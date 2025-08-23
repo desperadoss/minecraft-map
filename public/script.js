@@ -181,6 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // Wywołanie fetchPoints() na koniec, aby upewnić się, że DOM jest załadowany
     fetchPoints();
 
     // === Obsługa przycisków filtrowania ===
