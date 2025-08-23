@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     mapContainer.addEventListener('mousemove', (e) => {
-        // Nowe, poprawne obliczanie koordynatów myszki
+        // Obliczanie koordynatów myszki
         const mapRect = mapImage.getBoundingClientRect();
         
         if (e.clientX < mapRect.left || e.clientX > mapRect.right ||
@@ -188,8 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    fetchPoints();
-
     // === Obsługa przycisków filtrowania ===
     showYourPointsBtn.addEventListener('click', () => {
         showYourPointsBtn.classList.toggle('active');
