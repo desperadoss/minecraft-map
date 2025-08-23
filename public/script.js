@@ -35,14 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const promoteSessionCodeInput = document.getElementById('promote-session-code');
     const promoteUserBtn = document.getElementById('promote-user');
 
-
     // Zmienne do obsługi mapy
     let isDragging = false;
     let startX, startY;
     let scale = 1;
     let translateX = 0;
     let translateY = 0;
-    
     
     // === Obsługa powiększenia i przesuwania mapy, oraz śledzenia myszki ===
     function updateTransform() {
@@ -86,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     mapContainer.addEventListener('mousemove', (e) => {
-        // Obliczanie koordynatów myszki (NOWY KOD)
+        // Obliczanie koordynatów myszki
         const mapRect = mapImage.getBoundingClientRect();
         if (e.clientX < mapRect.left || e.clientX > mapRect.right ||
             e.clientY < mapRect.top || e.clientY > mapRect.bottom) {
