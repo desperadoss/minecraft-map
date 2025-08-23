@@ -111,6 +111,7 @@ body, html {
     border-radius: 3px;
     font-size: 0.9em;
     color: #9b9b9b;
+    z-index: 10
 }
 
 .coordinates-info {
@@ -334,4 +335,5 @@ ul#pending-points-list {
 #admin-login-modal input, #owner-login-modal input {
     width: 100%;
     box-sizing: border-box;
+
 }
