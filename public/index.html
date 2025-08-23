@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Minecraft</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="header">
+        <h1 class="main-title">Mapa Minecraft</h1>
+        <p class="subtitle">Interaktywna mapa serwera</p>
+    </div>
+    
+    <div class="main-content-wrapper">
+        <div class="main-content">
+            <div class="map-controls-top">
+                <div class="filter-buttons">
+                    <button class="button active" id="show-your-points">Pokaż/Filtruj swoje</button>
+                    <button class="button active" id="show-shared-points">Pokaż/Filtruj udostępnione</button>
+                </div>
+                <div class="view-controls">
+                    <button class="button zoom-button" id="zoom-in">+</button>
+                    <button class="button zoom-button" id="zoom-out">-</button>
+                    <button class="button" id="reset-view">Resetuj Widok</button>
+                </div>
+            </div>
+
+            <div class="map-view-container">
+                <div class="coordinates-info"></div>
+                <div class="zoom-info"></div>
+                <div class="map-container">
+                    <img id="minecraft-map" src="/map.jpg" alt="Mapa serwera Minecraft">
+                </div>
+            </div>
+
+            <div class="your-points-section">
+                <h2 class="section-title">Twoje punkty</h2>
+                <div class="add-point-form-inline">
+                    <div class="form-group">
+                        <label for="name-input">Nazwa punktu</label>
+                        <input type="text" id="name-input" placeholder="np. Dom">
+                    </div>
+                    <div class="form-group">
+                        <label for="x-input">Koordynat X</label>
+                        <input type="number" id="x-input" placeholder="np. 123">
+                    </div>
+                    <div class="form-group">
+                        <label for="z-input">Koordynat Z</label>
+                        <input type="number" id="z-input" placeholder="np. -456">
+                    </div>
+                    <button class="add-button" id="add-point-button">Dodaj punkt</button>
+                </div>
+            </div>
+            
+            <div class="session-code-display" id="session-code-text"></div>
+        </div>
+    </div>
+
+    <div id="point-details-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="modal-title" id="point-name">Nazwa punktu</h2>
+            <p>Koordynat X: <span id="point-x"></span></p>
+            <p>Koordynat Z: <span id="point-z"></span></p>
+            <div class="modal-buttons">
+                <button class="button" id="share-point">Udostępnij</button>
+                <button class="button" id="edit-point">Edytuj</button>
+                <button class="button" id="delete-point">Usuń</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="modal-title">Zaloguj się jako Admin</h2>
+            <p>Wprowadź kod admina:</p>
+            <input type="text" id="admin-login-input">
+            <div class="modal-buttons">
+                <button class="button" id="admin-login-btn">Zaloguj</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="owner-login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="modal-title">Zaloguj się jako Owner</h2>
+            <p>Wprowadź kod ownera:</p>
+            <input type="text" id="owner-login-input">
+            <div class="modal-buttons">
+                <button class="button" id="owner-login-btn">Zaloguj</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-panel-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="modal-title">Panel Admina</h2>
+            <div class="modal-section">
+                <h3>Oczekujące punkty</h3>
+                <ul id="pending-points-list"></ul>
+                <div class="modal-buttons">
+                    <button class="button" id="refresh-pending">Odśwież</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="owner-panel-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="modal-title">Panel Ownera</h2>
+            <div class="modal-section">
+                <h3>Awansuj na Admina</h3>
+                <p>Wpisz kod sesji, aby nadać uprawnienia admina:</p>
+                <input type="text" id="promote-session-code">
+                <div class="modal-buttons">
+                    <button class="button" id="promote-user">Awansuj</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
