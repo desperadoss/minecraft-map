@@ -111,7 +111,7 @@ body, html {
     border-radius: 3px;
     font-size: 0.9em;
     color: #9b9b9b;
-    z-index: 10
+    z-index: 20
 }
 
 .coordinates-info {
@@ -337,3 +337,4 @@ ul#pending-points-list {
     box-sizing: border-box;
 
 }
+
