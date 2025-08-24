@@ -44,13 +44,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const MAP_X_RANGE = 4200;
     const MAP_Z_RANGE = 2750;
     
-    let currentScale = 0.18;
+    // Zmienne dla zoom i pozycji
+    let currentScale = 1; // Zaczynamy od scale 1 zamiast 0.18
     let offsetX = 0;
     let offsetY = 0;
     let isDragging = false;
     let startX, startY;
     let lastMouseX = 0;
     let lastMouseY = 0;
+    let initialScaleSet = false; // Flaga do ustawienia początkowego zoom
     
     let isShowingPrivate = true;
     let isShowingPublic = true;
@@ -80,6 +82,25 @@ document.addEventListener('DOMContentLoaded', () => {
         return { x: Math.round(mcX), z: Math.round(mcZ) };
     }
 
+    // Funkcja do obliczenia początkowego zoom aby zmieścić całą mapę
+    function calculateInitialScale() {
+        const containerRect = mapContainer.parentElement.getBoundingClientRect();
+        const scaleX = containerRect.width / MAP_WIDTH_PX;
+        const scaleY = containerRect.height / MAP_HEIGHT_PX;
+        return Math.min(scaleX, scaleY) * 0.95; // 95% żeby był mały margines
+    }
+
+    // Funkcja do ustawienia początkowego widoku
+    function setInitialView() {
+        if (!initialScaleSet) {
+            currentScale = calculateInitialScale();
+            offsetX = 0;
+            offsetY = 0;
+            initialScaleSet = true;
+            updateMapPosition();
+        }
+    }
+
     function updateMapPosition() {
         if (isThrottling) return;
         
@@ -94,7 +115,12 @@ document.addEventListener('DOMContentLoaded', () => {
         offsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, offsetY));
 
         mapContainer.style.transform = `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px) scale(${currentScale})`;
-        zoomInfo.textContent = `Zoom: ${Math.round((currentScale - 0.18) * 100 / 0.82)}%`;
+        
+        // Lepsze obliczanie procentów zoom - od minimalnego do maksymalnego
+        const minScale = calculateInitialScale();
+        const maxScale = 5;
+        const zoomPercent = Math.round(((currentScale - minScale) / (maxScale - minScale)) * 100);
+        zoomInfo.textContent = `Zoom: ${Math.max(0, zoomPercent)}%`;
         
         updateCoordinatesFromMouse(lastMouseX, lastMouseY);
         
@@ -291,14 +317,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     zoomOutBtn.addEventListener('click', () => {
-        const containerRect = mapContainer.parentElement.getBoundingClientRect();
-        const minScale = Math.max(containerRect.width / MAP_WIDTH_PX, containerRect.height / MAP_HEIGHT_PX);
+        const minScale = calculateInitialScale();
         currentScale = Math.max(minScale, currentScale - 0.2);
         updateMapPosition();
     });
 
     resetViewBtn.addEventListener('click', () => {
-        currentScale = 1;
+        currentScale = calculateInitialScale();
         offsetX = 0;
         offsetY = 0;
         updateMapPosition();
@@ -735,7 +760,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Inicjalizacja
-    updateMapPosition();
-    fetchPoints();
+    // Obsługa resize okna - przelicz zoom przy zmianie rozmiaru
+    window.addEventListener('resize', () => {
+        if (initialScaleSet) {
+            // Przelicz minimalny zoom po resize
+            updateMapPosition();
+        }
+    });
+
+    // === Inicjalizacja ===
+    // Ustaw początkowy widok po załadowaniu obrazka
+    mapImage.addEventListener('load', () => {
+        setInitialView();
+        fetchPoints();
+    });
+
+    // Jeśli obrazek już się załadował
+    if (mapImage.complete) {
+        setInitialView();
+        fetchPoints();
+    }
 });
