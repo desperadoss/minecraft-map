@@ -8,32 +8,57 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
 
-// Poprawka: serowanie plików statycznych z katalogu gdzie są pliki HTML/CSS/JS
+// Serowanie plików statycznych
 app.use(express.static(__dirname));
 
 // Połączenie z bazą danych MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-.then(() => console.log('Połączenie z bazą danych MongoDB udane!'))
-.catch(err => console.error('Błąd połączenia z bazą danych:', err));
+const connectDB = async () => {
+    try {
+        await mongoose.connect(process.env.MONGODB_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        console.log('Połączenie z bazą danych MongoDB udane!');
+    } catch (err) {
+        console.error('Błąd połączenia z bazą danych:', err);
+        process.exit(1);
+    }
+};
 
 // Schemat i model dla punktów na mapie
 const pointSchema = new mongoose.Schema({
-    name: String,
-    x: Number,
-    z: Number,
-    ownerSessionCode: String,
+    name: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 100
+    },
+    x: {
+        type: Number,
+        required: true
+    },
+    z: {
+        type: Number,
+        required: true
+    },
+    ownerSessionCode: {
+        type: String,
+        required: true
+    },
     status: {
         type: String,
         enum: ['private', 'pending', 'public'],
         default: 'private'
     }
+}, {
+    timestamps: true
 });
+
 const Point = mongoose.model('Point', pointSchema);
 
 // Schemat i model dla uprawnień admina
@@ -43,38 +68,47 @@ const adminSchema = new mongoose.Schema({
         unique: true,
         required: true
     }
+}, {
+    timestamps: true
 });
+
 const Admin = mongoose.model('Admin', adminSchema);
 
 // Middleware do sprawdzania uprawnień admina
-async function checkAdmin(req, res, next) {
-    const sessionCode = req.header('X-Session-Code');
-    if (!sessionCode) {
-        return res.status(401).json({ message: 'Brak kodu sesji.' });
-    }
-    
-    // Sprawdź czy to owner
-    if (sessionCode === process.env.OWNER_SESSION_CODE) {
-        req.isAdmin = true;
-        return next();
-    }
-    
-    // Sprawdź czy to admin z bazy
+const checkAdmin = async (req, res, next) => {
     try {
+        const sessionCode = req.header('X-Session-Code');
+        if (!sessionCode) {
+            return res.status(401).json({ message: 'Brak kodu sesji.' });
+        }
+        
+        // Sprawdź czy to owner
+        if (sessionCode === process.env.OWNER_SESSION_CODE) {
+            req.isAdmin = true;
+            req.isOwner = true;
+            return next();
+        }
+        
+        // Sprawdź czy to admin z bazy
         const admin = await Admin.findOne({ sessionCode });
         if (admin) {
             req.isAdmin = true;
             return next();
         }
+        
+        return res.status(403).json({ message: 'Brak uprawnień admina.' });
     } catch (err) {
         console.error('Błąd sprawdzania uprawnień:', err);
         return res.status(500).json({ message: 'Błąd serwera.' });
     }
-    
-    return res.status(403).json({ message: 'Brak uprawnień admina.' });
-}
+};
 
-// === Endpointy API ===
+// === ENDPOINTY API ===
+
+// Health check
+app.get('/health', (req, res) => {
+    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
 
 // GET - Pobieranie wszystkich punktów publicznych
 app.get('/api/points', async (req, res) => {
@@ -83,7 +117,7 @@ app.get('/api/points', async (req, res) => {
         res.json(publicPoints);
     } catch (err) {
         console.error('Błąd pobierania punktów publicznych:', err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: 'Błąd pobierania punktów.' });
     }
 });
 
@@ -98,89 +132,149 @@ app.get('/api/points/private', async (req, res) => {
         res.json(privatePoints);
     } catch (err) {
         console.error('Błąd pobierania punktów prywatnych:', err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: 'Błąd pobierania punktów.' });
     }
 });
 
 // POST - Dodawanie nowego punktu (domyślnie status: private)
 app.post('/api/points', async (req, res) => {
-    const { name, x, z } = req.body;
-    const ownerSessionCode = req.header('X-Session-Code');
-
-    if (!name || x === undefined || z === undefined || !ownerSessionCode) {
-        return res.status(400).json({ message: 'Wszystkie pola są wymagane.' });
-    }
-
     try {
-        const newPoint = new Point({ name, x, z, ownerSessionCode, status: 'private' });
+        const { name, x, z } = req.body;
+        const ownerSessionCode = req.header('X-Session-Code');
+
+        if (!name || name.trim() === '') {
+            return res.status(400).json({ message: 'Nazwa punktu jest wymagana.' });
+        }
+
+        if (x === undefined || z === undefined) {
+            return res.status(400).json({ message: 'Współrzędne X i Z są wymagane.' });
+        }
+
+        if (!ownerSessionCode) {
+            return res.status(400).json({ message: 'Kod sesji jest wymagany.' });
+        }
+
+        const numX = parseInt(x);
+        const numZ = parseInt(z);
+
+        if (isNaN(numX) || isNaN(numZ)) {
+            return res.status(400).json({ message: 'Współrzędne muszą być liczbami.' });
+        }
+
+        const newPoint = new Point({ 
+            name: name.trim(), 
+            x: numX, 
+            z: numZ, 
+            ownerSessionCode, 
+            status: 'private' 
+        });
+        
         await newPoint.save();
         res.status(201).json(newPoint);
     } catch (err) {
         console.error('Błąd dodawania punktu:', err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: 'Błąd dodawania punktu.' });
     }
 });
 
 // PUT - Edycja punktu (tylko właściciel)
 app.put('/api/points/:id', async (req, res) => {
-    const { id } = req.params;
-    const { name, x, z } = req.body;
-    const sessionCode = req.header('X-Session-Code');
-
     try {
+        const { id } = req.params;
+        const { name, x, z } = req.body;
+        const sessionCode = req.header('X-Session-Code');
+
+        if (!name || name.trim() === '') {
+            return res.status(400).json({ message: 'Nazwa punktu jest wymagana.' });
+        }
+
+        if (x === undefined || z === undefined) {
+            return res.status(400).json({ message: 'Współrzędne X i Z są wymagane.' });
+        }
+
+        const numX = parseInt(x);
+        const numZ = parseInt(z);
+
+        if (isNaN(numX) || isNaN(numZ)) {
+            return res.status(400).json({ message: 'Współrzędne muszą być liczbami.' });
+        }
+
         const point = await Point.findById(id);
-        if (!point || point.ownerSessionCode !== sessionCode) {
+        if (!point) {
+            return res.status(404).json({ message: 'Punkt nie znaleziony.' });
+        }
+
+        if (point.ownerSessionCode !== sessionCode) {
             return res.status(403).json({ message: 'Brak uprawnień do edycji tego punktu.' });
         }
-        point.name = name;
-        point.x = x;
-        point.z = z;
+
+        point.name = name.trim();
+        point.x = numX;
+        point.z = numZ;
         await point.save();
         res.json(point);
     } catch (err) {
         console.error('Błąd edycji punktu:', err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: 'Błąd edycji punktu.' });
     }
 });
 
 // PUT - Udostępnianie punktu do akceptacji admina
 app.put('/api/points/share/:id', async (req, res) => {
-    const { id } = req.params;
-    const sessionCode = req.header('X-Session-Code');
-
     try {
+        const { id } = req.params;
+        const sessionCode = req.header('X-Session-Code');
+
         const point = await Point.findById(id);
-        if (!point || point.ownerSessionCode !== sessionCode) {
+        if (!point) {
+            return res.status(404).json({ message: 'Punkt nie znaleziony.' });
+        }
+
+        if (point.ownerSessionCode !== sessionCode) {
             return res.status(403).json({ message: 'Brak uprawnień do udostępnienia tego punktu.' });
         }
+
+        if (point.status === 'pending') {
+            return res.status(400).json({ message: 'Punkt już oczekuje na akceptację.' });
+        }
+
+        if (point.status === 'public') {
+            return res.status(400).json({ message: 'Punkt jest już publiczny.' });
+        }
+
         point.status = 'pending';
         await point.save();
         res.json(point);
     } catch (err) {
         console.error('Błąd udostępniania punktu:', err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: 'Błąd udostępniania punktu.' });
     }
 });
 
 // DELETE - Usuwanie punktu (tylko właściciel)
 app.delete('/api/points/:id', async (req, res) => {
-    const { id } = req.params;
-    const sessionCode = req.header('X-Session-Code');
-
     try {
+        const { id } = req.params;
+        const sessionCode = req.header('X-Session-Code');
+
         const point = await Point.findById(id);
-        if (!point || point.ownerSessionCode !== sessionCode) {
+        if (!point) {
+            return res.status(404).json({ message: 'Punkt nie znaleziony.' });
+        }
+
+        if (point.ownerSessionCode !== sessionCode) {
             return res.status(403).json({ message: 'Brak uprawnień do usunięcia tego punktu.' });
         }
-        await point.deleteOne();
+
+        await Point.findByIdAndDelete(id);
         res.json({ message: 'Punkt usunięty.' });
     } catch (err) {
         console.error('Błąd usuwania punktu:', err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: 'Błąd usuwania punktu.' });
     }
 });
 
-// === Endpointy Admina ===
+// === ENDPOINTY ADMINA ===
 
 // POST - Logowanie admina
 app.post('/api/admin/login', async (req, res) => {
@@ -198,7 +292,6 @@ app.post('/api/admin/login', async (req, res) => {
         
         // Sprawdź czy kod admina jest poprawny
         if (adminCode === process.env.ADMIN_CODE) {
-            // Zapisz sessionCode jako admina w bazie
             try {
                 const existingAdmin = await Admin.findOne({ sessionCode });
                 if (!existingAdmin) {
@@ -231,64 +324,83 @@ app.get('/api/admin/pending', checkAdmin, async (req, res) => {
         res.json(pendingPoints);
     } catch (err) {
         console.error('Błąd pobierania oczekujących punktów:', err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: 'Błąd pobierania oczekujących punktów.' });
     }
 });
 
 // PUT - Akceptowanie punktu (admin)
 app.put('/api/admin/accept/:id', checkAdmin, async (req, res) => {
-    const { id } = req.params;
     try {
+        const { id } = req.params;
         const point = await Point.findById(id);
         if (!point) {
             return res.status(404).json({ message: 'Punkt nie znaleziony.' });
+        }
+        if (point.status !== 'pending') {
+            return res.status(400).json({ message: 'Punkt nie oczekuje na akceptację.' });
         }
         point.status = 'public';
         await point.save();
         res.json(point);
     } catch (err) {
         console.error('Błąd akceptacji punktu:', err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: 'Błąd akceptacji punktu.' });
     }
 });
 
 // PUT - Edycja punktu publicznego (admin)
 app.put('/api/admin/edit/:id', checkAdmin, async (req, res) => {
-    const { id } = req.params;
-    const { name, x, z } = req.body;
     try {
+        const { id } = req.params;
+        const { name, x, z } = req.body;
+
+        if (!name || name.trim() === '') {
+            return res.status(400).json({ message: 'Nazwa punktu jest wymagana.' });
+        }
+
+        if (x === undefined || z === undefined) {
+            return res.status(400).json({ message: 'Współrzędne X i Z są wymagane.' });
+        }
+
+        const numX = parseInt(x);
+        const numZ = parseInt(z);
+
+        if (isNaN(numX) || isNaN(numZ)) {
+            return res.status(400).json({ message: 'Współrzędne muszą być liczbami.' });
+        }
+
         const point = await Point.findById(id);
         if (!point) {
             return res.status(404).json({ message: 'Punkt nie znaleziony.' });
         }
-        point.name = name;
-        point.x = x;
-        point.z = z;
+        point.name = name.trim();
+        point.x = numX;
+        point.z = numZ;
         await point.save();
         res.json(point);
     } catch (err) {
         console.error('Błąd edycji punktu przez admina:', err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: 'Błąd edycji punktu.' });
     }
 });
 
 // DELETE - Usuwanie punktu (admin)
 app.delete('/api/admin/delete/:id', checkAdmin, async (req, res) => {
-    const { id } = req.params;
     try {
+        const { id } = req.params;
         const point = await Point.findById(id);
         if (!point) {
             return res.status(404).json({ message: 'Punkt nie znaleziony.' });
         }
-        await point.deleteOne();
+        await Point.findByIdAndDelete(id);
         res.json({ message: 'Punkt usunięty.' });
     } catch (err) {
         console.error('Błąd usuwania punktu przez admina:', err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: 'Błąd usuwania punktu.' });
     }
 });
 
-// === Endpointy Ownera ===
+// === ENDPOINTY OWNERA ===
 
 // POST - Logowanie ownera
 app.post('/api/owner/login', async (req, res) => {
@@ -318,14 +430,18 @@ app.post('/api/owner/login', async (req, res) => {
 
 // PUT - Awansowanie użytkownika na admina (owner)
 app.put('/api/owner/promote', async (req, res) => {
-    const sessionCode = req.header('X-Session-Code');
-    const { sessionCode: codeToPromote } = req.body;
-
-    if (sessionCode !== process.env.OWNER_SESSION_CODE) {
-        return res.status(403).json({ message: 'Brak uprawnień ownera.' });
-    }
-
     try {
+        const sessionCode = req.header('X-Session-Code');
+        const { sessionCode: codeToPromote } = req.body;
+
+        if (sessionCode !== process.env.OWNER_SESSION_CODE) {
+            return res.status(403).json({ message: 'Brak uprawnień ownera.' });
+        }
+
+        if (!codeToPromote) {
+            return res.status(400).json({ message: 'Kod sesji do awansowania jest wymagany.' });
+        }
+
         const existingAdmin = await Admin.findOne({ sessionCode: codeToPromote });
         if (existingAdmin) {
             return res.json({ message: 'Użytkownik już jest adminem.' });
@@ -336,20 +452,24 @@ app.put('/api/owner/promote', async (req, res) => {
         res.json({ message: 'Użytkownik awansowany na admina.' });
     } catch (err) {
         console.error('Błąd awansowania użytkownika:', err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: 'Błąd awansowania użytkownika.' });
     }
 });
 
 // DELETE - Usunięcie admina (owner)
 app.delete('/api/owner/demote', async (req, res) => {
-    const sessionCode = req.header('X-Session-Code');
-    const { sessionCode: codeToDemote } = req.body;
-
-    if (sessionCode !== process.env.OWNER_SESSION_CODE) {
-        return res.status(403).json({ message: 'Brak uprawnień ownera.' });
-    }
-    
     try {
+        const sessionCode = req.header('X-Session-Code');
+        const { sessionCode: codeToDemote } = req.body;
+
+        if (sessionCode !== process.env.OWNER_SESSION_CODE) {
+            return res.status(403).json({ message: 'Brak uprawnień ownera.' });
+        }
+
+        if (!codeToDemote) {
+            return res.status(400).json({ message: 'Kod sesji do degradacji jest wymagany.' });
+        }
+        
         const result = await Admin.deleteOne({ sessionCode: codeToDemote });
         if (result.deletedCount === 0) {
             return res.json({ message: 'Użytkownik nie był adminem.' });
@@ -357,15 +477,32 @@ app.delete('/api/owner/demote', async (req, res) => {
         res.json({ message: 'Użytkownik zdegradowany.' });
     } catch (err) {
         console.error('Błąd degradacji użytkownika:', err);
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ message: 'Błąd degradacji użytkownika.' });
     }
 });
 
-// Catch-all route dla SPA
+// Catch-all route dla SPA - musi być na końcu
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(PORT, () => {
-    console.log(`Serwer działa na http://localhost:${PORT}`);
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Nieobsługiwany błąd:', err);
+    res.status(500).json({ message: 'Wewnętrzny błąd serwera' });
+});
+
+// Start serwera
+const startServer = async () => {
+    await connectDB();
+    
+    app.listen(PORT, () => {
+        console.log(`Serwer działa na porcie ${PORT}`);
+        console.log(`URL: http://localhost:${PORT}`);
+    });
+};
+
+startServer().catch(err => {
+    console.error('Błąd uruchomienia serwera:', err);
+    process.exit(1);
 });
