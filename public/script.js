@@ -427,7 +427,7 @@ adminLoginBtn.addEventListener('click', async () => {
                 'Content-Type': 'application/json',
                 'X-Session-Code': sessionCode
             },
-            body: JSON.stringify({ adminCode: code })
+            body: JSON.stringify({ code: code })
         });
         
         if (res.ok) {
@@ -459,7 +459,7 @@ ownerLoginBtn.addEventListener('click', async () => {
                 'Content-Type': 'application/json',
                 'X-Session-Code': sessionCode
             },
-            body: JSON.stringify({ ownerCode: code })
+            body: JSON.stringify({ code: code })
         });
         
         if (res.ok) {
@@ -566,6 +566,7 @@ async function fetchPendingPoints() {
     // Inicjalizacja
     fetchPoints();
 });
+
 
 
 
