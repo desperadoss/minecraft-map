@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // === Selektory HTML ===
+    // === HTML Selectors ===
     const mapContainer = document.querySelector('.map-container');
     const mapImage = document.getElementById('minecraft-map');
     const zoomInBtn = document.getElementById('zoom-in');
@@ -11,19 +11,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const showSharedPointsBtn = document.getElementById('show-shared-points');
     const sessionCodeDisplay = document.getElementById('session-code-text');
     
-    // Formularz dodawania punktu
+    // Add point form
     const nameInput = document.getElementById('name-input');
     const xInput = document.getElementById('x-input');
     const zInput = document.getElementById('z-input');
     const addPointBtn = document.getElementById('add-point-button');
 
-    // Modali
+    // Modals
     const pointDetailsModal = document.getElementById('point-details-modal');
     const adminLoginModal = document.getElementById('admin-login-modal');
     const adminPanelModal = document.getElementById('admin-panel-modal');
     const ownerPanelModal = document.getElementById('owner-panel-modal');
     
-    // Przyciski i pola w modalach
+    // Buttons and fields in modals
     const closeButtons = document.querySelectorAll('.close-button');
     const sharePointBtn = document.getElementById('share-point');
     const editPointBtn = document.getElementById('edit-point');
@@ -35,13 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const promoteSessionCodeInput = document.getElementById('promote-session-code');
     const pendingPointsList = document.getElementById('pending-points-list');
     
-    // NOWE ELEMENTY - panel ownera
+    // NEW ELEMENTS - owner panel
     const newSessionCodeInput = document.getElementById('new-session-code');
     const addSessionBtn = document.getElementById('add-session-btn');
     const allowedSessionsList = document.getElementById('allowed-sessions-list');
     const refreshSessionsBtn = document.getElementById('refresh-sessions');
     
-    // === Konfiguracja i zmienne globalne ===
+    // === Configuration and global variables ===
     const MAP_WIDTH_PX = 10000;
     const MAP_HEIGHT_PX = 5500;
     const MAP_X_RANGE = 4200;
@@ -65,45 +65,45 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionCode = uuid.v4();
         localStorage.setItem('sessionCode', sessionCode);
     }
-    sessionCodeDisplay.textContent = `Kod sesji: ${sessionCode}`;
+    sessionCodeDisplay.textContent = `Session Code: ${sessionCode}`;
 
     let isUserAdmin = false;
     let isUserOwner = false;
 
-    // === Sprawdzenie czy użytkownik jest ownerem i adminem ===
+    // === Check if user is owner and admin ===
     async function checkUserPermissions() {
         try {
-            // Sprawdź czy jest ownerem
+            // Check if owner
             const ownerRes = await fetch('/api/owner/check', {
                 headers: { 'X-Session-Code': sessionCode }
             });
             const ownerData = await ownerRes.json();
             if (ownerData.isOwner) {
                 isUserOwner = true;
-                isUserAdmin = true; // Owner ma zawsze uprawnienia admina
-                console.log('Użytkownik jest ownerem');
+                isUserAdmin = true; // Owner always has admin permissions
+                console.log('User is owner');
                 return;
             }
 
-            // Jeśli nie jest ownerem, sprawdź czy może jest adminem
+            // If not owner, check if admin
             try {
                 const adminRes = await fetch('/api/admin/pending', {
                     headers: { 'X-Session-Code': sessionCode }
                 });
                 if (adminRes.status === 200) {
                     isUserAdmin = true;
-                    console.log('Użytkownik jest adminem');
+                    console.log('User is admin');
                 }
             } catch (err) {
-                // Nie jest adminem
-                console.log('Użytkownik nie ma uprawnień admina');
+                // Not an admin
+                console.log('User has no admin permissions');
             }
         } catch (err) {
-            console.error('Błąd sprawdzania uprawnień:', err);
+            console.error('Error checking permissions:', err);
         }
     }
 
-    // === System powiadomień ===
+    // === Notification system ===
     function createNotificationContainer() {
         const container = document.createElement('div');
         container.id = 'notification-container';
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             word-wrap: break-word;
         `;
 
-        // Dodaj style animacji jeśli jeszcze nie istnieją
+        // Add animation styles if they don't exist yet
         if (!document.getElementById('notification-styles')) {
             const style = document.createElement('style');
             style.id = 'notification-styles';
@@ -159,12 +159,12 @@ document.addEventListener('DOMContentLoaded', () => {
         notification.textContent = message;
         container.appendChild(notification);
 
-        // Kliknij aby zamknąć
+        // Click to close
         notification.addEventListener('click', () => {
             removeNotification(notification);
         });
 
-        // Auto-usuń po 5 sekundach
+        // Auto-remove after 5 seconds
         setTimeout(() => {
             if (notification.parentNode) {
                 removeNotification(notification);
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300);
     }
 
-    // === Funkcje pomocnicze ===
+    // === Helper functions ===
     function mcToPx(x, z) {
         const pxX = (x + MAP_X_RANGE) / (MAP_X_RANGE * 2) * MAP_WIDTH_PX;
         const pxZ = (z + MAP_Z_RANGE) / (MAP_Z_RANGE * 2) * MAP_HEIGHT_PX;
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return { x: Math.round(mcX), z: Math.round(mcZ) };
     }
 
-    // === Funkcja do skalowania punktów ===
+    // === Function for point scaling ===
     function updatePointScaling() {
         const points = document.querySelectorAll('.point-wrapper');
         const pointScale = 1.0 / currentScale;
@@ -280,15 +280,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 input.removeAttribute('readonly');
             });
             
-            addPointBtn.textContent = 'Dodaj punkt';
+            addPointBtn.textContent = 'Add Point';
             addPointBtn.dataset.mode = 'add';
             addPointBtn.dataset.pointId = '';
         } catch (err) {
-            console.error('Błąd czyszczenia inputów:', err);
+            console.error('Error clearing inputs:', err);
         }
     }
 
-    // === Logika mapy i punktów ===
+    // === Map and point logic ===
     async function fetchPoints() {
         try {
             const publicRes = await fetch('/api/points');
@@ -301,8 +301,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             renderPoints([...publicPoints, ...privatePoints]);
         } catch (err) {
-            console.error('Błąd pobierania punktów:', err);
-            showError('Błąd pobierania punktów z serwera.');
+            console.error('Error fetching points:', err);
+            showError('Error fetching points from server.');
         }
     }
     
@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // === Obsługa zdarzeń UI ===
+    // === UI event handling ===
     mapContainer.addEventListener('mousedown', (e) => {
         if (e.target.closest('.point-wrapper')) return;
         
@@ -435,7 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
         filterPoints();
     });
 
-    // === Logika formularza i modali ===
+    // === Form and modal logic ===
     addPointBtn.addEventListener('click', async () => {
         const name = nameInput.value.trim();
         const x = parseInt(xInput.value);
@@ -444,12 +444,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const pointId = addPointBtn.dataset.pointId;
 
         if (!name || isNaN(x) || isNaN(z)) {
-            showError('Wypełnij wszystkie pola poprawnie!');
+            showError('Please fill all fields correctly!');
             return;
         }
 
         addPointBtn.disabled = true;
-        addPointBtn.textContent = 'Zapisywanie...';
+        addPointBtn.textContent = 'Saving...';
 
         try {
             let response;
@@ -467,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ name, x, z })
                 });
 
-                addPointBtn.textContent = 'Dodaj punkt';
+                addPointBtn.textContent = 'Add Point';
                 addPointBtn.dataset.mode = 'add';
                 addPointBtn.dataset.pointId = '';
                 
@@ -485,20 +485,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 clearInputs();
                 fetchPoints();
-                showSuccess(mode === 'edit' ? 'Punkt zaktualizowany!' : 'Punkt dodany!');
+                showSuccess(mode === 'edit' ? 'Point updated!' : 'Point added!');
             } else {
                 const errorData = await response.json();
-                showError(errorData.message || 'Wystąpił błąd przy zapisywaniu punktu.');
+                showError(errorData.message || 'Error occurred while saving point.');
             }
         } catch (err) {
-            console.error('Błąd zapisu punktu:', err);
-            showError('Błąd połączenia z serwerem.');
+            console.error('Error saving point:', err);
+            showError('Server connection error.');
         } finally {
             addPointBtn.disabled = false;
             if (mode === 'edit') {
-                addPointBtn.textContent = 'Zapisz zmiany';
+                addPointBtn.textContent = 'Save Changes';
             } else {
-                addPointBtn.textContent = 'Dodaj punkt';
+                addPointBtn.textContent = 'Add Point';
             }
         }
     });
@@ -552,16 +552,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'X-Session-Code': sessionCode }
             });
             if (res.ok) {
-                showSuccess('Punkt przesłany do akceptacji admina.');
+                showSuccess('Point sent for admin approval.');
                 fetchPoints();
                 hideModals();
             } else {
                 const errorData = await res.json();
-                showError(errorData.message || 'Błąd udostępniania punktu.');
+                showError(errorData.message || 'Error sharing point.');
             }
         } catch (err) {
-            console.error('Błąd udostępniania:', err);
-            showError('Błąd połączenia z serwerem.');
+            console.error('Error sharing:', err);
+            showError('Server connection error.');
         }
     });
 
@@ -575,14 +575,14 @@ document.addEventListener('DOMContentLoaded', () => {
         xInput.value = pointX;
         zInput.value = pointZ;
         
-        addPointBtn.textContent = 'Zapisz zmiany';
+        addPointBtn.textContent = 'Save Changes';
         addPointBtn.dataset.mode = 'edit';
         addPointBtn.dataset.pointId = pointId;
         hideModals();
     });
     
     deletePointBtn.addEventListener('click', async () => {
-        if (!confirm('Czy na pewno chcesz usunąć ten punkt?')) {
+        if (!confirm('Are you sure you want to delete this point?')) {
             return;
         }
 
@@ -597,42 +597,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'X-Session-Code': sessionCode }
             });
             if (res.ok) {
-                showSuccess('Punkt usunięty.');
+                showSuccess('Point deleted.');
                 fetchPoints();
                 hideModals();
             } else {
                 const errorData = await res.json();
-                showError(errorData.message || 'Błąd usuwania punktu.');
+                showError(errorData.message || 'Error deleting point.');
             }
         } catch (err) {
-            console.error('Błąd usuwania:', err);
-            showError('Błąd połączenia z serwerem.');
+            console.error('Error deleting:', err);
+            showError('Server connection error.');
         }
     });
 
-    // === NOWE MENU WYBORU DLA OWNERA ===
+    // === NEW OWNER MENU ===
     function showOwnerMenu() {
         hideModals();
         
-        // Utwórz modal z wyborem
+        // Create modal with choices
         const menuModal = document.createElement('div');
         menuModal.className = 'modal';
         menuModal.style.display = 'block';
         menuModal.innerHTML = `
             <div class="modal-content">
                 <span class="close-button">&times;</span>
-                <h2 class="modal-title">Panel Zarządzania</h2>
-                <p>Wybierz, co chcesz zrobić:</p>
+                <h2 class="modal-title">Management Panel</h2>
+                <p>Choose what you want to do:</p>
                 <div class="modal-buttons">
-                    <button class="button" id="open-admin-panel">Panel Admina</button>
-                    <button class="button" id="open-owner-panel">Panel Ownera</button>
+                    <button class="button" id="open-admin-panel">Admin Panel</button>
+                    <button class="button" id="open-owner-panel">Owner Panel</button>
                 </div>
             </div>
         `;
         
         document.body.appendChild(menuModal);
         
-        // Obsługa przycisków
+        // Button handlers
         menuModal.querySelector('.close-button').addEventListener('click', () => {
             document.body.removeChild(menuModal);
         });
@@ -649,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchAllowedSessions();
         });
         
-        // Zamknij po kliknięciu w tło
+        // Close on background click
         menuModal.addEventListener('click', (e) => {
             if (e.target === menuModal) {
                 document.body.removeChild(menuModal);
@@ -657,10 +657,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // === Panele admina i ownera ===
+    // === Admin and owner panels ===
     sessionCodeDisplay.addEventListener('click', () => {
         if (isUserOwner) {
-            showOwnerMenu(); // Pokaż menu wyboru dla ownera
+            showOwnerMenu(); // Show choice menu for owner
         } else if (isUserAdmin) {
             hideModals();
             adminPanelModal.style.display = 'block';
@@ -674,7 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
     adminLoginBtn.addEventListener('click', async () => {
         const code = adminLoginInput.value.trim();
         if (!code) {
-            showError('Wprowadź kod admina.');
+            showError('Enter admin code.');
             return;
         }
 
@@ -696,13 +696,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 hideModals();
                 adminPanelModal.style.display = 'block';
                 fetchPendingPoints();
-                showSuccess('Pomyślnie zalogowano jako admin.');
+                showSuccess('Successfully logged in as admin.');
             } else {
-                showError(data.message || 'Niepoprawny kod admina.');
+                showError(data.message || 'Invalid admin code.');
             }
         } catch (err) {
-            console.error('Błąd logowania admina:', err);
-            showError('Błąd połączenia z serwerem.');
+            console.error('Admin login error:', err);
+            showError('Server connection error.');
         }
     });
 
@@ -715,26 +715,26 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             if (res.status === 403) {
-                showError('Brak uprawnień admina.');
+                showError('Admin permissions required.');
                 return;
             }
             
             if (!res.ok) {
-                throw new Error(`Błąd HTTP: ${res.status}`);
+                throw new Error(`HTTP Error: ${res.status}`);
             }
             
             const pendingPoints = await res.json();
             renderPendingPoints(pendingPoints);
         } catch (err) {
-            console.error('Błąd pobierania oczekujących punktów:', err);
-            pendingPointsList.innerHTML = '<li>Błąd połączenia z serwerem</li>';
+            console.error('Error fetching pending points:', err);
+            pendingPointsList.innerHTML = '<li>Server connection error</li>';
         }
     }
 
     function renderPendingPoints(points) {
         pendingPointsList.innerHTML = '';
         if (points.length === 0) {
-            pendingPointsList.innerHTML = '<li>Brak oczekujących punktów.</li>';
+            pendingPointsList.innerHTML = '<li>No pending points.</li>';
             return;
         }
 
@@ -743,8 +743,8 @@ document.addEventListener('DOMContentLoaded', () => {
             li.innerHTML = `
                 <span>${point.name} (X: ${point.x}, Z: ${point.z})</span>
                 <div>
-                    <button class="button accept-btn" data-id="${point._id}">Akceptuj</button>
-                    <button class="button reject-btn" data-id="${point._id}">Odrzuć</button>
+                    <button class="button accept-btn" data-id="${point._id}">Accept</button>
+                    <button class="button reject-btn" data-id="${point._id}">Reject</button>
                 </div>
             `;
             pendingPointsList.appendChild(li);
@@ -761,21 +761,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (res.ok) {
                         fetchPendingPoints();
                         fetchPoints();
-                        showSuccess('Punkt zaakceptowany.');
+                        showSuccess('Point accepted.');
                     } else {
                         const errorData = await res.json();
-                        showError(errorData.message || 'Błąd akceptacji punktu.');
+                        showError(errorData.message || 'Error accepting point.');
                     }
                 } catch (err) {
-                    console.error('Błąd akceptacji:', err);
-                    showError('Błąd połączenia z serwerem.');
+                    console.error('Error accepting:', err);
+                    showError('Server connection error.');
                 }
             });
         });
 
         document.querySelectorAll('.reject-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
-                if (!confirm('Czy na pewno chcesz odrzucić ten punkt? Zostanie przywrócony jako prywatny.')) {
+                if (!confirm('Are you sure you want to reject this point? It will be returned as private.')) {
                     return;
                 }
                 
@@ -788,22 +788,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (res.ok) {
                         fetchPendingPoints();
                         fetchPoints();
-                        showSuccess('Punkt odrzucony - przywrócony jako prywatny.');
+                        showSuccess('Point rejected - returned as private.');
                     } else {
                         const errorData = await res.json();
-                        showError(errorData.message || 'Błąd odrzucenia punktu.');
+                        showError(errorData.message || 'Error rejecting point.');
                     }
                 } catch (err) {
-                    console.error('Błąd odrzucenia:', err);
-                    showError('Błąd połączenia z serwerem.');
+                    console.error('Error rejecting:', err);
+                    showError('Server connection error.');
                 }
             });
         });
     }
 
-    // === NOWE FUNKCJE PANELU OWNERA ===
+    // === NEW OWNER PANEL FUNCTIONS ===
 
-    // Pobieranie listy dozwolonych sesji
+    // Fetch allowed sessions list
     async function fetchAllowedSessions() {
         try {
             const res = await fetch('/api/owner/allowed-sessions', {
@@ -811,22 +811,22 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             if (!res.ok) {
-                throw new Error(`Błąd HTTP: ${res.status}`);
+                throw new Error(`HTTP Error: ${res.status}`);
             }
             
             const allowedSessions = await res.json();
             renderAllowedSessions(allowedSessions);
         } catch (err) {
-            console.error('Błąd pobierania dozwolonych sesji:', err);
-            allowedSessionsList.innerHTML = '<li>Błąd połączenia z serwerem</li>';
+            console.error('Error fetching allowed sessions:', err);
+            allowedSessionsList.innerHTML = '<li>Server connection error</li>';
         }
     }
 
-    // Renderowanie listy dozwolonych sesji
+    // Render allowed sessions list
     function renderAllowedSessions(sessions) {
         allowedSessionsList.innerHTML = '';
         if (sessions.length === 0) {
-            allowedSessionsList.innerHTML = '<li>Brak dozwolonych sesji.</li>';
+            allowedSessionsList.innerHTML = '<li>No allowed sessions.</li>';
             return;
         }
 
@@ -835,19 +835,19 @@ document.addEventListener('DOMContentLoaded', () => {
             li.innerHTML = `
                 <div class="session-item">
                     <span class="session-code">${session.sessionCode}</span>
-                    <small class="session-date">Dodano: ${new Date(session.createdAt).toLocaleString()}</small>
-                    <button class="button remove-session-btn" data-session="${session.sessionCode}">Usuń</button>
+                    <small class="session-date">Added: ${new Date(session.createdAt).toLocaleString()}</small>
+                    <button class="button remove-session-btn" data-session="${session.sessionCode}">Remove</button>
                 </div>
             `;
             allowedSessionsList.appendChild(li);
         });
 
-        // Dodaj event listenery do przycisków usuwania
+        // Add event listeners to remove buttons
         document.querySelectorAll('.remove-session-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const sessionToRemove = e.target.dataset.session;
                 
-                if (!confirm(`Czy na pewno chcesz usunąć sesję ${sessionToRemove} z listy dozwolonych?`)) {
+                if (!confirm(`Are you sure you want to remove session ${sessionToRemove} from the allowed list?`)) {
                     return;
                 }
                 
@@ -862,25 +862,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     
                     if (res.ok) {
-                        fetchAllowedSessions(); // Odśwież listę
-                        showSuccess('Kod sesji usunięty z listy dozwolonych.');
+                        fetchAllowedSessions(); // Refresh list
+                        showSuccess('Session code removed from allowed list.');
                     } else {
                         const errorData = await res.json();
-                        showError(errorData.message || 'Błąd usuwania kodu sesji.');
+                        showError(errorData.message || 'Error removing session code.');
                     }
                 } catch (err) {
-                    console.error('Błąd usuwania sesji:', err);
-                    showError('Błąd połączenia z serwerem.');
+                    console.error('Error removing session:', err);
+                    showError('Server connection error.');
                 }
             });
         });
     }
 
-    // Dodawanie nowej dozwolonej sesji
+    // Add new allowed session
     addSessionBtn.addEventListener('click', async () => {
         const newSession = newSessionCodeInput.value.trim();
         if (!newSession) {
-            showError('Wprowadź kod sesji.');
+            showError('Enter session code.');
             return;
         }
 
@@ -898,25 +898,25 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (res.ok) {
                 newSessionCodeInput.value = '';
-                fetchAllowedSessions(); // Odśwież listę
+                fetchAllowedSessions(); // Refresh list
                 showSuccess(data.message);
             } else {
-                showError(data.message || 'Błąd dodawania kodu sesji.');
+                showError(data.message || 'Error adding session code.');
             }
         } catch (err) {
-            console.error('Błąd dodawania sesji:', err);
-            showError('Błąd połączenia z serwerem.');
+            console.error('Error adding session:', err);
+            showError('Server connection error.');
         }
     });
 
-    // Odświeżanie listy sesji
+    // Refresh sessions list
     refreshSessionsBtn.addEventListener('click', fetchAllowedSessions);
 
-    // Awansowanie użytkownika na admina
+    // Promote user to admin
     promoteUserBtn.addEventListener('click', async () => {
         const code = promoteSessionCodeInput.value.trim();
         if (!code) {
-            showError('Wpisz kod sesji użytkownika do awansowania.');
+            showError('Enter session code of user to promote.');
             return;
         }
 
@@ -934,15 +934,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 promoteSessionCodeInput.value = '';
                 showSuccess(result.message);
             } else {
-                showError(result.message || 'Błąd awansowania użytkownika.');
+                showError(result.message || 'Error promoting user.');
             }
         } catch (err) {
-            console.error('Błąd awansowania użytkownika:', err);
-            showError('Błąd połączenia z serwerem.');
+            console.error('Error promoting user:', err);
+            showError('Server connection error.');
         }
     });
 
-    // Obsługa Enter w polach input
+    // Handle Enter key in input fields
     adminLoginInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             adminLoginBtn.click();
@@ -969,20 +969,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Dodaj obsługę Escape dla zamykania modali
+    // Add Escape key handling for closing modals
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             hideModals();
         }
     });
 
-    // === INICJALIZACJA ===
+    // === INITIALIZATION ===
     async function init() {
-        await checkUserPermissions(); // Sprawdź uprawnienia użytkownika
+        await checkUserPermissions(); // Check user permissions
         updateMapPosition();
         fetchPoints();
     }
 
-    // Uruchom inicjalizację
+    // Run initialization
     init();
 });
