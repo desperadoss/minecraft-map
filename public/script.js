@@ -553,7 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span>${point.name} (X: ${point.x}, Z: ${point.z})</span>
                 <div>
                     <button class="button accept-btn" data-id="${point._id}">Akceptuj</button>
-                    <button class="button delete-btn" data-id="${point._id}">Usuń</button>
+                    <button class="button reject-btn" data-id="${point._id}">Usuń</button>
                 </div>
             `;
             pendingPointsList.appendChild(li);
@@ -670,3 +670,4 @@ document.addEventListener('DOMContentLoaded', () => {
     updateMapPosition();
     fetchPoints();
 });
+
