@@ -126,10 +126,8 @@ body, html {
     position: absolute;
     top: 50%;
     left: 50%;
-    /* Usunięta transition dla lepszej wydajności */
     transform: translate(-50%, -50%);
     will-change: transform;
-    /* Naprawienie rozmycia mapy */
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
@@ -154,7 +152,6 @@ body, html {
     cursor: pointer;
     z-index: 10;
     transition: opacity 0.2s;
-    /* Centrowanie całego wrappera z ostrym renderowaniem */
     transform: translate(-50%, -50%);
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
@@ -166,17 +163,16 @@ body, html {
 }
 
 .point {
-    width: 30px; /* było 60px -> 30px (połowa) */
-    height: 30px; /* było 60px -> 30px (połowa) */
+    width: 30px;
+    height: 30px;
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-    border: 2.5px solid rgba(255, 255, 255, 0.3); /* było 5px -> 2.5px (połowa) */
+    border: 2.5px solid rgba(255, 255, 255, 0.3);
     transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
     position: relative;
-    margin: 0 auto 10px auto; /* było 20px -> 10px (połowa) */
-    /* Naprawienie rozmycia */
+    margin: 0 auto 10px auto;
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
@@ -191,8 +187,8 @@ body, html {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 10px; /* było 20px -> 10px (połowa) */
-    height: 10px; /* było 20px -> 10px (połowa) */
+    width: 10px;
+    height: 10px;
     background-color: rgba(255, 255, 255, 0.9);
     border-radius: 50%;
     transform: translate3d(-50%, -50%, 0) rotate(45deg);
@@ -234,18 +230,18 @@ body, html {
 
 .point-name {
     position: absolute;
-    top: 37.5px; /* było 75px -> 37.5px (połowa) */
+    top: 37.5px;
     left: 50%;
     transform: translateX(-50%);
     white-space: nowrap;
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 100%);
     color: #fff;
-    padding: 5px 10px; /* było 10px 20px -> 5px 10px (połowa) */
-    border-radius: 5px; /* było 10px -> 5px (połowa) */
-    font-size: 13.75px; /* było 27.5px -> 13.75px (połowa) */
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 13.75px;
     font-weight: 500;
-    border: 1.25px solid rgba(255, 255, 255, 0.1); /* było 2.5px -> 1.25px (połowa) */
-    box-shadow: 0 2.5px 7.5px rgba(0, 0, 0, 0.3); /* było 0 5px 15px -> 0 2.5px 7.5px (połowa) */
+    border: 1.25px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2.5px 7.5px rgba(0, 0, 0, 0.3);
     pointer-events: none;
 }
 
@@ -292,7 +288,6 @@ body, html {
     background-color: #83d47d;
 }
 
-/* POPRAWIONE INPUTY - zapobiegają blokowaniu */
 input[type="text"], input[type="number"] {
     background-color: #3b3d40;
     border: 1px solid #5a5c60;
@@ -350,6 +345,14 @@ input[type="text"]:disabled, input[type="number"]:disabled {
     max-width: 90%;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     color: #c9c9c9;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* Większy modal dla panelu ownera */
+.modal-content.large-modal {
+    width: 500px;
+    max-width: 95%;
 }
 
 .close-button {
@@ -371,11 +374,104 @@ input[type="text"]:disabled, input[type="number"]:disabled {
     margin-top: 0;
 }
 
+.modal-section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #5a5c60;
+}
+
+.modal-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.modal-section h3 {
+    color: #90ee90;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.modal-section h4 {
+    color: #c9c9c9;
+    margin: 15px 0 10px 0;
+    font-size: 1em;
+}
+
+.help-text {
+    color: #9b9b9b;
+    font-size: 0.9em;
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
 .modal-buttons {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
     margin-top: 20px;
+}
+
+/* Style dla uprzywilejowanych sesji */
+.privileged-sessions-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.privileged-sessions-form input {
+    flex-grow: 1;
+}
+
+.privileged-sessions-list {
+    background-color: #212224;
+    border: 1px solid #5a5c60;
+    border-radius: 5px;
+    padding: 15px;
+}
+
+ul#privileged-sessions-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#privileged-sessions-list li {
+    background-color: #3b3d40;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 3px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+#privileged-sessions-list .session-code {
+    color: #90ee90;
+    font-weight: bold;
+}
+
+#privileged-sessions-list .session-date {
+    color: #9b9b9b;
+    font-size: 0.8em;
+}
+
+#privileged-sessions-list .remove-session {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 0.8em;
+}
+
+#privileged-sessions-list .remove-session:hover {
+    background-color: #c0392b;
 }
 
 ul#pending-points-list {
@@ -410,4 +506,22 @@ ul#pending-points-list {
 #admin-login-modal input, #owner-login-modal input {
     width: 100%;
     box-sizing: border-box;
+}
+
+/* Responsive design dla mniejszych ekranów */
+@media (max-width: 768px) {
+    .modal-content.large-modal {
+        width: 90%;
+    }
+    
+    .privileged-sessions-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    #privileged-sessions-list li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
 }
