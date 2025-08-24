@@ -8,18 +8,12 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Poprawiona konfiguracja CORS
-app.use(cors({
-    origin: true,
-    credentials: true,
-    exposedHeaders: ['X-Session-Code']
-}));
-
+app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Połączenie z bazą danych MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/minecraft-map', {
+mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 })
@@ -64,14 +58,10 @@ async function checkAdmin(req, res, next) {
     }
     
     // Sprawdź czy to admin z bazy
-    try {
-        const admin = await Admin.findOne({ sessionCode });
-        if (admin) {
-            req.isAdmin = true;
-            return next();
-        }
-    } catch (err) {
-        console.error('Błąd sprawdzania uprawnień admina:', err);
+    const admin = await Admin.findOne({ sessionCode });
+    if (admin) {
+        req.isAdmin = true;
+        return next();
     }
     
     return res.status(403).json({ message: 'Brak uprawnień admina.' });
@@ -96,12 +86,7 @@ app.get('/api/points/private', async (req, res) => {
         if (!sessionCode) {
             return res.status(401).json({ message: 'Brak kodu sesji.' });
         }
-        const privatePoints = await Point.find({ 
-            $or: [
-                { ownerSessionCode: sessionCode, status: 'private' },
-                { ownerSessionCode: sessionCode, status: 'pending' }
-            ]
-        });
+        const privatePoints = await Point.find({ ownerSessionCode: sessionCode });
         res.json(privatePoints);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -182,16 +167,13 @@ app.delete('/api/points/:id', async (req, res) => {
     }
 });
 
+
 // === Endpointy Admina ===
 
 // POST - Logowanie admina
 app.post('/api/admin/login', async (req, res) => {
     const { adminCode } = req.body;
     const sessionCode = req.header('X-Session-Code');
-    
-    if (!adminCode) {
-        return res.status(400).json({ success: false, message: 'Brak kodu admina.' });
-    }
     
     // Sprawdź czy kod admina jest poprawny
     if (adminCode === process.env.ADMIN_CODE) {
@@ -204,7 +186,6 @@ app.post('/api/admin/login', async (req, res) => {
             }
             res.json({ success: true, message: 'Zalogowano jako admin' });
         } catch (err) {
-            console.error('Błąd zapisywania admina:', err);
             res.status(500).json({ success: false, message: 'Błąd serwera' });
         }
     } else {
@@ -279,10 +260,6 @@ app.post('/api/owner/login', async (req, res) => {
     const { ownerCode } = req.body;
     const sessionCode = req.header('X-Session-Code');
     
-    if (!ownerCode) {
-        return res.status(400).json({ success: false, message: 'Brak kodu ownera.' });
-    }
-    
     // Sprawdź czy kod ownera jest poprawny
     if (ownerCode === process.env.OWNER_CODE) {
         res.json({ success: true, message: 'Zalogowano jako owner' });
@@ -305,11 +282,7 @@ app.put('/api/owner/promote', async (req, res) => {
         await newAdmin.save();
         res.json({ message: 'Użytkownik awansowany na admina.' });
     } catch (err) {
-        if (err.code === 11000) {
-            res.status(400).json({ message: 'Użytkownik jest już adminem.' });
-        } else {
-            res.status(500).json({ message: err.message });
-        }
+        res.status(500).json({ message: err.message });
     }
 });
 
@@ -330,11 +303,10 @@ app.delete('/api/owner/demote', async (req, res) => {
     }
 });
 
-// Obsługa błędów 404
-app.use((req, res) => {
-    res.status(404).json({ message: 'Endpoint nie znaleziony.' });
-});
 
 app.listen(PORT, () => {
     console.log(`Serwer działa na http://localhost:${PORT}`);
+
 });
+
+
