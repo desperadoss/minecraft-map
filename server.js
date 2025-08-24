@@ -172,7 +172,7 @@ app.delete('/api/points/:id', async (req, res) => {
 
 // POST - Logowanie admina
 app.post('/api/admin/login', async (req, res) => {
-    const { adminCode } = req.body;
+    const { code } = req.body;
     const sessionCode = req.header('X-Session-Code');
     
     // Sprawdź czy kod admina jest poprawny
@@ -257,7 +257,7 @@ app.delete('/api/admin/delete/:id', checkAdmin, async (req, res) => {
 
 // POST - Logowanie ownera
 app.post('/api/owner/login', async (req, res) => {
-    const { ownerCode } = req.body;
+    const { code } = req.body;
     const sessionCode = req.header('X-Session-Code');
     
     // Sprawdź czy kod ownera jest poprawny
@@ -308,3 +308,4 @@ app.listen(PORT, () => {
     console.log(`Serwer działa na http://localhost:${PORT}`);
 
 });
+
