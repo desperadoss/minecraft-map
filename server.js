@@ -8,16 +8,19 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Twój kod sesji ownera - ustaw to w .env jako OWNER_SESSION_CODE
+const OWNER_SESSION_CODE = '301263ee-49a9-4575-8c3d-f784bae7b27d';
+
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Serowanie plików statycznych - poprawione ścieżki
+// Serowanie plików statycznych
 app.use(express.static(path.join(__dirname)));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Połączenie z bazą danych MongoDB - usunięcie deprecated opcji
+// Połączenie z bazą danych MongoDB
 const connectDB = async () => {
     try {
         await mongoose.connect(process.env.MONGODB_URI);
@@ -72,6 +75,23 @@ const adminSchema = new mongoose.Schema({
 
 const Admin = mongoose.model('Admin', adminSchema);
 
+// NOWY: Schemat dla uprzywilejowanych kodów sesji
+const privilegedSessionSchema = new mongoose.Schema({
+    sessionCode: {
+        type: String,
+        unique: true,
+        required: true
+    },
+    addedBy: {
+        type: String,
+        required: true // kod sesji ownera który dodał ten kod
+    }
+}, {
+    timestamps: true
+});
+
+const PrivilegedSession = mongoose.model('PrivilegedSession', privilegedSessionSchema);
+
 // Middleware do sprawdzania uprawnień admina
 const checkAdmin = async (req, res, next) => {
     try {
@@ -81,7 +101,7 @@ const checkAdmin = async (req, res, next) => {
         }
         
         // Sprawdź czy to owner
-        if (sessionCode === process.env.OWNER_SESSION_CODE) {
+        if (sessionCode === OWNER_SESSION_CODE) {
             req.isAdmin = true;
             req.isOwner = true;
             return next();
@@ -99,6 +119,16 @@ const checkAdmin = async (req, res, next) => {
         console.error('Błąd sprawdzania uprawnień:', err);
         return res.status(500).json({ message: 'Błąd serwera.' });
     }
+};
+
+// Middleware do sprawdzania uprawnień ownera
+const checkOwner = (req, res, next) => {
+    const sessionCode = req.header('X-Session-Code');
+    if (sessionCode !== OWNER_SESSION_CODE) {
+        return res.status(403).json({ message: 'Brak uprawnień ownera.' });
+    }
+    req.isOwner = true;
+    next();
 };
 
 // === ENDPOINTY API ===
@@ -274,7 +304,7 @@ app.delete('/api/points/:id', async (req, res) => {
 
 // === ENDPOINTY ADMINA ===
 
-// POST - Logowanie admina
+// POST - Logowanie admina (ZMODYFIKOWANE - sprawdza uprzywilejowane sesje)
 app.post('/api/admin/login', async (req, res) => {
     try {
         const { adminCode } = req.body;
@@ -286,6 +316,26 @@ app.post('/api/admin/login', async (req, res) => {
         
         if (!adminCode) {
             return res.status(400).json({ success: false, message: 'Brak kodu admina.' });
+        }
+        
+        // Sprawdź czy to owner - owner może się zawsze zalogować
+        if (sessionCode === OWNER_SESSION_CODE) {
+            if (adminCode === process.env.ADMIN_CODE) {
+                res.json({ success: true, message: 'Zalogowano jako owner/admin' });
+                return;
+            } else {
+                res.status(401).json({ success: false, message: 'Niepoprawny kod admina' });
+                return;
+            }
+        }
+        
+        // NOWE: Sprawdź czy kod sesji jest uprzywilejowany
+        const isPrivileged = await PrivilegedSession.findOne({ sessionCode });
+        if (!isPrivileged) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'Brak uprawnień. Twój kod sesji nie jest uprzywilejowany.' 
+            });
         }
         
         // Sprawdź czy kod admina jest poprawny
@@ -430,6 +480,10 @@ app.post('/api/owner/login', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Brak kodu sesji.' });
         }
         
+        if (sessionCode !== OWNER_SESSION_CODE) {
+            return res.status(403).json({ success: false, message: 'Nieprawidłowy kod sesji ownera.' });
+        }
+        
         if (!ownerCode) {
             return res.status(400).json({ success: false, message: 'Brak kodu ownera.' });
         }
@@ -447,14 +501,9 @@ app.post('/api/owner/login', async (req, res) => {
 });
 
 // PUT - Awansowanie użytkownika na admina (owner)
-app.put('/api/owner/promote', async (req, res) => {
+app.put('/api/owner/promote', checkOwner, async (req, res) => {
     try {
-        const sessionCode = req.header('X-Session-Code');
         const { sessionCode: codeToPromote } = req.body;
-
-        if (sessionCode !== process.env.OWNER_SESSION_CODE) {
-            return res.status(403).json({ message: 'Brak uprawnień ownera.' });
-        }
 
         if (!codeToPromote) {
             return res.status(400).json({ message: 'Kod sesji do awansowania jest wymagany.' });
@@ -475,14 +524,9 @@ app.put('/api/owner/promote', async (req, res) => {
 });
 
 // DELETE - Usunięcie admina (owner)
-app.delete('/api/owner/demote', async (req, res) => {
+app.delete('/api/owner/demote', checkOwner, async (req, res) => {
     try {
-        const sessionCode = req.header('X-Session-Code');
         const { sessionCode: codeToDemote } = req.body;
-
-        if (sessionCode !== process.env.OWNER_SESSION_CODE) {
-            return res.status(403).json({ message: 'Brak uprawnień ownera.' });
-        }
 
         if (!codeToDemote) {
             return res.status(400).json({ message: 'Kod sesji do degradacji jest wymagany.' });
@@ -499,7 +543,81 @@ app.delete('/api/owner/demote', async (req, res) => {
     }
 });
 
-// Obsługa żądań do plików statycznych z lepszym debugowaniem
+// === NOWE ENDPOINTY OWNERA - ZARZĄDZANIE UPRZYWILEJOWANYMI SESJAMI ===
+
+// GET - Pobieranie listy uprzywilejowanych kodów sesji (owner)
+app.get('/api/owner/privileged-sessions', checkOwner, async (req, res) => {
+    try {
+        const privilegedSessions = await PrivilegedSession.find().sort({ createdAt: -1 });
+        res.json(privilegedSessions);
+    } catch (err) {
+        console.error('Błąd pobierania uprzywilejowanych sesji:', err);
+        res.status(500).json({ message: 'Błąd pobierania uprzywilejowanych sesji.' });
+    }
+});
+
+// POST - Dodawanie uprzywilejowanego kodu sesji (owner)
+app.post('/api/owner/add-privileged-session', checkOwner, async (req, res) => {
+    try {
+        const { sessionCode } = req.body;
+        const ownerSessionCode = req.header('X-Session-Code');
+
+        if (!sessionCode) {
+            return res.status(400).json({ message: 'Kod sesji jest wymagany.' });
+        }
+
+        // Sprawdź czy już istnieje
+        const existing = await PrivilegedSession.findOne({ sessionCode });
+        if (existing) {
+            return res.status(400).json({ message: 'Ten kod sesji już jest uprzywilejowany.' });
+        }
+
+        // Nie można dodać kodu ownera do uprzywilejowanych (owner ma zawsze dostęp)
+        if (sessionCode === OWNER_SESSION_CODE) {
+            return res.status(400).json({ message: 'Nie można dodać kodu ownera do listy uprzywilejowanych.' });
+        }
+
+        const newPrivilegedSession = new PrivilegedSession({
+            sessionCode,
+            addedBy: ownerSessionCode
+        });
+
+        await newPrivilegedSession.save();
+        res.status(201).json({
+            message: 'Kod sesji dodany do uprzywilejowanych.',
+            privilegedSession: newPrivilegedSession
+        });
+    } catch (err) {
+        console.error('Błąd dodawania uprzywilejowanej sesji:', err);
+        res.status(500).json({ message: 'Błąd dodawania uprzywilejowanej sesji.' });
+    }
+});
+
+// DELETE - Usuwanie uprzywilejowanego kodu sesji (owner)
+app.delete('/api/owner/remove-privileged-session', checkOwner, async (req, res) => {
+    try {
+        const { sessionCode } = req.body;
+
+        if (!sessionCode) {
+            return res.status(400).json({ message: 'Kod sesji jest wymagany.' });
+        }
+
+        const result = await PrivilegedSession.deleteOne({ sessionCode });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ message: 'Kod sesji nie był uprzywilejowany.' });
+        }
+
+        // Usuń również uprawnienia admina jeśli użytkownik je miał
+        await Admin.deleteOne({ sessionCode });
+
+        res.json({ message: 'Kod sesji usunięty z uprzywilejowanych i zdegradowany z admina.' });
+    } catch (err) {
+        console.error('Błąd usuwania uprzywilejowanej sesji:', err);
+        res.status(500).json({ message: 'Błąd usuwania uprzywilejowanej sesji.' });
+    }
+});
+
+// Obsługa żądań do plików statycznych
 app.get('/', (req, res) => {
     const indexPath = path.join(__dirname, 'index.html');
     console.log('Próba wysłania pliku index.html z ścieżki:', indexPath);
@@ -511,9 +629,8 @@ app.get('/', (req, res) => {
     });
 });
 
-// Catch-all route dla SPA - musi być na końcu
+// Catch-all route dla SPA
 app.get('*', (req, res) => {
-    // Sprawdź czy żądanie nie dotyczy API
     if (req.path.startsWith('/api/')) {
         return res.status(404).json({ message: 'Endpoint nie znaleziony' });
     }
@@ -542,6 +659,7 @@ const startServer = async () => {
         console.log(`Serwer działa na porcie ${PORT}`);
         console.log(`URL: http://localhost:${PORT}`);
         console.log('Aktualne pliki w katalogu:', require('fs').readdirSync(__dirname));
+        console.log(`Owner session code: ${OWNER_SESSION_CODE}`);
     });
 };
 
@@ -549,4 +667,3 @@ startServer().catch(err => {
     console.error('Błąd uruchomienia serwera:', err);
     process.exit(1);
 });
-
