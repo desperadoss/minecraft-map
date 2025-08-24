@@ -136,7 +136,7 @@ body, html {
     height: 5500px;
     user-select: none;
     -webkit-user-drag: none;
-    image-rendering: pixelated;
+    image-rendering: auto;
 }
 
 .point-wrapper {
@@ -337,4 +337,5 @@ ul#pending-points-list {
     box-sizing: border-box;
 
 }
+
 
