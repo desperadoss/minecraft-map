@@ -70,20 +70,36 @@ document.addEventListener('DOMContentLoaded', () => {
     let isUserAdmin = false;
     let isUserOwner = false;
 
-    // === Sprawdzenie czy użytkownik jest ownerem ===
-    async function checkOwnerStatus() {
+    // === Sprawdzenie czy użytkownik jest ownerem i adminem ===
+    async function checkUserPermissions() {
         try {
-            const res = await fetch('/api/owner/check', {
+            // Sprawdź czy jest ownerem
+            const ownerRes = await fetch('/api/owner/check', {
                 headers: { 'X-Session-Code': sessionCode }
             });
-            const data = await res.json();
-            if (data.isOwner) {
+            const ownerData = await ownerRes.json();
+            if (ownerData.isOwner) {
                 isUserOwner = true;
-                isUserAdmin = true;
+                isUserAdmin = true; // Owner ma zawsze uprawnienia admina
                 console.log('Użytkownik jest ownerem');
+                return;
+            }
+
+            // Jeśli nie jest ownerem, sprawdź czy może jest adminem
+            try {
+                const adminRes = await fetch('/api/admin/pending', {
+                    headers: { 'X-Session-Code': sessionCode }
+                });
+                if (adminRes.status === 200) {
+                    isUserAdmin = true;
+                    console.log('Użytkownik jest adminem');
+                }
+            } catch (err) {
+                // Nie jest adminem
+                console.log('Użytkownik nie ma uprawnień admina');
             }
         } catch (err) {
-            console.error('Błąd sprawdzania statusu ownera:', err);
+            console.error('Błąd sprawdzania uprawnień:', err);
         }
     }
 
@@ -594,16 +610,63 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // === NOWE MENU WYBORU DLA OWNERA ===
+    function showOwnerMenu() {
+        hideModals();
+        
+        // Utwórz modal z wyborem
+        const menuModal = document.createElement('div');
+        menuModal.className = 'modal';
+        menuModal.style.display = 'block';
+        menuModal.innerHTML = `
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h2 class="modal-title">Panel Zarządzania</h2>
+                <p>Wybierz, co chcesz zrobić:</p>
+                <div class="modal-buttons">
+                    <button class="button" id="open-admin-panel">Panel Admina</button>
+                    <button class="button" id="open-owner-panel">Panel Ownera</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(menuModal);
+        
+        // Obsługa przycisków
+        menuModal.querySelector('.close-button').addEventListener('click', () => {
+            document.body.removeChild(menuModal);
+        });
+        
+        menuModal.querySelector('#open-admin-panel').addEventListener('click', () => {
+            document.body.removeChild(menuModal);
+            adminPanelModal.style.display = 'block';
+            fetchPendingPoints();
+        });
+        
+        menuModal.querySelector('#open-owner-panel').addEventListener('click', () => {
+            document.body.removeChild(menuModal);
+            ownerPanelModal.style.display = 'block';
+            fetchAllowedSessions();
+        });
+        
+        // Zamknij po kliknięciu w tło
+        menuModal.addEventListener('click', (e) => {
+            if (e.target === menuModal) {
+                document.body.removeChild(menuModal);
+            }
+        });
+    }
+
     // === Panele admina i ownera ===
     sessionCodeDisplay.addEventListener('click', () => {
-        hideModals();
         if (isUserOwner) {
-            ownerPanelModal.style.display = 'block';
-            fetchAllowedSessions(); // Załaduj listę dozwolonych sesji
+            showOwnerMenu(); // Pokaż menu wyboru dla ownera
         } else if (isUserAdmin) {
+            hideModals();
             adminPanelModal.style.display = 'block';
             fetchPendingPoints();
         } else {
+            hideModals();
             adminLoginModal.style.display = 'block';
         }
     });
@@ -915,7 +978,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === INICJALIZACJA ===
     async function init() {
-        await checkOwnerStatus(); // Sprawdź czy użytkownik jest ownerem
+        await checkUserPermissions(); // Sprawdź uprawnienia użytkownika
         updateMapPosition();
         fetchPoints();
     }
