@@ -82,18 +82,6 @@
             </div>
         </div>
     </div>
-    
-    <div id="owner-login-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2 class="modal-title">Zaloguj się jako Owner</h2>
-            <p>Wprowadź kod ownera:</p>
-            <input type="text" id="owner-login-input">
-            <div class="modal-buttons">
-                <button class="button" id="owner-login-btn">Zaloguj</button>
-            </div>
-        </div>
-    </div>
 
     <div id="admin-panel-modal" class="modal">
         <div class="modal-content">
@@ -110,25 +98,23 @@
     </div>
     
     <div id="owner-panel-modal" class="modal">
-        <div class="modal-content large-modal">
+        <div class="modal-content owner-panel">
             <span class="close-button">&times;</span>
             <h2 class="modal-title">Panel Ownera</h2>
             
             <div class="modal-section">
-                <h3>Zarządzanie uprzywilejowanymi kodami sesji</h3>
-                <p class="help-text">Tylko użytkownicy z uprzywilejowanymi kodami sesji mogą próbować logować się jako admin.</p>
+                <h3>Zarządzanie dozwolonymi sesjami</h3>
+                <p>Tylko użytkownicy z kodami sesji z tej listy mogą logować się jako adminzy:</p>
                 
-                <div class="privileged-sessions-form">
-                    <input type="text" id="new-privileged-session" placeholder="Wklej kod sesji użytkownika...">
-                    <button class="button" id="add-privileged-session">Dodaj uprzywilejowany kod</button>
+                <div class="add-session-form">
+                    <input type="text" id="new-session-code" placeholder="Wpisz kod sesji do dodania">
+                    <button class="button" id="add-session-btn">Dodaj sesję</button>
                 </div>
                 
-                <div class="privileged-sessions-list">
-                    <h4>Uprzywilejowane kody sesji:</h4>
-                    <ul id="privileged-sessions-list"></ul>
-                    <div class="modal-buttons">
-                        <button class="button" id="refresh-privileged-sessions">Odśwież listę</button>
-                    </div>
+                <div class="allowed-sessions-list">
+                    <h4>Dozwolone sesje:</h4>
+                    <ul id="allowed-sessions-list"></ul>
+                    <button class="button" id="refresh-sessions">Odśwież listę</button>
                 </div>
             </div>
             
