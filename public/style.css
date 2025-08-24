@@ -36,7 +36,7 @@ body, html {
 }
 
 .main-content {
-    width: 1452px; /* Zwiększona szerokość interfejsu */
+    width: 1452px;
     max-width: 95%; 
     display: flex;
     flex-direction: column;
@@ -126,8 +126,9 @@ body, html {
     position: absolute;
     top: 50%;
     left: 50%;
+    /* Usunięta transition dla lepszej wydajności */
     transform: translate(-50%, -50%);
-    transition: transform 0.1s ease-out;
+    will-change: transform;
 }
 
 #minecraft-map {
@@ -139,35 +140,66 @@ body, html {
     image-rendering: auto;
 }
 
+/* NOWY DESIGN PUNKTÓW */
 .point-wrapper {
     position: absolute;
-    transform: translate(-50%, -50%);
     cursor: pointer;
     z-index: 10;
     transition: opacity 0.2s;
+    /* Centrowanie całego wrappera */
+    transform: translate(-50%, -50%);
 }
 
 .point {
-    width: 52.5px;
-    height: 52.5px;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
     cursor: pointer;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-    border: 3px solid #000;
-    transition: transform 0.1s ease-out;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    position: relative;
+    margin: 0 auto 8px auto;
+}
+
+.point::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.point:hover {
+    transform: rotate(-45deg) scale(1.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 
 .point.private {
-    background-color: #f1c40f;
+    background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+    border-color: rgba(241, 196, 15, 0.5);
 }
 
 .point.public {
-    background-color: #2ecc71;
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    border-color: rgba(46, 204, 113, 0.5);
 }
 
 .point.pending {
-    background-color: #e74c3c;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border-color: rgba(231, 76, 60, 0.5);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); }
+    50% { box-shadow: 0 2px 8px rgba(231, 76, 60, 0.6), 0 0 20px rgba(231, 76, 60, 0.3); }
+    100% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); }
 }
 
 .point-wrapper.hidden {
@@ -176,15 +208,19 @@ body, html {
 
 .point-name {
     position: absolute;
-    bottom: 15px;
+    top: 30px;
     left: 50%;
     transform: translateX(-50%);
     white-space: nowrap;
-    background-color: rgba(0, 0, 0, 0.7);
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 100%);
     color: #fff;
-    padding: 2px 5px;
-    border-radius: 3px;
-    font-size: 1.2em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
 }
 
 .your-points-section {
@@ -230,12 +266,25 @@ body, html {
     background-color: #83d47d;
 }
 
+/* POPRAWIONE INPUTY - zapobiegają blokowaniu */
 input[type="text"], input[type="number"] {
     background-color: #3b3d40;
     border: 1px solid #5a5c60;
     color: #c9c9c9;
     padding: 8px;
     border-radius: 3px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+input[type="text"]:focus, input[type="number"]:focus {
+    border-color: #90ee90;
+    background-color: #444548;
+}
+
+input[type="text"]:disabled, input[type="number"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .session-code-display {
@@ -335,7 +384,4 @@ ul#pending-points-list {
 #admin-login-modal input, #owner-login-modal input {
     width: 100%;
     box-sizing: border-box;
-
 }
-
-
