@@ -44,15 +44,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const MAP_X_RANGE = 4200;
     const MAP_Z_RANGE = 2750;
     
-    // Zmienne dla zoom i pozycji
-    let currentScale = 1; // Zaczynamy od scale 1 zamiast 0.18
+    let currentScale = 0.18;
     let offsetX = 0;
     let offsetY = 0;
     let isDragging = false;
     let startX, startY;
     let lastMouseX = 0;
     let lastMouseY = 0;
-    let initialScaleSet = false; // Flaga do ustawienia początkowego zoom
     
     let isShowingPrivate = true;
     let isShowingPublic = true;
@@ -69,6 +67,84 @@ document.addEventListener('DOMContentLoaded', () => {
     let isUserAdmin = false;
     let isUserOwner = false;
 
+    // === System powiadomień ===
+    function createNotificationContainer() {
+        const container = document.createElement('div');
+        container.id = 'notification-container';
+        container.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 350px;
+        `;
+        document.body.appendChild(container);
+        return container;
+    }
+
+    function showNotification(message, type = 'info') {
+        let container = document.getElementById('notification-container');
+        if (!container) {
+            container = createNotificationContainer();
+        }
+
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            background: ${type === 'error' ? '#e74c3c' : type === 'success' ? '#27ae60' : '#3498db'};
+            color: white;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 14px;
+            line-height: 1.4;
+            animation: slideIn 0.3s ease-out;
+            cursor: pointer;
+            word-wrap: break-word;
+        `;
+
+        // Dodaj style animacji jeśli jeszcze nie istnieją
+        if (!document.getElementById('notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'notification-styles';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        notification.textContent = message;
+        container.appendChild(notification);
+
+        // Kliknij aby zamknąć
+        notification.addEventListener('click', () => {
+            removeNotification(notification);
+        });
+
+        // Auto-usuń po 5 sekundach
+        setTimeout(() => {
+            if (notification.parentNode) {
+                removeNotification(notification);
+            }
+        }, 5000);
+    }
+
+    function removeNotification(notification) {
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }
+
     // === Funkcje pomocnicze ===
     function mcToPx(x, z) {
         const pxX = (x + MAP_X_RANGE) / (MAP_X_RANGE * 2) * MAP_WIDTH_PX;
@@ -80,25 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const mcX = (pxX / MAP_WIDTH_PX * (MAP_X_RANGE * 2)) - MAP_X_RANGE;
         const mcZ = (pxZ / MAP_HEIGHT_PX * (MAP_Z_RANGE * 2)) - MAP_Z_RANGE;
         return { x: Math.round(mcX), z: Math.round(mcZ) };
-    }
-
-    // Funkcja do obliczenia początkowego zoom aby zmieścić całą mapę
-    function calculateInitialScale() {
-        const containerRect = mapContainer.parentElement.getBoundingClientRect();
-        const scaleX = containerRect.width / MAP_WIDTH_PX;
-        const scaleY = containerRect.height / MAP_HEIGHT_PX;
-        return Math.min(scaleX, scaleY) * 0.95; // 95% żeby był mały margines
-    }
-
-    // Funkcja do ustawienia początkowego widoku
-    function setInitialView() {
-        if (!initialScaleSet) {
-            currentScale = calculateInitialScale();
-            offsetX = 0;
-            offsetY = 0;
-            initialScaleSet = true;
-            updateMapPosition();
-        }
     }
 
     function updateMapPosition() {
@@ -115,12 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         offsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, offsetY));
 
         mapContainer.style.transform = `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px) scale(${currentScale})`;
-        
-        // Lepsze obliczanie procentów zoom - od minimalnego do maksymalnego
-        const minScale = calculateInitialScale();
-        const maxScale = 5;
-        const zoomPercent = Math.round(((currentScale - minScale) / (maxScale - minScale)) * 100);
-        zoomInfo.textContent = `Zoom: ${Math.max(0, zoomPercent)}%`;
+        zoomInfo.textContent = `Zoom: ${Math.round((currentScale - 0.18) * 100 / 0.82)}%`;
         
         updateCoordinatesFromMouse(lastMouseX, lastMouseY);
         
@@ -164,12 +216,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showError(message) {
         console.error(message);
-        alert(message);
+        showNotification(message, 'error');
     }
 
     function showSuccess(message) {
         console.log(message);
-        alert(message);
+        showNotification(message, 'success');
     }
 
     function clearInputs() {
@@ -317,13 +369,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     zoomOutBtn.addEventListener('click', () => {
-        const minScale = calculateInitialScale();
+        const containerRect = mapContainer.parentElement.getBoundingClientRect();
+        const minScale = Math.max(containerRect.width / MAP_WIDTH_PX, containerRect.height / MAP_HEIGHT_PX);
         currentScale = Math.max(minScale, currentScale - 0.2);
         updateMapPosition();
     });
 
     resetViewBtn.addEventListener('click', () => {
-        currentScale = calculateInitialScale();
+        currentScale = 1;
         offsetX = 0;
         offsetY = 0;
         updateMapPosition();
@@ -760,24 +813,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Obsługa resize okna - przelicz zoom przy zmianie rozmiaru
-    window.addEventListener('resize', () => {
-        if (initialScaleSet) {
-            // Przelicz minimalny zoom po resize
-            updateMapPosition();
-        }
-    });
-
-    // === Inicjalizacja ===
-    // Ustaw początkowy widok po załadowaniu obrazka
-    mapImage.addEventListener('load', () => {
-        setInitialView();
-        fetchPoints();
-    });
-
-    // Jeśli obrazek już się załadował
-    if (mapImage.complete) {
-        setInitialView();
-        fetchPoints();
-    }
+    // Inicjalizacja
+    updateMapPosition();
+    fetchPoints();
 });
