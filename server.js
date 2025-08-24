@@ -50,12 +50,21 @@ async function checkAdmin(req, res, next) {
     if (!sessionCode) {
         return res.status(401).json({ message: 'Brak kodu sesji.' });
     }
-    const admin = await Admin.findOne({ sessionCode });
-    if (!admin && sessionCode !== process.env.OWNER_SESSION_CODE) {
-        return res.status(403).json({ message: 'Brak uprawnień admina.' });
+    
+    // Sprawdź czy to owner
+    if (sessionCode === process.env.OWNER_SESSION_CODE) {
+        req.isAdmin = true;
+        return next();
     }
-    req.isAdmin = !!admin || sessionCode === process.env.OWNER_SESSION_CODE;
-    next();
+    
+    // Sprawdź czy to admin z bazy
+    const admin = await Admin.findOne({ sessionCode });
+    if (admin) {
+        req.isAdmin = true;
+        return next();
+    }
+    
+    return res.status(403).json({ message: 'Brak uprawnień admina.' });
 }
 
 // === Endpointy API ===
@@ -161,6 +170,29 @@ app.delete('/api/points/:id', async (req, res) => {
 
 // === Endpointy Admina ===
 
+// POST - Logowanie admina
+app.post('/api/admin/login', async (req, res) => {
+    const { adminCode } = req.body;
+    const sessionCode = req.header('X-Session-Code');
+    
+    // Sprawdź czy kod admina jest poprawny
+    if (adminCode === process.env.ADMIN_CODE) {
+        // Zapisz sessionCode jako admina w bazie
+        try {
+            const existingAdmin = await Admin.findOne({ sessionCode });
+            if (!existingAdmin) {
+                const newAdmin = new Admin({ sessionCode });
+                await newAdmin.save();
+            }
+            res.json({ success: true, message: 'Zalogowano jako admin' });
+        } catch (err) {
+            res.status(500).json({ success: false, message: 'Błąd serwera' });
+        }
+    } else {
+        res.status(401).json({ success: false, message: 'Niepoprawny kod admina' });
+    }
+});
+
 // GET - Pobieranie punktów do akceptacji (admin)
 app.get('/api/admin/pending', checkAdmin, async (req, res) => {
     try {
@@ -223,6 +255,19 @@ app.delete('/api/admin/delete/:id', checkAdmin, async (req, res) => {
 
 // === Endpointy Ownera ===
 
+// POST - Logowanie ownera
+app.post('/api/owner/login', async (req, res) => {
+    const { ownerCode } = req.body;
+    const sessionCode = req.header('X-Session-Code');
+    
+    // Sprawdź czy kod ownera jest poprawny
+    if (ownerCode === process.env.OWNER_CODE) {
+        res.json({ success: true, message: 'Zalogowano jako owner' });
+    } else {
+        res.status(401).json({ success: false, message: 'Niepoprawny kod ownera' });
+    }
+});
+
 // PUT - Awansowanie użytkownika na admina (owner)
 app.put('/api/owner/promote', async (req, res) => {
     const sessionCode = req.header('X-Session-Code');
@@ -261,4 +306,5 @@ app.delete('/api/owner/demote', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Serwer działa na http://localhost:${PORT}`);
+
 });
