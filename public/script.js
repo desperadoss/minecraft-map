@@ -418,47 +418,92 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    adminLoginBtn.addEventListener('click', async () => {
-        const code = adminLoginInput.value;
-        const res = await fetch('/api/admin/pending', {
-            headers: { 'X-Session-Code': code }
+adminLoginBtn.addEventListener('click', async () => {
+    const code = adminLoginInput.value;
+    try {
+        const res = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Session-Code': sessionCode
+            },
+            body: JSON.stringify({ adminCode: code })
         });
+        
         if (res.ok) {
-            isUserAdmin = true;
-            hideModals();
-            adminPanelModal.style.display = 'block';
-            fetchPendingPoints();
-            alert('Pomyślnie zalogowano jako admin.');
+            const data = await res.json();
+            if (data.success) {
+                isUserAdmin = true;
+                hideModals();
+                adminPanelModal.style.display = 'block';
+                fetchPendingPoints();
+                alert('Pomyślnie zalogowano jako admin.');
+            } else {
+                alert(data.message || 'Niepoprawny kod admina.');
+            }
         } else {
-            alert('Niepoprawny kod admina.');
+            alert('Błąd logowania.');
         }
-    });
-
-    ownerLoginBtn.addEventListener('click', async () => {
-        const code = ownerLoginInput.value;
-        const res = await fetch('/api/admin/pending', {
-            headers: { 'X-Session-Code': code }
-        });
-        if (res.ok) {
-            isUserOwner = true;
-            isUserAdmin = true;
-            hideModals();
-            ownerPanelModal.style.display = 'block';
-            alert('Pomyślnie zalogowano jako owner.');
-        } else {
-            alert('Niepoprawny kod ownera.');
-        }
-    });
-
-    async function fetchPendingPoints() {
-        try {
-            const res = await fetch('/api/admin/pending', { headers: { 'X-Session-Code': sessionCode } });
-            const pendingPoints = await res.json();
-            renderPendingPoints(pendingPoints);
-        } catch (err) {
-            console.error('Błąd pobierania oczekujących punktów:', err);
-        }
+    } catch (err) {
+        console.error('Błąd logowania admina:', err);
+        alert('Błąd połączenia z serwerem.');
     }
+});
+
+ownerLoginBtn.addEventListener('click', async () => {
+    const code = ownerLoginInput.value;
+    try {
+        const res = await fetch('/api/owner/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Session-Code': sessionCode
+            },
+            body: JSON.stringify({ ownerCode: code })
+        });
+        
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+                isUserOwner = true;
+                isUserAdmin = true;
+                hideModals();
+                ownerPanelModal.style.display = 'block';
+                alert('Pomyślnie zalogowano jako owner.');
+            } else {
+                alert(data.message || 'Niepoprawny kod ownera.');
+            }
+        } else {
+            alert('Błąd logowania.');
+        }
+    } catch (err) {
+        console.error('Błąd logowania ownera:', err);
+        alert('Błąd połączenia z serwerem.');
+    }
+});
+
+async function fetchPendingPoints() {
+    try {
+        const res = await fetch('/api/admin/pending', {
+            headers: { 'X-Session-Code': sessionCode }
+        });
+        
+        if (res.status === 403) {
+            alert('Brak uprawnień admina.');
+            return;
+        }
+        
+        if (!res.ok) {
+            throw new Error(`Błąd HTTP: ${res.status}`);
+        }
+        
+        const pendingPoints = await res.json();
+        renderPendingPoints(pendingPoints);
+    } catch (err) {
+        console.error('Błąd pobierania oczekujących punktów:', err);
+        pendingPointsList.innerHTML = '<li>Błąd połączenia z serwerem</li>';
+    }
+}
 
     function renderPendingPoints(points) {
         pendingPointsList.innerHTML = '';
@@ -521,5 +566,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicjalizacja
     fetchPoints();
 });
+
 
 
