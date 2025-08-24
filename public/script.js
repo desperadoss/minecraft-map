@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // === Konfiguracja i zmienne globalne ===
     const MAP_WIDTH_PX = 10000;
     const MAP_HEIGHT_PX = 5500;
-    const MAP_X_RANGE = 4600;  // Zmienione z 4000 na 4600 (o 30% większe)
+    const MAP_X_RANGE = 4200;  // Zmienione z 4000 na 4600 (o 30% większe)
     const MAP_Z_RANGE = 2750;
     
     let currentScale = 1;
@@ -521,3 +521,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicjalizacja
     fetchPoints();
 });
+
