@@ -55,9 +55,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let isShowingPrivate = true;
     let isShowingPublic = true;
 
+    // Funkcja do generowania UUID bez zewnętrznej biblioteki
+    function generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
     let sessionCode = localStorage.getItem('sessionCode');
     if (!sessionCode) {
-        sessionCode = uuid.v4();
+        sessionCode = generateUUID();
         localStorage.setItem('sessionCode', sessionCode);
     }
     sessionCodeDisplay.textContent = `Kod sesji: ${sessionCode}`;
@@ -257,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
         filterPoints();
     });
 
-    // === Logika formularza i modalów ===
+    // === Logika formularza i modali ===
     addPointBtn.addEventListener('click', async () => {
         const name = nameInput.value;
         const x = xInput.value;
@@ -418,22 +427,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-adminLoginBtn.addEventListener('click', async () => {
-    const code = adminLoginInput.value;
-    try {
-        const res = await fetch('/api/admin/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Session-Code': sessionCode
-            },
-            body: JSON.stringify({ adminCode: code })
-        });
+    adminLoginBtn.addEventListener('click', async () => {
+        const code = adminLoginInput.value.trim();
         
-        if (res.ok) {
+        if (!code) {
+            alert('Wprowadź kod admina.');
+            return;
+        }
+        
+        try {
+            const res = await fetch('/api/admin/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Session-Code': sessionCode
+                },
+                body: JSON.stringify({ adminCode: code })
+            });
+            
             const data = await res.json();
-            if (data.success) {
+            
+            if (res.ok && data.success) {
                 isUserAdmin = true;
+                adminLoginInput.value = '';
                 hideModals();
                 adminPanelModal.style.display = 'block';
                 fetchPendingPoints();
@@ -441,69 +457,70 @@ adminLoginBtn.addEventListener('click', async () => {
             } else {
                 alert(data.message || 'Niepoprawny kod admina.');
             }
-        } else {
-            alert('Błąd logowania.');
+        } catch (err) {
+            console.error('Błąd logowania admina:', err);
+            alert('Błąd połączenia z serwerem.');
         }
-    } catch (err) {
-        console.error('Błąd logowania admina:', err);
-        alert('Błąd połączenia z serwerem.');
-    }
-});
+    });
 
-ownerLoginBtn.addEventListener('click', async () => {
-    const code = ownerLoginInput.value;
-    try {
-        const res = await fetch('/api/owner/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Session-Code': sessionCode
-            },
-            body: JSON.stringify({ ownerCode: code })
-        });
+    ownerLoginBtn.addEventListener('click', async () => {
+        const code = ownerLoginInput.value.trim();
         
-        if (res.ok) {
+        if (!code) {
+            alert('Wprowadź kod ownera.');
+            return;
+        }
+        
+        try {
+            const res = await fetch('/api/owner/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Session-Code': sessionCode
+                },
+                body: JSON.stringify({ ownerCode: code })
+            });
+            
             const data = await res.json();
-            if (data.success) {
+            
+            if (res.ok && data.success) {
                 isUserOwner = true;
                 isUserAdmin = true;
+                ownerLoginInput.value = '';
                 hideModals();
                 ownerPanelModal.style.display = 'block';
                 alert('Pomyślnie zalogowano jako owner.');
             } else {
                 alert(data.message || 'Niepoprawny kod ownera.');
             }
-        } else {
-            alert('Błąd logowania.');
+        } catch (err) {
+            console.error('Błąd logowania ownera:', err);
+            alert('Błąd połączenia z serwerem.');
         }
-    } catch (err) {
-        console.error('Błąd logowania ownera:', err);
-        alert('Błąd połączenia z serwerem.');
-    }
-});
+    });
 
-async function fetchPendingPoints() {
-    try {
-        const res = await fetch('/api/admin/pending', {
-            headers: { 'X-Session-Code': sessionCode }
-        });
-        
-        if (res.status === 403) {
-            alert('Brak uprawnień admina.');
-            return;
+    async function fetchPendingPoints() {
+        try {
+            const res = await fetch('/api/admin/pending', {
+                headers: { 'X-Session-Code': sessionCode }
+            });
+            
+            if (res.status === 403) {
+                alert('Brak uprawnień admina.');
+                return;
+            }
+            
+            if (!res.ok) {
+                throw new Error(`Błąd HTTP: ${res.status}`);
+            }
+            
+            const pendingPoints = await res.json();
+            renderPendingPoints(pendingPoints);
+        } catch (err) {
+            console.error('Błąd pobierania oczekujących punktów:', err);
+            pendingPointsList.innerHTML = '<li>Błąd połączenia z serwerem</li>';
         }
-        
-        if (!res.ok) {
-            throw new Error(`Błąd HTTP: ${res.status}`);
-        }
-        
-        const pendingPoints = await res.json();
-        renderPendingPoints(pendingPoints);
-    } catch (err) {
-        console.error('Błąd pobierania oczekujących punktów:', err);
-        pendingPointsList.innerHTML = '<li>Błąd połączenia z serwerem</li>';
     }
-}
 
     function renderPendingPoints(points) {
         pendingPointsList.innerHTML = '';
@@ -527,24 +544,48 @@ async function fetchPendingPoints() {
         document.querySelectorAll('.accept-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const id = e.target.dataset.id;
-                await fetch(`/api/admin/accept/${id}`, { method: 'PUT', headers: { 'X-Session-Code': sessionCode } });
-                fetchPendingPoints();
-                fetchPoints();
+                try {
+                    await fetch(`/api/admin/accept/${id}`, { 
+                        method: 'PUT', 
+                        headers: { 'X-Session-Code': sessionCode } 
+                    });
+                    fetchPendingPoints();
+                    fetchPoints();
+                } catch (err) {
+                    console.error('Błąd akceptacji punktu:', err);
+                    alert('Błąd akceptacji punktu.');
+                }
             });
         });
 
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const id = e.target.dataset.id;
-                await fetch(`/api/admin/delete/${id}`, { method: 'DELETE', headers: { 'X-Session-Code': sessionCode } });
-                fetchPendingPoints();
-                fetchPoints();
+                try {
+                    await fetch(`/api/admin/delete/${id}`, { 
+                        method: 'DELETE', 
+                        headers: { 'X-Session-Code': sessionCode } 
+                    });
+                    fetchPendingPoints();
+                    fetchPoints();
+                } catch (err) {
+                    console.error('Błąd usuwania punktu:', err);
+                    alert('Błąd usuwania punktu.');
+                }
             });
         });
     }
 
+    // Dodaj obsługę przycisku odświeżania
+    if (refreshPendingBtn) {
+        refreshPendingBtn.addEventListener('click', () => {
+            fetchPendingPoints();
+        });
+    }
+
     promoteUserBtn.addEventListener('click', async () => {
-        const code = promoteSessionCodeInput.value;
+        const code = promoteSessionCodeInput.value.trim();
+        
         if (!code) {
             alert('Wpisz kod sesji użytkownika do awansowania.');
             return;
@@ -553,21 +594,45 @@ async function fetchPendingPoints() {
         try {
             const res = await fetch('/api/owner/promote', {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'X-Session-Code': sessionCode },
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-Session-Code': sessionCode 
+                },
                 body: JSON.stringify({ sessionCode: code })
             });
+            
             const result = await res.json();
             alert(result.message);
+            
+            if (res.ok) {
+                promoteSessionCodeInput.value = '';
+            }
         } catch (err) {
             console.error('Błąd awansowania użytkownika:', err);
+            alert('Błąd połączenia z serwerem.');
+        }
+    });
+
+    // Dodaj obsługę klawisza Enter w polach logowania
+    adminLoginInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            adminLoginBtn.click();
+        }
+    });
+
+    ownerLoginInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            ownerLoginBtn.click();
+        }
+    });
+
+    // Zamykanie modali po kliknięciu w tło
+    window.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal')) {
+            hideModals();
         }
     });
 
     // Inicjalizacja
     fetchPoints();
 });
-
-
-
-
-
