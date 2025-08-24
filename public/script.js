@@ -540,75 +540,77 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function renderPendingPoints(points) {
-        pendingPointsList.innerHTML = '';
-        if (points.length === 0) {
-            pendingPointsList.innerHTML = '<li>Brak oczekujących punktów.</li>';
-            return;
-        }
-
-        points.forEach(point => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-                <span>${point.name} (X: ${point.x}, Z: ${point.z})</span>
-                <div>
-                    <button class="button accept-btn" data-id="${point._id}">Akceptuj</button>
-                    <button class="button reject-btn" data-id="${point._id}">Usuń</button>
-                </div>
-            `;
-            pendingPointsList.appendChild(li);
-        });
-
-        document.querySelectorAll('.accept-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const id = e.target.dataset.id;
-                try {
-                    const res = await fetch(`/api/admin/accept/${id}`, { 
-                        method: 'PUT', 
-                        headers: { 'X-Session-Code': sessionCode } 
-                    });
-                    if (res.ok) {
-                        fetchPendingPoints();
-                        fetchPoints();
-                        showSuccess('Punkt zaakceptowany.');
-                    } else {
-                        const errorData = await res.json();
-                        showError(errorData.message || 'Błąd akceptacji punktu.');
-                    }
-                } catch (err) {
-                    console.error('Błąd akceptacji:', err);
-                    showError('Błąd połączenia z serwerem.');
-                }
-            });
-        });
-
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                if (!confirm('Czy na pewno chcesz usunąć ten punkt?')) {
-                    return;
-                }
-                
-                const id = e.target.dataset.id;
-                try {
-                    const res = await fetch(`/api/admin/delete/${id}`, { 
-                        method: 'DELETE', 
-                        headers: { 'X-Session-Code': sessionCode } 
-                    });
-                    if (res.ok) {
-                        fetchPendingPoints();
-                        fetchPoints();
-                        showSuccess('Punkt usunięty.');
-                    } else {
-                        const errorData = await res.json();
-                        showError(errorData.message || 'Błąd usuwania punktu.');
-                    }
-                } catch (err) {
-                    console.error('Błąd usuwania:', err);
-                    showError('Błąd połączenia z serwerem.');
-                }
-            });
-        });
+function renderPendingPoints(points) {
+    pendingPointsList.innerHTML = '';
+    if (points.length === 0) {
+        pendingPointsList.innerHTML = '<li>Brak oczekujących punktów.</li>';
+        return;
     }
+
+    points.forEach(point => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <span>${point.name} (X: ${point.x}, Z: ${point.z})</span>
+            <div>
+                <button class="button accept-btn" data-id="${point._id}">Akceptuj</button>
+                <button class="button reject-btn" data-id="${point._id}">Odrzuć</button>
+            </div>
+        `;
+        pendingPointsList.appendChild(li);
+    });
+
+    // Obsługa przycisków "Akceptuj"
+    document.querySelectorAll('.accept-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const id = e.target.dataset.id;
+            try {
+                const res = await fetch(`/api/admin/accept/${id}`, { 
+                    method: 'PUT', 
+                    headers: { 'X-Session-Code': sessionCode } 
+                });
+                if (res.ok) {
+                    fetchPendingPoints();
+                    fetchPoints();
+                    showSuccess('Punkt zaakceptowany.');
+                } else {
+                    const errorData = await res.json();
+                    showError(errorData.message || 'Błąd akceptacji punktu.');
+                }
+            } catch (err) {
+                console.error('Błąd akceptacji:', err);
+                showError('Błąd połączenia z serwerem.');
+            }
+        });
+    });
+
+    // Obsługa przycisków "Odrzuć"
+    document.querySelectorAll('.reject-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            if (!confirm('Czy na pewno chcesz odrzucić ten punkt? Zostanie przywrócony jako prywatny.')) {
+                return;
+            }
+            
+            const id = e.target.dataset.id;
+            try {
+                const res = await fetch(`/api/admin/reject/${id}`, { 
+                    method: 'PUT', 
+                    headers: { 'X-Session-Code': sessionCode } 
+                });
+                if (res.ok) {
+                    fetchPendingPoints();
+                    fetchPoints();
+                    showSuccess('Punkt odrzucony - przywrócony jako prywatny.');
+                } else {
+                    const errorData = await res.json();
+                    showError(errorData.message || 'Błąd odrzucenia punktu.');
+                }
+            } catch (err) {
+                console.error('Błąd odrzucenia:', err);
+                showError('Błąd połączenia z serwerem.');
+            }
+        });
+    });
+}
 
     promoteUserBtn.addEventListener('click', async () => {
         const code = promoteSessionCodeInput.value.trim();
@@ -670,4 +672,5 @@ document.addEventListener('DOMContentLoaded', () => {
     updateMapPosition();
     fetchPoints();
 });
+
 
