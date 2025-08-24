@@ -288,6 +288,7 @@ body, html {
     background-color: #83d47d;
 }
 
+/* POPRAWIONE INPUTY - zapobiegają blokowaniu */
 input[type="text"], input[type="number"] {
     background-color: #3b3d40;
     border: 1px solid #5a5c60;
@@ -345,14 +346,14 @@ input[type="text"]:disabled, input[type="number"]:disabled {
     max-width: 90%;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     color: #c9c9c9;
-    max-height: 80vh;
-    overflow-y: auto;
 }
 
-/* Większy modal dla panelu ownera */
-.modal-content.large-modal {
+/* NOWE STYLE DLA PANELU OWNERA */
+.modal-content.owner-panel {
     width: 500px;
     max-width: 95%;
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 .close-button {
@@ -375,7 +376,7 @@ input[type="text"]:disabled, input[type="number"]:disabled {
 }
 
 .modal-section {
-    margin-bottom: 30px;
+    margin-bottom: 25px;
     padding-bottom: 20px;
     border-bottom: 1px solid #5a5c60;
 }
@@ -388,20 +389,85 @@ input[type="text"]:disabled, input[type="number"]:disabled {
 .modal-section h3 {
     color: #90ee90;
     margin-top: 0;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
+    font-size: 1.1em;
 }
 
 .modal-section h4 {
     color: #c9c9c9;
-    margin: 15px 0 10px 0;
+    margin-top: 15px;
+    margin-bottom: 10px;
     font-size: 1em;
 }
 
-.help-text {
-    color: #9b9b9b;
-    font-size: 0.9em;
+.add-session-form {
+    display: flex;
+    gap: 10px;
     margin-bottom: 15px;
-    line-height: 1.4;
+}
+
+.add-session-form input {
+    flex-grow: 1;
+}
+
+.allowed-sessions-list {
+    background-color: #212224;
+    border: 1px solid #5a5c60;
+    border-radius: 5px;
+    padding: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#allowed-sessions-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+#allowed-sessions-list li {
+    margin-bottom: 10px;
+}
+
+.session-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #2e3034;
+    padding: 8px 12px;
+    border-radius: 3px;
+    border: 1px solid #444548;
+}
+
+.session-code {
+    font-family: monospace;
+    color: #90ee90;
+    font-weight: bold;
+    flex-grow: 1;
+    margin-right: 10px;
+    word-break: break-all;
+}
+
+.session-date {
+    color: #9b9b9b;
+    font-size: 0.8em;
+    margin-right: 10px;
+    white-space: nowrap;
+}
+
+.remove-session-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: background-color 0.2s;
+}
+
+.remove-session-btn:hover {
+    background-color: #c0392b;
 }
 
 .modal-buttons {
@@ -409,69 +475,6 @@ input[type="text"]:disabled, input[type="number"]:disabled {
     justify-content: flex-end;
     gap: 10px;
     margin-top: 20px;
-}
-
-/* Style dla uprzywilejowanych sesji */
-.privileged-sessions-form {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    align-items: center;
-}
-
-.privileged-sessions-form input {
-    flex-grow: 1;
-}
-
-.privileged-sessions-list {
-    background-color: #212224;
-    border: 1px solid #5a5c60;
-    border-radius: 5px;
-    padding: 15px;
-}
-
-ul#privileged-sessions-list {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-#privileged-sessions-list li {
-    background-color: #3b3d40;
-    padding: 10px;
-    margin-bottom: 8px;
-    border-radius: 3px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-family: monospace;
-    font-size: 0.9em;
-}
-
-#privileged-sessions-list .session-code {
-    color: #90ee90;
-    font-weight: bold;
-}
-
-#privileged-sessions-list .session-date {
-    color: #9b9b9b;
-    font-size: 0.8em;
-}
-
-#privileged-sessions-list .remove-session {
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-    border-radius: 3px;
-    font-size: 0.8em;
-}
-
-#privileged-sessions-list .remove-session:hover {
-    background-color: #c0392b;
 }
 
 ul#pending-points-list {
@@ -508,20 +511,34 @@ ul#pending-points-list {
     box-sizing: border-box;
 }
 
-/* Responsive design dla mniejszych ekranów */
+/* RESPONSYWNOŚĆ */
 @media (max-width: 768px) {
-    .modal-content.large-modal {
-        width: 90%;
+    .modal-content.owner-panel {
+        width: 95%;
+        padding: 15px;
     }
     
-    .privileged-sessions-form {
+    .add-session-form {
+        flex-direction: column;
+    }
+    
+    .session-item {
         flex-direction: column;
         align-items: stretch;
+        gap: 8px;
     }
     
-    #privileged-sessions-list li {
+    .session-date {
+        white-space: normal;
+        margin-right: 0;
+    }
+    
+    .add-point-form-inline {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+        gap: 10px;
+    }
+    
+    .main-content {
+        padding: 10px;
     }
 }
