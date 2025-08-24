@@ -140,7 +140,7 @@ body, html {
     image-rendering: auto;
 }
 
-/* NOWY DESIGN PUNKTÓW */
+/* PUNKTY - ZWIĘKSZONE O 2.5X */
 .point-wrapper {
     position: absolute;
     cursor: pointer;
@@ -151,16 +151,16 @@ body, html {
 }
 
 .point {
-    width: 24px;
-    height: 24px;
+    width: 60px; /* było 24px -> 24 * 2.5 = 60px */
+    height: 60px; /* było 24px -> 24 * 2.5 = 60px */
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 5px solid rgba(255, 255, 255, 0.3); /* było 2px -> 2 * 2.5 = 5px */
     transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
     position: relative;
-    margin: 0 auto 8px auto;
+    margin: 0 auto 20px auto; /* było 8px -> 8 * 2.5 = 20px */
 }
 
 .point::before {
@@ -168,8 +168,8 @@ body, html {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 8px;
-    height: 8px;
+    width: 20px; /* było 8px -> 8 * 2.5 = 20px */
+    height: 20px; /* było 8px -> 8 * 2.5 = 20px */
     background-color: rgba(255, 255, 255, 0.9);
     border-radius: 50%;
     transform: translate(-50%, -50%) rotate(45deg);
@@ -208,18 +208,18 @@ body, html {
 
 .point-name {
     position: absolute;
-    top: 30px;
+    top: 75px; /* było 30px -> 30 * 2.5 = 75px */
     left: 50%;
     transform: translateX(-50%);
     white-space: nowrap;
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 100%);
     color: #fff;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 11px;
+    padding: 10px 20px; /* było 4px 8px -> 4*2.5=10px, 8*2.5=20px */
+    border-radius: 10px; /* było 4px -> 4 * 2.5 = 10px */
+    font-size: 27.5px; /* było 11px -> 11 * 2.5 = 27.5px */
     font-weight: 500;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    border: 2.5px solid rgba(255, 255, 255, 0.1); /* było 1px -> 1 * 2.5 = 2.5px */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); /* było 0 2px 6px -> 2*2.5=5px, 6*2.5=15px */
     pointer-events: none;
 }
 
