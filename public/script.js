@@ -54,6 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let isShowingPrivate = true;
     let isShowingPublic = true;
+    let isThrottling = false;
+    let mouseMoveThrottle = null;
 
     let sessionCode = localStorage.getItem('sessionCode');
     if (!sessionCode) {
@@ -79,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateMapPosition() {
+        if (isThrottling) return;
+        
         const containerRect = mapContainer.parentElement.getBoundingClientRect();
         const scaledWidth = MAP_WIDTH_PX * currentScale;
         const scaledHeight = MAP_HEIGHT_PX * currentScale;
@@ -93,6 +97,12 @@ document.addEventListener('DOMContentLoaded', () => {
         zoomInfo.textContent = `Zoom: ${Math.round((currentScale - 0.18) * 100 / 0.82)}%`;
         
         updateCoordinatesFromMouse(lastMouseX, lastMouseY);
+        
+        // Throttling dla lepszej wydajności
+        isThrottling = true;
+        requestAnimationFrame(() => {
+            isThrottling = false;
+        });
     }
 
     function updateCoordinatesFromMouse(clientX, clientY) {
@@ -114,6 +124,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function hideModals() {
         const modals = document.querySelectorAll('.modal');
         modals.forEach(modal => modal.style.display = 'none');
+        
+        // Wyczyść wszystkie inputy w modalach
+        document.querySelectorAll('.modal input').forEach(input => {
+            if (input.type === 'text' || input.type === 'password') {
+                setTimeout(() => {
+                    input.value = '';
+                    input.blur();
+                }, 100);
+            }
+        });
     }
 
     function showError(message) {
@@ -124,6 +144,27 @@ document.addEventListener('DOMContentLoaded', () => {
     function showSuccess(message) {
         console.log(message);
         alert(message);
+    }
+
+    function clearInputs() {
+        try {
+            nameInput.value = '';
+            xInput.value = '';
+            zInput.value = '';
+            
+            // Usuń focus i blur event listenery, jeśli istnieją
+            [nameInput, xInput, zInput].forEach(input => {
+                input.blur();
+                input.removeAttribute('readonly');
+            });
+            
+            // Reset trybu edycji
+            addPointBtn.textContent = 'Dodaj punkt';
+            addPointBtn.dataset.mode = 'add';
+            addPointBtn.dataset.pointId = '';
+        } catch (err) {
+            console.error('Błąd czyszczenia inputów:', err);
+        }
     }
 
     // === Logika mapy i punktów ===
@@ -204,10 +245,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === Obsługa zdarzeń UI ===
     mapContainer.addEventListener('mousedown', (e) => {
+        // Sprawdź czy nie kliknęliśmy na punkt
+        if (e.target.closest('.point-wrapper')) return;
+        
         isDragging = true;
         startX = e.clientX;
         startY = e.clientY;
         mapContainer.style.cursor = 'grabbing';
+        e.preventDefault();
     });
     
     window.addEventListener('mouseup', () => {
@@ -215,12 +260,19 @@ document.addEventListener('DOMContentLoaded', () => {
         mapContainer.style.cursor = 'grab';
     });
     
+    // Throttled mousemove dla lepszej wydajności
     window.addEventListener('mousemove', (e) => {
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
         
         if (!isDragging) {
-            updateCoordinatesFromMouse(e.clientX, e.clientY);
+            // Throttle coordinate updates
+            if (!mouseMoveThrottle) {
+                mouseMoveThrottle = setTimeout(() => {
+                    updateCoordinatesFromMouse(e.clientX, e.clientY);
+                    mouseMoveThrottle = null;
+                }, 16); // ~60fps
+            }
             return;
         }
         
@@ -277,6 +329,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Zablokuj przyciski podczas wysyłania
+        addPointBtn.disabled = true;
+        addPointBtn.textContent = 'Zapisywanie...';
+
         try {
             let response;
             if (mode === 'edit') {
@@ -309,9 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (response.ok) {
-                nameInput.value = '';
-                xInput.value = '';
-                zInput.value = '';
+                clearInputs();
                 fetchPoints();
                 showSuccess(mode === 'edit' ? 'Punkt zaktualizowany!' : 'Punkt dodany!');
             } else {
@@ -321,6 +375,14 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.error('Błąd zapisu punktu:', err);
             showError('Błąd połączenia z serwerem.');
+        } finally {
+            // Odblokuj przyciski
+            addPointBtn.disabled = false;
+            if (mode === 'edit') {
+                addPointBtn.textContent = 'Zapisz zmiany';
+            } else {
+                addPointBtn.textContent = 'Dodaj punkt';
+            }
         }
     });
 
@@ -540,77 +602,75 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-function renderPendingPoints(points) {
-    pendingPointsList.innerHTML = '';
-    if (points.length === 0) {
-        pendingPointsList.innerHTML = '<li>Brak oczekujących punktów.</li>';
-        return;
+    function renderPendingPoints(points) {
+        pendingPointsList.innerHTML = '';
+        if (points.length === 0) {
+            pendingPointsList.innerHTML = '<li>Brak oczekujących punktów.</li>';
+            return;
+        }
+
+        points.forEach(point => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>${point.name} (X: ${point.x}, Z: ${point.z})</span>
+                <div>
+                    <button class="button accept-btn" data-id="${point._id}">Akceptuj</button>
+                    <button class="button reject-btn" data-id="${point._id}">Odrzuć</button>
+                </div>
+            `;
+            pendingPointsList.appendChild(li);
+        });
+
+        document.querySelectorAll('.accept-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.target.dataset.id;
+                try {
+                    const res = await fetch(`/api/admin/accept/${id}`, { 
+                        method: 'PUT', 
+                        headers: { 'X-Session-Code': sessionCode } 
+                    });
+                    if (res.ok) {
+                        fetchPendingPoints();
+                        fetchPoints();
+                        showSuccess('Punkt zaakceptowany.');
+                    } else {
+                        const errorData = await res.json();
+                        showError(errorData.message || 'Błąd akceptacji punktu.');
+                    }
+                } catch (err) {
+                    console.error('Błąd akceptacji:', err);
+                    showError('Błąd połączenia z serwerem.');
+                }
+            });
+        });
+
+        document.querySelectorAll('.reject-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                if (!confirm('Czy na pewno chcesz odrzucić ten punkt? Zostanie przywrócony jako prywatny.')) {
+                    return;
+                }
+                
+                const id = e.target.dataset.id;
+                try {
+                    const res = await fetch(`/api/admin/reject/${id}`, { 
+                        method: 'PUT', 
+                        headers: { 'X-Session-Code': sessionCode } 
+                    });
+                    if (res.ok) {
+                        fetchPendingPoints();
+                        fetchPoints();
+                        showSuccess('Punkt odrzucony - przywrócony jako prywatny.');
+                    } else {
+                        const errorData = await res.json();
+                        showError(errorData.message || 'Błąd odrzucenia punktu.');
+                    }
+                } catch (err) {
+                    console.error('Błąd odrzucenia:', err);
+                    showError('Błąd połączenia z serwerem.');
+                }
+            });
+        });
     }
-
-    points.forEach(point => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-            <span>${point.name} (X: ${point.x}, Z: ${point.z})</span>
-            <div>
-                <button class="button accept-btn" data-id="${point._id}">Akceptuj</button>
-                <button class="button reject-btn" data-id="${point._id}">Odrzuć</button>
-            </div>
-        `;
-        pendingPointsList.appendChild(li);
-    });
-
-    // Obsługa przycisków "Akceptuj"
-    document.querySelectorAll('.accept-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const id = e.target.dataset.id;
-            try {
-                const res = await fetch(`/api/admin/accept/${id}`, { 
-                    method: 'PUT', 
-                    headers: { 'X-Session-Code': sessionCode } 
-                });
-                if (res.ok) {
-                    fetchPendingPoints();
-                    fetchPoints();
-                    showSuccess('Punkt zaakceptowany.');
-                } else {
-                    const errorData = await res.json();
-                    showError(errorData.message || 'Błąd akceptacji punktu.');
-                }
-            } catch (err) {
-                console.error('Błąd akceptacji:', err);
-                showError('Błąd połączenia z serwerem.');
-            }
-        });
-    });
-
-    // Obsługa przycisków "Odrzuć"
-    document.querySelectorAll('.reject-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            if (!confirm('Czy na pewno chcesz odrzucić ten punkt? Zostanie przywrócony jako prywatny.')) {
-                return;
-            }
-            
-            const id = e.target.dataset.id;
-            try {
-                const res = await fetch(`/api/admin/reject/${id}`, { 
-                    method: 'PUT', 
-                    headers: { 'X-Session-Code': sessionCode } 
-                });
-                if (res.ok) {
-                    fetchPendingPoints();
-                    fetchPoints();
-                    showSuccess('Punkt odrzucony - przywrócony jako prywatny.');
-                } else {
-                    const errorData = await res.json();
-                    showError(errorData.message || 'Błąd odrzucenia punktu.');
-                }
-            } catch (err) {
-                console.error('Błąd odrzucenia:', err);
-                showError('Błąd połączenia z serwerem.');
-            }
-        });
-    });
-}
 
     promoteUserBtn.addEventListener('click', async () => {
         const code = promoteSessionCodeInput.value.trim();
@@ -668,9 +728,14 @@ function renderPendingPoints(points) {
         });
     });
 
+    // Dodaj obsługę Escape dla zamykania modali
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            hideModals();
+        }
+    });
+
     // Inicjalizacja
     updateMapPosition();
     fetchPoints();
 });
-
-
