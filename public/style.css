@@ -111,7 +111,7 @@ body, html {
     border-radius: 3px;
     font-size: 0.9em;
     color: #9b9b9b;
-    z-index: 20
+    z-index: 20;
 }
 
 .coordinates-info {
@@ -146,7 +146,7 @@ body, html {
     image-rendering: crisp-edges;
 }
 
-/* PUNKTY - ZMNIEJSZONE O POŁOWĘ I RESPONSYWNE */
+/* POINTS - REDUCED BY HALF AND RESPONSIVE */
 .point-wrapper {
     position: absolute;
     cursor: pointer;
@@ -288,7 +288,7 @@ body, html {
     background-color: #83d47d;
 }
 
-/* POPRAWIONE INPUTY - zapobiegają blokowaniu */
+/* FIXED INPUTS - prevent blocking */
 input[type="text"], input[type="number"] {
     background-color: #3b3d40;
     border: 1px solid #5a5c60;
@@ -348,7 +348,7 @@ input[type="text"]:disabled, input[type="number"]:disabled {
     color: #c9c9c9;
 }
 
-/* NOWE STYLE DLA PANELU OWNERA */
+/* NEW STYLES FOR OWNER PANEL */
 .modal-content.owner-panel {
     width: 500px;
     max-width: 95%;
@@ -511,7 +511,7 @@ ul#pending-points-list {
     box-sizing: border-box;
 }
 
-/* RESPONSYWNOŚĆ */
+/* RESPONSIVENESS */
 @media (max-width: 768px) {
     .modal-content.owner-panel {
         width: 95%;
