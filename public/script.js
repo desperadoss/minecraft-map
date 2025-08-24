@@ -158,6 +158,19 @@ document.addEventListener('DOMContentLoaded', () => {
         return { x: Math.round(mcX), z: Math.round(mcZ) };
     }
 
+    // === Funkcja do skalowania punktów ===
+    function updatePointScaling() {
+        const points = document.querySelectorAll('.point-wrapper');
+        // Oblicz skale punktów: odwrotnie proporcjonalnie do zoomu mapy
+        // Przy zoom = 1.0 (100%) punkty mają standardowy rozmiar (scale = 1)
+        // Im mniejszy zoom, tym większe punkty
+        const pointScale = 1.0 / currentScale;
+        
+        points.forEach(point => {
+            point.style.transform = `translate(-50%, -50%) scale(${pointScale})`;
+        });
+    }
+
     function updateMapPosition() {
         if (isThrottling) return;
         
@@ -173,6 +186,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         mapContainer.style.transform = `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px) scale(${currentScale})`;
         zoomInfo.textContent = `Zoom: ${Math.round((currentScale - 0.18) * 100 / 0.82)}%`;
+        
+        // Zaktualizuj skalowanie punktów
+        updatePointScaling();
         
         updateCoordinatesFromMouse(lastMouseX, lastMouseY);
         
@@ -299,6 +315,8 @@ document.addEventListener('DOMContentLoaded', () => {
             mapContainer.appendChild(pointWrapper);
         });
         filterPoints();
+        // Zaktualizuj skalowanie punktów po renderowaniu
+        updatePointScaling();
     }
 
     function filterPoints() {
