@@ -76,7 +76,7 @@
             <span class="close-button">&times;</span>
             <h2 class="modal-title">Zaloguj się jako Admin</h2>
             <p>Wprowadź kod admina:</p>
-            <input type="text" id="admin-login-input" placeholder="Wpisz kod admina...">
+            <input type="text" id="admin-login-input">
             <div class="modal-buttons">
                 <button class="button" id="admin-login-btn">Zaloguj</button>
             </div>
@@ -85,4 +85,48 @@
     
     <div id="owner-login-modal" class="modal">
         <div class="modal-content">
-            <span class="close
+            <span class="close-button">&times;</span>
+            <h2 class="modal-title">Zaloguj się jako Owner</h2>
+            <p>Wprowadź kod ownera:</p>
+            <input type="text" id="owner-login-input">
+            <div class="modal-buttons">
+                <button class="button" id="owner-login-btn">Zaloguj</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-panel-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="modal-title">Panel Admina</h2>
+            <div class="modal-section">
+                <h3>Oczekujące punkty</h3>
+                <ul id="pending-points-list"></ul>
+                <div class="modal-buttons">
+                    <button class="button" id="refresh-pending">Odśwież</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="owner-panel-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="modal-title">Panel Ownera</h2>
+            <div class="modal-section">
+                <h3>Awansuj na Admina</h3>
+                <p>Wpisz kod sesji, aby nadać uprawnienia admina:</p>
+                <input type="text" id="promote-session-code">
+                <div class="modal-buttons">
+                    <button class="button" id="promote-user">Awansuj</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
+
