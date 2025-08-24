@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const pointDetailsModal = document.getElementById('point-details-modal');
     const adminLoginModal = document.getElementById('admin-login-modal');
     const adminPanelModal = document.getElementById('admin-panel-modal');
-    const ownerLoginModal = document.getElementById('owner-login-modal');
     const ownerPanelModal = document.getElementById('owner-panel-modal');
     
     // Przyciski i pola w modalach
@@ -31,12 +30,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const deletePointBtn = document.getElementById('delete-point');
     const adminLoginBtn = document.getElementById('admin-login-btn');
     const adminLoginInput = document.getElementById('admin-login-input');
-    const ownerLoginBtn = document.getElementById('owner-login-btn');
-    const ownerLoginInput = document.getElementById('owner-login-input');
     const refreshPendingBtn = document.getElementById('refresh-pending');
     const promoteUserBtn = document.getElementById('promote-user');
     const promoteSessionCodeInput = document.getElementById('promote-session-code');
     const pendingPointsList = document.getElementById('pending-points-list');
+    
+    // NOWE ELEMENTY - panel ownera
+    const newSessionCodeInput = document.getElementById('new-session-code');
+    const addSessionBtn = document.getElementById('add-session-btn');
+    const allowedSessionsList = document.getElementById('allowed-sessions-list');
+    const refreshSessionsBtn = document.getElementById('refresh-sessions');
     
     // === Konfiguracja i zmienne globalne ===
     const MAP_WIDTH_PX = 10000;
@@ -66,6 +69,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let isUserAdmin = false;
     let isUserOwner = false;
+
+    // === Sprawdzenie czy użytkownik jest ownerem ===
+    async function checkOwnerStatus() {
+        try {
+            const res = await fetch('/api/owner/check', {
+                headers: { 'X-Session-Code': sessionCode }
+            });
+            const data = await res.json();
+            if (data.isOwner) {
+                isUserOwner = true;
+                isUserAdmin = true;
+                console.log('Użytkownik jest ownerem');
+            }
+        } catch (err) {
+            console.error('Błąd sprawdzania statusu ownera:', err);
+        }
+    }
 
     // === System powiadomień ===
     function createNotificationContainer() {
@@ -161,13 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // === Funkcja do skalowania punktów ===
     function updatePointScaling() {
         const points = document.querySelectorAll('.point-wrapper');
-        // Oblicz skale punktów: odwrotnie proporcjonalnie do zoomu mapy
-        // Przy zoom = 1.0 (100%) punkty mają standardowy rozmiar (scale = 1)
-        // Im mniejszy zoom, tym większe punkty
         const pointScale = 1.0 / currentScale;
         
         points.forEach(point => {
-            // Używaj translate3d dla lepszej wydajności i ostrości
             point.style.transform = `translate3d(-50%, -50%, 0) scale(${pointScale.toFixed(3)})`;
         });
     }
@@ -188,12 +204,9 @@ document.addEventListener('DOMContentLoaded', () => {
         mapContainer.style.transform = `translate3d(-50%, -50%, 0) translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, 0) scale(${currentScale.toFixed(3)})`;
         zoomInfo.textContent = `Zoom: ${Math.round((currentScale - 0.18) * 100 / 0.82)}%`;
         
-        // Zaktualizuj skalowanie punktów
         updatePointScaling();
-        
         updateCoordinatesFromMouse(lastMouseX, lastMouseY);
         
-        // Throttling dla lepszej wydajności
         isThrottling = true;
         requestAnimationFrame(() => {
             isThrottling = false;
@@ -220,7 +233,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const modals = document.querySelectorAll('.modal');
         modals.forEach(modal => modal.style.display = 'none');
         
-        // Wyczyść wszystkie inputy w modalach
         document.querySelectorAll('.modal input').forEach(input => {
             if (input.type === 'text' || input.type === 'password') {
                 setTimeout(() => {
@@ -247,13 +259,11 @@ document.addEventListener('DOMContentLoaded', () => {
             xInput.value = '';
             zInput.value = '';
             
-            // Usuń focus i blur event listenery, jeśli istnieją
             [nameInput, xInput, zInput].forEach(input => {
                 input.blur();
                 input.removeAttribute('readonly');
             });
             
-            // Reset trybu edycji
             addPointBtn.textContent = 'Dodaj punkt';
             addPointBtn.dataset.mode = 'add';
             addPointBtn.dataset.pointId = '';
@@ -316,7 +326,6 @@ document.addEventListener('DOMContentLoaded', () => {
             mapContainer.appendChild(pointWrapper);
         });
         filterPoints();
-        // Zaktualizuj skalowanie punktów po renderowaniu
         updatePointScaling();
     }
 
@@ -342,7 +351,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === Obsługa zdarzeń UI ===
     mapContainer.addEventListener('mousedown', (e) => {
-        // Sprawdź czy nie kliknęliśmy na punkt
         if (e.target.closest('.point-wrapper')) return;
         
         isDragging = true;
@@ -357,18 +365,16 @@ document.addEventListener('DOMContentLoaded', () => {
         mapContainer.style.cursor = 'grab';
     });
     
-    // Throttled mousemove dla lepszej wydajności
     window.addEventListener('mousemove', (e) => {
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
         
         if (!isDragging) {
-            // Throttle coordinate updates
             if (!mouseMoveThrottle) {
                 mouseMoveThrottle = setTimeout(() => {
                     updateCoordinatesFromMouse(e.clientX, e.clientY);
                     mouseMoveThrottle = null;
-                }, 16); // ~60fps
+                }, 16);
             }
             return;
         }
@@ -426,7 +432,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Zablokuj przyciski podczas wysyłania
         addPointBtn.disabled = true;
         addPointBtn.textContent = 'Zapisywanie...';
 
@@ -450,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 addPointBtn.dataset.mode = 'add';
                 addPointBtn.dataset.pointId = '';
                 
-            } else { // add mode
+            } else {
                 response = await fetch('/api/points', {
                     method: 'POST',
                     headers: {
@@ -473,7 +478,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Błąd zapisu punktu:', err);
             showError('Błąd połączenia z serwerem.');
         } finally {
-            // Odblokuj przyciski
             addPointBtn.disabled = false;
             if (mode === 'edit') {
                 addPointBtn.textContent = 'Zapisz zmiany';
@@ -487,7 +491,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', hideModals);
     });
 
-    // Zamknij modal kliknięciem poza nim
     window.addEventListener('click', (e) => {
         if (e.target.classList.contains('modal')) {
             hideModals();
@@ -596,6 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
         hideModals();
         if (isUserOwner) {
             ownerPanelModal.style.display = 'block';
+            fetchAllowedSessions(); // Załaduj listę dozwolonych sesji
         } else if (isUserAdmin) {
             adminPanelModal.style.display = 'block';
             fetchPendingPoints();
@@ -635,41 +639,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (err) {
             console.error('Błąd logowania admina:', err);
-            showError('Błąd połączenia z serwerem.');
-        }
-    });
-
-    ownerLoginBtn.addEventListener('click', async () => {
-        const code = ownerLoginInput.value.trim();
-        if (!code) {
-            showError('Wprowadź kod ownera.');
-            return;
-        }
-
-        try {
-            const res = await fetch('/api/owner/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Session-Code': sessionCode
-                },
-                body: JSON.stringify({ ownerCode: code })
-            });
-            
-            const data = await res.json();
-            
-            if (data.success) {
-                isUserOwner = true;
-                isUserAdmin = true;
-                ownerLoginInput.value = '';
-                hideModals();
-                ownerPanelModal.style.display = 'block';
-                showSuccess('Pomyślnie zalogowano jako owner.');
-            } else {
-                showError(data.message || 'Niepoprawny kod ownera.');
-            }
-        } catch (err) {
-            console.error('Błąd logowania ownera:', err);
             showError('Błąd połączenia z serwerem.');
         }
     });
@@ -769,6 +738,118 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // === NOWE FUNKCJE PANELU OWNERA ===
+
+    // Pobieranie listy dozwolonych sesji
+    async function fetchAllowedSessions() {
+        try {
+            const res = await fetch('/api/owner/allowed-sessions', {
+                headers: { 'X-Session-Code': sessionCode }
+            });
+            
+            if (!res.ok) {
+                throw new Error(`Błąd HTTP: ${res.status}`);
+            }
+            
+            const allowedSessions = await res.json();
+            renderAllowedSessions(allowedSessions);
+        } catch (err) {
+            console.error('Błąd pobierania dozwolonych sesji:', err);
+            allowedSessionsList.innerHTML = '<li>Błąd połączenia z serwerem</li>';
+        }
+    }
+
+    // Renderowanie listy dozwolonych sesji
+    function renderAllowedSessions(sessions) {
+        allowedSessionsList.innerHTML = '';
+        if (sessions.length === 0) {
+            allowedSessionsList.innerHTML = '<li>Brak dozwolonych sesji.</li>';
+            return;
+        }
+
+        sessions.forEach(session => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <div class="session-item">
+                    <span class="session-code">${session.sessionCode}</span>
+                    <small class="session-date">Dodano: ${new Date(session.createdAt).toLocaleString()}</small>
+                    <button class="button remove-session-btn" data-session="${session.sessionCode}">Usuń</button>
+                </div>
+            `;
+            allowedSessionsList.appendChild(li);
+        });
+
+        // Dodaj event listenery do przycisków usuwania
+        document.querySelectorAll('.remove-session-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const sessionToRemove = e.target.dataset.session;
+                
+                if (!confirm(`Czy na pewno chcesz usunąć sesję ${sessionToRemove} z listy dozwolonych?`)) {
+                    return;
+                }
+                
+                try {
+                    const res = await fetch('/api/owner/remove-session', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Session-Code': sessionCode
+                        },
+                        body: JSON.stringify({ sessionCode: sessionToRemove })
+                    });
+                    
+                    if (res.ok) {
+                        fetchAllowedSessions(); // Odśwież listę
+                        showSuccess('Kod sesji usunięty z listy dozwolonych.');
+                    } else {
+                        const errorData = await res.json();
+                        showError(errorData.message || 'Błąd usuwania kodu sesji.');
+                    }
+                } catch (err) {
+                    console.error('Błąd usuwania sesji:', err);
+                    showError('Błąd połączenia z serwerem.');
+                }
+            });
+        });
+    }
+
+    // Dodawanie nowej dozwolonej sesji
+    addSessionBtn.addEventListener('click', async () => {
+        const newSession = newSessionCodeInput.value.trim();
+        if (!newSession) {
+            showError('Wprowadź kod sesji.');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/owner/allow-session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Session-Code': sessionCode
+                },
+                body: JSON.stringify({ sessionCode: newSession })
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                newSessionCodeInput.value = '';
+                fetchAllowedSessions(); // Odśwież listę
+                showSuccess(data.message);
+            } else {
+                showError(data.message || 'Błąd dodawania kodu sesji.');
+            }
+        } catch (err) {
+            console.error('Błąd dodawania sesji:', err);
+            showError('Błąd połączenia z serwerem.');
+        }
+    });
+
+    // Odświeżanie listy sesji
+    refreshSessionsBtn.addEventListener('click', fetchAllowedSessions);
+
+    // Awansowanie użytkownika na admina
     promoteUserBtn.addEventListener('click', async () => {
         const code = promoteSessionCodeInput.value.trim();
         if (!code) {
@@ -799,16 +880,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Obsługa Enter w polach input
-    [adminLoginInput, ownerLoginInput].forEach(input => {
-        input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                if (input === adminLoginInput) {
-                    adminLoginBtn.click();
-                } else if (input === ownerLoginInput) {
-                    ownerLoginBtn.click();
-                }
-            }
-        });
+    adminLoginInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            adminLoginBtn.click();
+        }
+    });
+
+    newSessionCodeInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            addSessionBtn.click();
+        }
     });
 
     promoteSessionCodeInput.addEventListener('keypress', (e) => {
@@ -832,7 +913,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Inicjalizacja
-    updateMapPosition();
-    fetchPoints();
+    // === INICJALIZACJA ===
+    async function init() {
+        await checkOwnerStatus(); // Sprawdź czy użytkownik jest ownerem
+        updateMapPosition();
+        fetchPoints();
+    }
+
+    // Uruchom inicjalizację
+    init();
 });
