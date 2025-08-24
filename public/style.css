@@ -129,6 +129,12 @@ body, html {
     /* Usunięta transition dla lepszej wydajności */
     transform: translate(-50%, -50%);
     will-change: transform;
+    /* Naprawienie rozmycia mapy */
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
 }
 
 #minecraft-map {
@@ -137,7 +143,9 @@ body, html {
     height: 5500px;
     user-select: none;
     -webkit-user-drag: none;
-    image-rendering: auto;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
 }
 
 /* PUNKTY - ZMNIEJSZONE O POŁOWĘ I RESPONSYWNE */
@@ -146,8 +154,15 @@ body, html {
     cursor: pointer;
     z-index: 10;
     transition: opacity 0.2s;
-    /* Centrowanie całego wrappera */
+    /* Centrowanie całego wrappera z ostrym renderowaniem */
     transform: translate(-50%, -50%);
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    -webkit-transform: translate3d(-50%, -50%, 0);
+    transform: translate3d(-50%, -50%, 0);
 }
 
 .point {
@@ -161,6 +176,14 @@ body, html {
     transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
     position: relative;
     margin: 0 auto 10px auto; /* było 20px -> 10px (połowa) */
+    /* Naprawienie rozmycia */
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+    -webkit-transform: translate3d(0, 0, 0) rotate(-45deg);
+    transform: translate3d(0, 0, 0) rotate(-45deg);
 }
 
 .point::before {
@@ -172,11 +195,14 @@ body, html {
     height: 10px; /* było 20px -> 10px (połowa) */
     background-color: rgba(255, 255, 255, 0.9);
     border-radius: 50%;
-    transform: translate(-50%, -50%) rotate(45deg);
+    transform: translate3d(-50%, -50%, 0) rotate(45deg);
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
 }
 
 .point:hover {
-    transform: rotate(-45deg) scale(1.2);
+    transform: translate3d(0, 0, 0) rotate(-45deg) scale(1.2);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 
