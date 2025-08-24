@@ -110,9 +110,28 @@
     </div>
     
     <div id="owner-panel-modal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content large-modal">
             <span class="close-button">&times;</span>
             <h2 class="modal-title">Panel Ownera</h2>
+            
+            <div class="modal-section">
+                <h3>Zarządzanie uprzywilejowanymi kodami sesji</h3>
+                <p class="help-text">Tylko użytkownicy z uprzywilejowanymi kodami sesji mogą próbować logować się jako admin.</p>
+                
+                <div class="privileged-sessions-form">
+                    <input type="text" id="new-privileged-session" placeholder="Wklej kod sesji użytkownika...">
+                    <button class="button" id="add-privileged-session">Dodaj uprzywilejowany kod</button>
+                </div>
+                
+                <div class="privileged-sessions-list">
+                    <h4>Uprzywilejowane kody sesji:</h4>
+                    <ul id="privileged-sessions-list"></ul>
+                    <div class="modal-buttons">
+                        <button class="button" id="refresh-privileged-sessions">Odśwież listę</button>
+                    </div>
+                </div>
+            </div>
+            
             <div class="modal-section">
                 <h3>Awansuj na Admina</h3>
                 <p>Wpisz kod sesji, aby nadać uprawnienia admina:</p>
