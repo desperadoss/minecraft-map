@@ -346,6 +346,26 @@ app.put('/api/admin/accept/:id', checkAdmin, async (req, res) => {
     }
 });
 
+// PUT - Odrzucenie punktu (zmiana z pending na private)
+app.put('/api/admin/reject/:id', checkAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const point = await Point.findById(id);
+        if (!point) {
+            return res.status(404).json({ message: 'Punkt nie znaleziony.' });
+        }
+        if (point.status !== 'pending') {
+            return res.status(400).json({ message: 'Punkt nie oczekuje na akceptację.' });
+        }
+        point.status = 'private';
+        await point.save();
+        res.json(point);
+    } catch (err) {
+        console.error('Błąd odrzucenia punktu:', err);
+        res.status(500).json({ message: 'Błąd odrzucenia punktu.' });
+    }
+});
+
 // PUT - Edycja punktu publicznego (admin)
 app.put('/api/admin/edit/:id', checkAdmin, async (req, res) => {
     try {
@@ -529,3 +549,4 @@ startServer().catch(err => {
     console.error('Błąd uruchomienia serwera:', err);
     process.exit(1);
 });
+
