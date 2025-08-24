@@ -140,7 +140,7 @@ body, html {
     image-rendering: auto;
 }
 
-/* PUNKTY - ZWIĘKSZONE O 2.5X */
+/* PUNKTY - ZMNIEJSZONE O POŁOWĘ I RESPONSYWNE */
 .point-wrapper {
     position: absolute;
     cursor: pointer;
@@ -151,16 +151,16 @@ body, html {
 }
 
 .point {
-    width: 60px; /* było 24px -> 24 * 2.5 = 60px */
-    height: 60px; /* było 24px -> 24 * 2.5 = 60px */
+    width: 30px; /* było 60px -> 30px (połowa) */
+    height: 30px; /* było 60px -> 30px (połowa) */
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-    border: 5px solid rgba(255, 255, 255, 0.3); /* było 2px -> 2 * 2.5 = 5px */
+    border: 2.5px solid rgba(255, 255, 255, 0.3); /* było 5px -> 2.5px (połowa) */
     transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
     position: relative;
-    margin: 0 auto 20px auto; /* było 8px -> 8 * 2.5 = 20px */
+    margin: 0 auto 10px auto; /* było 20px -> 10px (połowa) */
 }
 
 .point::before {
@@ -168,8 +168,8 @@ body, html {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 20px; /* było 8px -> 8 * 2.5 = 20px */
-    height: 20px; /* było 8px -> 8 * 2.5 = 20px */
+    width: 10px; /* było 20px -> 10px (połowa) */
+    height: 10px; /* było 20px -> 10px (połowa) */
     background-color: rgba(255, 255, 255, 0.9);
     border-radius: 50%;
     transform: translate(-50%, -50%) rotate(45deg);
@@ -208,18 +208,18 @@ body, html {
 
 .point-name {
     position: absolute;
-    top: 75px; /* było 30px -> 30 * 2.5 = 75px */
+    top: 37.5px; /* było 75px -> 37.5px (połowa) */
     left: 50%;
     transform: translateX(-50%);
     white-space: nowrap;
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 100%);
     color: #fff;
-    padding: 10px 20px; /* było 4px 8px -> 4*2.5=10px, 8*2.5=20px */
-    border-radius: 10px; /* było 4px -> 4 * 2.5 = 10px */
-    font-size: 27.5px; /* było 11px -> 11 * 2.5 = 27.5px */
+    padding: 5px 10px; /* było 10px 20px -> 5px 10px (połowa) */
+    border-radius: 5px; /* było 10px -> 5px (połowa) */
+    font-size: 13.75px; /* było 27.5px -> 13.75px (połowa) */
     font-weight: 500;
-    border: 2.5px solid rgba(255, 255, 255, 0.1); /* było 1px -> 1 * 2.5 = 2.5px */
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); /* było 0 2px 6px -> 2*2.5=5px, 6*2.5=15px */
+    border: 1.25px solid rgba(255, 255, 255, 0.1); /* było 2.5px -> 1.25px (połowa) */
+    box-shadow: 0 2.5px 7.5px rgba(0, 0, 0, 0.3); /* było 0 5px 15px -> 0 2.5px 7.5px (połowa) */
     pointer-events: none;
 }
 
