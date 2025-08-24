@@ -49,6 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let offsetY = 0;
     let isDragging = false;
     let startX, startY;
+    let lastMouseX = 0;
+    let lastMouseY = 0;
     
     let isShowingPrivate = true;
     let isShowingPublic = true;
@@ -90,11 +92,26 @@ document.addEventListener('DOMContentLoaded', () => {
         mapContainer.style.transform = `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px) scale(${currentScale})`;
         zoomInfo.textContent = `Zoom: ${Math.round(currentScale * 100)}%`;
         
-        // Poprawione obliczenia współrzędnych - względem środka mapy
-        const centerPxX = (containerRect.width / 2 - offsetX) / currentScale;
-        const centerPxZ = (containerRect.height / 2 - offsetY) / currentScale;
+        updateCoordinatesFromMouse(lastMouseX, lastMouseY);
+    }
+
+    function updateCoordinatesFromMouse(clientX, clientY) {
+        const containerRect = mapContainer.parentElement.getBoundingClientRect();
         
-        const mcCoords = pxToMc(centerPxX, centerPxZ);
+        // Pozycja kursora względem kontenera mapy
+        const mouseX = clientX - containerRect.left;
+        const mouseY = clientY - containerRect.top;
+        
+        // Pozycja kursora względem środka kontenera
+        const centerX = containerRect.width / 2;
+        const centerY = containerRect.height / 2;
+        
+        // Pozycja kursora względem środka mapy (uwzględniając zoom i przesunięcie)
+        const cursorX = (mouseX - centerX - offsetX) / currentScale;
+        const cursorY = (mouseY - centerY - offsetY) / currentScale;
+        
+        // Konwersja na współrzędne Minecrafta
+        const mcCoords = pxToMc(cursorX + MAP_WIDTH_PX/2, cursorY + MAP_HEIGHT_PX/2);
         coordinatesInfo.textContent = `X: ${mcCoords.x}, Z: ${mcCoords.z}`;
     }
 
@@ -192,7 +209,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     window.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+        
+        if (!isDragging) {
+            updateCoordinatesFromMouse(e.clientX, e.clientY);
+            return;
+        }
+        
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
         offsetX += dx;
