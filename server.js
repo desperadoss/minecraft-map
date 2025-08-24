@@ -13,16 +13,14 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Serowanie plików statycznych
-app.use(express.static(__dirname));
+// Serowanie plików statycznych - poprawione ścieżki
+app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Połączenie z bazą danych MongoDB
+// Połączenie z bazą danych MongoDB - usunięcie deprecated opcji
 const connectDB = async () => {
     try {
-        await mongoose.connect(process.env.MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
+        await mongoose.connect(process.env.MONGODB_URI);
         console.log('Połączenie z bazą danych MongoDB udane!');
     } catch (err) {
         console.error('Błąd połączenia z bazą danych:', err);
@@ -481,9 +479,33 @@ app.delete('/api/owner/demote', async (req, res) => {
     }
 });
 
+// Obsługa żądań do plików statycznych z lepszym debugowaniem
+app.get('/', (req, res) => {
+    const indexPath = path.join(__dirname, 'index.html');
+    console.log('Próba wysłania pliku index.html z ścieżki:', indexPath);
+    res.sendFile(indexPath, (err) => {
+        if (err) {
+            console.error('Błąd wysyłania index.html:', err);
+            res.status(500).send('Błąd serwera - nie można załadować strony głównej');
+        }
+    });
+});
+
 // Catch-all route dla SPA - musi być na końcu
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    // Sprawdź czy żądanie nie dotyczy API
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ message: 'Endpoint nie znaleziony' });
+    }
+    
+    const indexPath = path.join(__dirname, 'index.html');
+    console.log('Catch-all: próba wysłania pliku index.html z ścieżki:', indexPath);
+    res.sendFile(indexPath, (err) => {
+        if (err) {
+            console.error('Catch-all: Błąd wysyłania index.html:', err);
+            res.status(404).send('Strona nie znaleziona');
+        }
+    });
 });
 
 // Error handling middleware
@@ -499,6 +521,7 @@ const startServer = async () => {
     app.listen(PORT, () => {
         console.log(`Serwer działa na porcie ${PORT}`);
         console.log(`URL: http://localhost:${PORT}`);
+        console.log('Aktualne pliki w katalogu:', require('fs').readdirSync(__dirname));
     });
 };
 
