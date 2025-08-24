@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const MAP_X_RANGE = 4200;  // Zmienione z 4000 na 4600 (o 30% większe)
     const MAP_Z_RANGE = 2750;
     
-    let currentScale = 1;
+    let currentScale = 0.18;
     let offsetX = 0;
     let offsetY = 0;
     let isDragging = false;
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         offsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, offsetY));
 
         mapContainer.style.transform = `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px) scale(${currentScale})`;
-        zoomInfo.textContent = `Zoom: ${Math.round(currentScale * 100)}%`;
+        zoomInfo.textContent = `Zoom: ${Math.round((currentScale - 0.18) * 100 / 0.82)}%`;
         
         updateCoordinatesFromMouse(lastMouseX, lastMouseY);
     }
@@ -521,4 +521,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicjalizacja
     fetchPoints();
 });
+
 
