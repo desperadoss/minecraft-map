@@ -167,7 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const pointScale = 1.0 / currentScale;
         
         points.forEach(point => {
-            point.style.transform = `translate(-50%, -50%) scale(${pointScale})`;
+            // Używaj translate3d dla lepszej wydajności i ostrości
+            point.style.transform = `translate3d(-50%, -50%, 0) scale(${pointScale.toFixed(3)})`;
         });
     }
 
@@ -184,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         offsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, offsetX));
         offsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, offsetY));
 
-        mapContainer.style.transform = `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px) scale(${currentScale})`;
+        mapContainer.style.transform = `translate3d(-50%, -50%, 0) translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, 0) scale(${currentScale.toFixed(3)})`;
         zoomInfo.textContent = `Zoom: ${Math.round((currentScale - 0.18) * 100 / 0.82)}%`;
         
         // Zaktualizuj skalowanie punktów
