@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // === Konfiguracja i zmienne globalne ===
     const MAP_WIDTH_PX = 10000;
     const MAP_HEIGHT_PX = 5500;
-    const MAP_X_RANGE = 5000;
+    const MAP_X_RANGE = 4000;  // Zmienione z 5000 na 4000
     const MAP_Z_RANGE = 2750;
     
     let currentScale = 1;
