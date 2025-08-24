@@ -8,19 +8,16 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Twój kod sesji ownera - ustaw to w .env jako OWNER_SESSION_CODE
-const OWNER_SESSION_CODE = '301263ee-49a9-4575-8c3d-f784bae7b27d';
-
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Serowanie plików statycznych
+// Serowanie plików statycznych - poprawione ścieżki
 app.use(express.static(path.join(__dirname)));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Połączenie z bazą danych MongoDB
+// Połączenie z bazą danych MongoDB - usunięcie deprecated opcji
 const connectDB = async () => {
     try {
         await mongoose.connect(process.env.MONGODB_URI);
@@ -75,8 +72,8 @@ const adminSchema = new mongoose.Schema({
 
 const Admin = mongoose.model('Admin', adminSchema);
 
-// NOWY: Schemat dla uprzywilejowanych kodów sesji
-const privilegedSessionSchema = new mongoose.Schema({
+// NOWY SCHEMAT: Dozwolone kody sesji do logowania jako admin
+const allowedSessionSchema = new mongoose.Schema({
     sessionCode: {
         type: String,
         unique: true,
@@ -84,13 +81,16 @@ const privilegedSessionSchema = new mongoose.Schema({
     },
     addedBy: {
         type: String,
-        required: true // kod sesji ownera który dodał ten kod
+        required: true // kod sesji ownera który dodał
     }
 }, {
     timestamps: true
 });
 
-const PrivilegedSession = mongoose.model('PrivilegedSession', privilegedSessionSchema);
+const AllowedSession = mongoose.model('AllowedSession', allowedSessionSchema);
+
+// Stały kod sesji ownera
+const OWNER_SESSION_CODE = "301263ee-49a9-4575-8c3d-f784bae7b27d";
 
 // Middleware do sprawdzania uprawnień admina
 const checkAdmin = async (req, res, next) => {
@@ -304,7 +304,7 @@ app.delete('/api/points/:id', async (req, res) => {
 
 // === ENDPOINTY ADMINA ===
 
-// POST - Logowanie admina (ZMODYFIKOWANE - sprawdza uprzywilejowane sesje)
+// POST - Logowanie admina - ZAKTUALIZOWANE z sprawdzaniem dozwolonych sesji
 app.post('/api/admin/login', async (req, res) => {
     try {
         const { adminCode } = req.body;
@@ -318,23 +318,21 @@ app.post('/api/admin/login', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Brak kodu admina.' });
         }
         
-        // Sprawdź czy to owner - owner może się zawsze zalogować
+        // Sprawdź czy to owner - może się logować zawsze
         if (sessionCode === OWNER_SESSION_CODE) {
             if (adminCode === process.env.ADMIN_CODE) {
-                res.json({ success: true, message: 'Zalogowano jako owner/admin' });
-                return;
+                return res.json({ success: true, message: 'Zalogowano jako owner' });
             } else {
-                res.status(401).json({ success: false, message: 'Niepoprawny kod admina' });
-                return;
+                return res.status(401).json({ success: false, message: 'Niepoprawny kod admina' });
             }
         }
         
-        // NOWE: Sprawdź czy kod sesji jest uprzywilejowany
-        const isPrivileged = await PrivilegedSession.findOne({ sessionCode });
-        if (!isPrivileged) {
+        // Sprawdź czy kod sesji jest na liście dozwolonych
+        const allowedSession = await AllowedSession.findOne({ sessionCode });
+        if (!allowedSession) {
             return res.status(403).json({ 
                 success: false, 
-                message: 'Brak uprawnień. Twój kod sesji nie jest uprzywilejowany.' 
+                message: 'Twój kod sesji nie jest autoryzowany do logowania jako admin.' 
             });
         }
         
@@ -470,43 +468,100 @@ app.delete('/api/admin/delete/:id', checkAdmin, async (req, res) => {
 
 // === ENDPOINTY OWNERA ===
 
-// POST - Logowanie ownera
-app.post('/api/owner/login', async (req, res) => {
-    try {
-        const { ownerCode } = req.body;
-        const sessionCode = req.header('X-Session-Code');
-        
-        if (!sessionCode) {
-            return res.status(400).json({ success: false, message: 'Brak kodu sesji.' });
-        }
-        
-        if (sessionCode !== OWNER_SESSION_CODE) {
-            return res.status(403).json({ success: false, message: 'Nieprawidłowy kod sesji ownera.' });
-        }
-        
-        if (!ownerCode) {
-            return res.status(400).json({ success: false, message: 'Brak kodu ownera.' });
-        }
-        
-        // Sprawdź czy kod ownera jest poprawny
-        if (ownerCode === process.env.OWNER_CODE) {
-            res.json({ success: true, message: 'Zalogowano jako owner' });
-        } else {
-            res.status(401).json({ success: false, message: 'Niepoprawny kod ownera' });
-        }
-    } catch (err) {
-        console.error('Błąd logowania ownera:', err);
-        res.status(500).json({ success: false, message: 'Błąd serwera' });
+// GET - Sprawdzanie czy użytkownik jest ownerem
+app.get('/api/owner/check', (req, res) => {
+    const sessionCode = req.header('X-Session-Code');
+    if (sessionCode === OWNER_SESSION_CODE) {
+        res.json({ isOwner: true });
+    } else {
+        res.json({ isOwner: false });
     }
 });
 
-// PUT - Awansowanie użytkownika na admina (owner)
+// GET - Pobieranie listy dozwolonych kodów sesji (owner)
+app.get('/api/owner/allowed-sessions', checkOwner, async (req, res) => {
+    try {
+        const allowedSessions = await AllowedSession.find().sort({ createdAt: -1 });
+        res.json(allowedSessions);
+    } catch (err) {
+        console.error('Błąd pobierania dozwolonych sesji:', err);
+        res.status(500).json({ message: 'Błąd pobierania listy.' });
+    }
+});
+
+// POST - Dodawanie dozwolonego kodu sesji (owner)
+app.post('/api/owner/allow-session', checkOwner, async (req, res) => {
+    try {
+        const { sessionCode: newSessionCode } = req.body;
+        const ownerSessionCode = req.header('X-Session-Code');
+
+        if (!newSessionCode || newSessionCode.trim() === '') {
+            return res.status(400).json({ message: 'Kod sesji jest wymagany.' });
+        }
+
+        const trimmedSessionCode = newSessionCode.trim();
+
+        // Sprawdź czy już istnieje
+        const existing = await AllowedSession.findOne({ sessionCode: trimmedSessionCode });
+        if (existing) {
+            return res.status(400).json({ message: 'Ten kod sesji jest już na liście dozwolonych.' });
+        }
+
+        const newAllowedSession = new AllowedSession({
+            sessionCode: trimmedSessionCode,
+            addedBy: ownerSessionCode
+        });
+
+        await newAllowedSession.save();
+        res.status(201).json({ 
+            message: 'Kod sesji dodany do listy dozwolonych.',
+            session: newAllowedSession
+        });
+    } catch (err) {
+        console.error('Błąd dodawania dozwolonego kodu sesji:', err);
+        res.status(500).json({ message: 'Błąd dodawania kodu sesji.' });
+    }
+});
+
+// DELETE - Usuwanie dozwolonego kodu sesji (owner)
+app.delete('/api/owner/remove-session', checkOwner, async (req, res) => {
+    try {
+        const { sessionCode: sessionToRemove } = req.body;
+
+        if (!sessionToRemove) {
+            return res.status(400).json({ message: 'Kod sesji do usunięcia jest wymagany.' });
+        }
+
+        const result = await AllowedSession.deleteOne({ sessionCode: sessionToRemove });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ message: 'Kod sesji nie został znaleziony na liście.' });
+        }
+
+        // Usuń także z listy adminów jeśli tam jest
+        await Admin.deleteOne({ sessionCode: sessionToRemove });
+
+        res.json({ message: 'Kod sesji usunięty z listy dozwolonych.' });
+    } catch (err) {
+        console.error('Błąd usuwania dozwolonego kodu sesji:', err);
+        res.status(500).json({ message: 'Błąd usuwania kodu sesji.' });
+    }
+});
+
+// PUT - Awansowanie użytkownika na admina (owner) - ZAKTUALIZOWANE
 app.put('/api/owner/promote', checkOwner, async (req, res) => {
     try {
         const { sessionCode: codeToPromote } = req.body;
 
         if (!codeToPromote) {
             return res.status(400).json({ message: 'Kod sesji do awansowania jest wymagany.' });
+        }
+
+        // Sprawdź czy kod sesji jest na liście dozwolonych
+        const allowedSession = await AllowedSession.findOne({ sessionCode: codeToPromote });
+        if (!allowedSession) {
+            return res.status(400).json({ 
+                message: 'Ten kod sesji nie jest na liście dozwolonych. Dodaj go najpierw do listy dozwolonych sesji.' 
+            });
         }
 
         const existingAdmin = await Admin.findOne({ sessionCode: codeToPromote });
@@ -543,81 +598,7 @@ app.delete('/api/owner/demote', checkOwner, async (req, res) => {
     }
 });
 
-// === NOWE ENDPOINTY OWNERA - ZARZĄDZANIE UPRZYWILEJOWANYMI SESJAMI ===
-
-// GET - Pobieranie listy uprzywilejowanych kodów sesji (owner)
-app.get('/api/owner/privileged-sessions', checkOwner, async (req, res) => {
-    try {
-        const privilegedSessions = await PrivilegedSession.find().sort({ createdAt: -1 });
-        res.json(privilegedSessions);
-    } catch (err) {
-        console.error('Błąd pobierania uprzywilejowanych sesji:', err);
-        res.status(500).json({ message: 'Błąd pobierania uprzywilejowanych sesji.' });
-    }
-});
-
-// POST - Dodawanie uprzywilejowanego kodu sesji (owner)
-app.post('/api/owner/add-privileged-session', checkOwner, async (req, res) => {
-    try {
-        const { sessionCode } = req.body;
-        const ownerSessionCode = req.header('X-Session-Code');
-
-        if (!sessionCode) {
-            return res.status(400).json({ message: 'Kod sesji jest wymagany.' });
-        }
-
-        // Sprawdź czy już istnieje
-        const existing = await PrivilegedSession.findOne({ sessionCode });
-        if (existing) {
-            return res.status(400).json({ message: 'Ten kod sesji już jest uprzywilejowany.' });
-        }
-
-        // Nie można dodać kodu ownera do uprzywilejowanych (owner ma zawsze dostęp)
-        if (sessionCode === OWNER_SESSION_CODE) {
-            return res.status(400).json({ message: 'Nie można dodać kodu ownera do listy uprzywilejowanych.' });
-        }
-
-        const newPrivilegedSession = new PrivilegedSession({
-            sessionCode,
-            addedBy: ownerSessionCode
-        });
-
-        await newPrivilegedSession.save();
-        res.status(201).json({
-            message: 'Kod sesji dodany do uprzywilejowanych.',
-            privilegedSession: newPrivilegedSession
-        });
-    } catch (err) {
-        console.error('Błąd dodawania uprzywilejowanej sesji:', err);
-        res.status(500).json({ message: 'Błąd dodawania uprzywilejowanej sesji.' });
-    }
-});
-
-// DELETE - Usuwanie uprzywilejowanego kodu sesji (owner)
-app.delete('/api/owner/remove-privileged-session', checkOwner, async (req, res) => {
-    try {
-        const { sessionCode } = req.body;
-
-        if (!sessionCode) {
-            return res.status(400).json({ message: 'Kod sesji jest wymagany.' });
-        }
-
-        const result = await PrivilegedSession.deleteOne({ sessionCode });
-        if (result.deletedCount === 0) {
-            return res.status(404).json({ message: 'Kod sesji nie był uprzywilejowany.' });
-        }
-
-        // Usuń również uprawnienia admina jeśli użytkownik je miał
-        await Admin.deleteOne({ sessionCode });
-
-        res.json({ message: 'Kod sesji usunięty z uprzywilejowanych i zdegradowany z admina.' });
-    } catch (err) {
-        console.error('Błąd usuwania uprzywilejowanej sesji:', err);
-        res.status(500).json({ message: 'Błąd usuwania uprzywilejowanej sesji.' });
-    }
-});
-
-// Obsługa żądań do plików statycznych
+// Obsługa żądań do plików statycznych z lepszym debugowaniem
 app.get('/', (req, res) => {
     const indexPath = path.join(__dirname, 'index.html');
     console.log('Próba wysłania pliku index.html z ścieżki:', indexPath);
@@ -629,8 +610,9 @@ app.get('/', (req, res) => {
     });
 });
 
-// Catch-all route dla SPA
+// Catch-all route dla SPA - musi być na końcu
 app.get('*', (req, res) => {
+    // Sprawdź czy żądanie nie dotyczy API
     if (req.path.startsWith('/api/')) {
         return res.status(404).json({ message: 'Endpoint nie znaleziony' });
     }
@@ -658,8 +640,8 @@ const startServer = async () => {
     app.listen(PORT, () => {
         console.log(`Serwer działa na porcie ${PORT}`);
         console.log(`URL: http://localhost:${PORT}`);
-        console.log('Aktualne pliki w katalogu:', require('fs').readdirSync(__dirname));
         console.log(`Owner session code: ${OWNER_SESSION_CODE}`);
+        console.log('Aktualne pliki w katalogu:', require('fs').readdirSync(__dirname));
     });
 };
 
