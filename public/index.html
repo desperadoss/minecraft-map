@@ -1,49 +1,28 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa Minecraft</title>
+    <title>Minecraft Map</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="header">
-        <div class="header-content">
-            <h1 class="main-title">Mapa Minecraft</h1>
-            <p class="subtitle">Interaktywna mapa serwera</p>
-        </div>
-        <div class="header-decoration">
-            <div class="minecraft-block"></div>
-            <div class="minecraft-block"></div>
-            <div class="minecraft-block"></div>
-        </div>
+        <h1 class="main-title">Minecraft Map</h1>
+        <p class="subtitle">Interactive server map</p>
     </div>
     
     <div class="main-content-wrapper">
         <div class="main-content">
             <div class="map-controls-top">
                 <div class="filter-buttons">
-                    <button class="button active" id="show-your-points">
-                        <span class="button-icon">📍</span>
-                        <span>Pokaż/Filtruj swoje</span>
-                    </button>
-                    <button class="button active" id="show-shared-points">
-                        <span class="button-icon">🌐</span>
-                        <span>Pokaż/Filtruj udostępnione</span>
-                    </button>
+                    <button class="button active" id="show-your-points">Show/Filter Your Points</button>
+                    <button class="button active" id="show-shared-points">Show/Filter Shared Points</button>
                 </div>
                 <div class="view-controls">
-                    <button class="button zoom-button" id="zoom-in">
-                        <span class="button-icon">+</span>
-                    </button>
-                    <button class="button zoom-button" id="zoom-out">
-                        <span class="button-icon">-</span>
-                    </button>
-                    <button class="button" id="reset-view">
-                        <span class="button-icon">🗺️</span>
-                        <span>Resetuj Widok</span>
-                    </button>
+                    <button class="button zoom-button" id="zoom-in">+</button>
+                    <button class="button zoom-button" id="zoom-out">-</button>
+                    <button class="button" id="reset-view">Reset View</button>
                 </div>
             </div>
 
@@ -51,29 +30,26 @@
                 <div class="coordinates-info"></div>
                 <div class="zoom-info"></div>
                 <div class="map-container">
-                    <img id="minecraft-map" src="map-extract.jpg" alt="Mapa serwera Minecraft">
+                    <img id="minecraft-map" src="map.jpg" alt="Minecraft server map">
                 </div>
             </div>
 
             <div class="your-points-section">
-                <h2 class="section-title">Twoje punkty</h2>
+                <h2 class="section-title">Your Points</h2>
                 <div class="add-point-form-inline">
                     <div class="form-group">
-                        <label for="name-input">Nazwa punktu</label>
-                        <input type="text" id="name-input" placeholder="np. Dom">
+                        <label for="name-input">Point Name</label>
+                        <input type="text" id="name-input" placeholder="e.g. Home">
                     </div>
                     <div class="form-group">
-                        <label for="x-input">Koordynat X</label>
-                        <input type="number" id="x-input" placeholder="np. 123">
+                        <label for="x-input">X Coordinate</label>
+                        <input type="number" id="x-input" placeholder="e.g. 123">
                     </div>
                     <div class="form-group">
-                        <label for="z-input">Koordynat Z</label>
-                        <input type="number" id="z-input" placeholder="np. -456">
+                        <label for="z-input">Z Coordinate</label>
+                        <input type="number" id="z-input" placeholder="e.g. -456">
                     </div>
-                    <button class="add-button" id="add-point-button">
-                        <span class="button-icon">+</span>
-                        <span>Dodaj punkt</span>
-                    </button>
+                    <button class="add-button" id="add-point-button">Add Point</button>
                 </div>
             </div>
             
@@ -84,45 +60,73 @@
     <div id="point-details-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
-            <h2 class="modal-title" id="point-name">Nazwa punktu</h2>
-            <div class="modal-info">
-                <div class="info-item">
-                    <span class="info-label">Koordynat X:</span>
-                    <span class="info-value" id="point-x"></span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Koordynat Z:</span>
-                    <span class="info-value" id="point-z"></span>
-                </div>
-            </div>
+            <h2 class="modal-title" id="point-name">Point Name</h2>
+            <p>X Coordinate: <span id="point-x"></span></p>
+            <p>Z Coordinate: <span id="point-z"></span></p>
             <div class="modal-buttons">
-                <button class="button modal-btn share" id="share-point">
-                    <span class="button-icon">📤</span>
-                    <span>Udostępnij</span>
-                </button>
-                <button class="button modal-btn edit" id="edit-point">
-                    <span class="button-icon">✏️</span>
-                    <span>Edytuj</span>
-                </button>
-                <button class="button modal-btn delete" id="delete-point">
-                    <span class="button-icon">🗑️</span>
-                    <span>Usuń</span>
-                </button>
+                <button class="button" id="share-point">Share</button>
+                <button class="button" id="edit-point">Edit</button>
+                <button class="button" id="delete-point">Delete</button>
             </div>
         </div>
     </div>
 
-    <!-- Rest of the modals remain the same but will be styled in CSS -->
     <div id="admin-login-modal" class="modal">
-        <!-- Content unchanged -->
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="modal-title">Login as Admin</h2>
+            <p>Enter admin code:</p>
+            <input type="text" id="admin-login-input">
+            <div class="modal-buttons">
+                <button class="button" id="admin-login-btn">Login</button>
+            </div>
+        </div>
     </div>
 
     <div id="admin-panel-modal" class="modal">
-        <!-- Content unchanged -->
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="modal-title">Admin Panel</h2>
+            <div class="modal-section">
+                <h3>Pending Points</h3>
+                <ul id="pending-points-list"></ul>
+                <div class="modal-buttons">
+                    <button class="button" id="refresh-pending">Refresh</button>
+                </div>
+            </div>
+        </div>
     </div>
     
     <div id="owner-panel-modal" class="modal">
-        <!-- Content unchanged -->
+        <div class="modal-content owner-panel">
+            <span class="close-button">&times;</span>
+            <h2 class="modal-title">Owner Panel</h2>
+            
+            <div class="modal-section">
+                <h3>Allowed Sessions Management</h3>
+                <p>Only users with session codes from this list can login as admins:</p>
+                
+                <div class="add-session-form">
+                    <input type="text" id="new-session-code" placeholder="Enter session code to add">
+                    <button class="button" id="add-session-btn">Add Session</button>
+                </div>
+                
+                <div class="allowed-sessions-list">
+                    <h4>Allowed Sessions:</h4>
+                    <ul id="allowed-sessions-list"></ul>
+                    <button class="button" id="refresh-sessions">Refresh List</button>
+                </div>
+            </div>
+            
+            <div class="modal-section">
+                <h3>Promote to Admin</h3>
+                <p>Enter session code to grant admin permissions:</p>
+                <input type="text" id="promote-session-code">
+                <div class="modal-buttons">
+                    <button class="button" id="promote-user">Promote</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>

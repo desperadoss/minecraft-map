@@ -43,9 +43,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // === Configuration and global variables ===
     const MAP_WIDTH_PX = 10000;
-    const MAP_HEIGHT_PX = 6000;
+    const MAP_HEIGHT_PX = 5500;
     const MAP_X_RANGE = 4200;
-    const MAP_Z_RANGE = 3000;
+    const MAP_Z_RANGE = 2750;
     
     let currentScale = 0.18;
     let offsetX = 0;
@@ -986,4 +986,3 @@ document.addEventListener('DOMContentLoaded', () => {
     // Run initialization
     init();
 });
-
