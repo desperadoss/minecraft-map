@@ -28,6 +28,13 @@ const connectDB = async () => {
     }
 };
 
+// Valid Minecraft categories
+const VALID_CATEGORIES = [
+    'structures', 'ores', 'diamond', 'gold', 'iron', 'emerald', 'redstone',
+    'coal', 'lapis', 'copper', 'netherite', 'farms', 'villages', 'stronghold',
+    'dungeon', 'nether', 'end', 'ocean', 'base', 'spawn', 'other'
+];
+
 // Schema and model for map points
 const pointSchema = new mongoose.Schema({
     name: {
@@ -43,6 +50,12 @@ const pointSchema = new mongoose.Schema({
     z: {
         type: Number,
         required: true
+    },
+    category: {
+        type: String,
+        required: true,
+        enum: VALID_CATEGORIES,
+        default: 'other'
     },
     ownerSessionCode: {
         type: String,
@@ -72,7 +85,7 @@ const adminSchema = new mongoose.Schema({
 
 const Admin = mongoose.model('Admin', adminSchema);
 
-// NEW SCHEMA: Allowed session codes for admin login
+// Schema for allowed session codes for admin login
 const allowedSessionSchema = new mongoose.Schema({
     sessionCode: {
         type: String,
@@ -167,7 +180,7 @@ app.get('/api/points/private', async (req, res) => {
 // POST - Add new point (default status: private)
 app.post('/api/points', async (req, res) => {
     try {
-        const { name, x, z } = req.body;
+        const { name, x, z, category } = req.body;
         const ownerSessionCode = req.header('X-Session-Code');
 
         if (!name || name.trim() === '') {
@@ -182,42 +195,9 @@ app.post('/api/points', async (req, res) => {
             return res.status(400).json({ message: 'Session code is required.' });
         }
 
-        const numX = parseInt(x);
-        const numZ = parseInt(z);
-
-        if (isNaN(numX) || isNaN(numZ)) {
-            return res.status(400).json({ message: 'Coordinates must be numbers.' });
-        }
-
-        const newPoint = new Point({ 
-            name: name.trim(), 
-            x: numX, 
-            z: numZ, 
-            ownerSessionCode, 
-            status: 'private' 
-        });
-        
-        await newPoint.save();
-        res.status(201).json(newPoint);
-    } catch (err) {
-        console.error('Error adding point:', err);
-        res.status(500).json({ message: 'Error adding point.' });
-    }
-});
-
-// PUT - Edit point (owner only)
-app.put('/api/points/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name, x, z } = req.body;
-        const sessionCode = req.header('X-Session-Code');
-
-        if (!name || name.trim() === '') {
-            return res.status(400).json({ message: 'Point name is required.' });
-        }
-
-        if (x === undefined || z === undefined) {
-            return res.status(400).json({ message: 'X and Z coordinates are required.' });
+        // Validate category
+        if (category && !VALID_CATEGORIES.includes(category)) {
+            return res.status(400).json({ message: 'Invalid category.' });
         }
 
         const numX = parseInt(x);
@@ -239,6 +219,7 @@ app.put('/api/points/:id', async (req, res) => {
         point.name = name.trim();
         point.x = numX;
         point.z = numZ;
+        point.category = category || point.category || 'other';
         await point.save();
         res.json(point);
     } catch (err) {
@@ -418,7 +399,7 @@ app.put('/api/admin/reject/:id', checkAdmin, async (req, res) => {
 app.put('/api/admin/edit/:id', checkAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, x, z } = req.body;
+        const { name, x, z, category } = req.body;
 
         if (!name || name.trim() === '') {
             return res.status(400).json({ message: 'Point name is required.' });
@@ -426,6 +407,11 @@ app.put('/api/admin/edit/:id', checkAdmin, async (req, res) => {
 
         if (x === undefined || z === undefined) {
             return res.status(400).json({ message: 'X and Z coordinates are required.' });
+        }
+
+        // Validate category
+        if (category && !VALID_CATEGORIES.includes(category)) {
+            return res.status(400).json({ message: 'Invalid category.' });
         }
 
         const numX = parseInt(x);
@@ -442,6 +428,7 @@ app.put('/api/admin/edit/:id', checkAdmin, async (req, res) => {
         point.name = name.trim();
         point.x = numX;
         point.z = numZ;
+        point.category = category || point.category || 'other';
         await point.save();
         res.json(point);
     } catch (err) {
@@ -649,3 +636,47 @@ startServer().catch(err => {
     console.error('Server startup error:', err);
     process.exit(1);
 });
+        if (category && !VALID_CATEGORIES.includes(category)) {
+            return res.status(400).json({ message: 'Invalid category.' });
+        }
+
+        const numX = parseInt(x);
+        const numZ = parseInt(z);
+
+        if (isNaN(numX) || isNaN(numZ)) {
+            return res.status(400).json({ message: 'Coordinates must be numbers.' });
+        }
+
+        const newPoint = new Point({ 
+            name: name.trim(), 
+            x: numX, 
+            z: numZ,
+            category: category || 'other',
+            ownerSessionCode, 
+            status: 'private' 
+        });
+        
+        await newPoint.save();
+        res.status(201).json(newPoint);
+    } catch (err) {
+        console.error('Error adding point:', err);
+        res.status(500).json({ message: 'Error adding point.' });
+    }
+});
+
+// PUT - Edit point (owner only)
+app.put('/api/points/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, x, z, category } = req.body;
+        const sessionCode = req.header('X-Session-Code');
+
+        if (!name || name.trim() === '') {
+            return res.status(400).json({ message: 'Point name is required.' });
+        }
+
+        if (x === undefined || z === undefined) {
+            return res.status(400).json({ message: 'X and Z coordinates are required.' });
+        }
+
+        // Validate category
