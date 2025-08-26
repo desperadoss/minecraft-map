@@ -18,9 +18,10 @@
                 <div class="filter-buttons">
                     <button class="button active" id="show-your-points">Show/Filter Your Points</button>
                     <button class="button active" id="show-shared-points">Show/Filter Shared Points</button>
-                    <div class="category-filter">
-                        <select id="category-filter-select" class="filter-select">
-                            <option value="all">All Categories</option>
+                    <div class="resource-filter-container">
+                        <label for="resource-filter">Filter by resource:</label>
+                        <select id="resource-filter" class="resource-dropdown">
+                            <option value="">All Resources</option>
                         </select>
                     </div>
                 </div>
@@ -43,14 +44,14 @@
                 <h2 class="section-title">Your Points</h2>
                 <div class="add-point-form-inline">
                     <div class="form-group">
-                        <label for="category-select">Category</label>
-                        <select id="category-select" class="category-select">
-                            <!-- Categories will be populated by JS -->
+                        <label for="resource-select">Resource Type</label>
+                        <select id="resource-select" class="resource-dropdown">
+                            <option value="">Select Resource</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="name-input">Point Name</label>
-                        <input type="text" id="name-input" placeholder="e.g. Diamond Vein">
+                    <div class="form-group custom-name-group" style="display: none;">
+                        <label for="name-input">Custom Name</label>
+                        <input type="text" id="name-input" placeholder="e.g. Home Base">
                     </div>
                     <div class="form-group">
                         <label for="x-input">X Coordinate</label>
@@ -72,12 +73,10 @@
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2 class="modal-title" id="point-name">Point Name</h2>
-            <div class="point-details-info">
-                <div class="point-category-badge" id="point-category-badge"></div>
-                <div class="point-status-badge" id="point-status-badge"></div>
-            </div>
-            <p>X Coordinate: <span id="point-x"></span></p>
-            <p>Z Coordinate: <span id="point-z"></span></p>
+            <p><strong>Resource Type:</strong> <span id="point-resource"></span></p>
+            <p><strong>X Coordinate:</strong> <span id="point-x"></span></p>
+            <p><strong>Z Coordinate:</strong> <span id="point-z"></span></p>
+            <p><strong>Status:</strong> <span id="point-status"></span></p>
             <div class="modal-buttons">
                 <button class="button" id="share-point">Share</button>
                 <button class="button" id="edit-point">Edit</button>
