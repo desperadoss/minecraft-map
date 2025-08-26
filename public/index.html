@@ -18,6 +18,11 @@
                 <div class="filter-buttons">
                     <button class="button active" id="show-your-points">Show/Filter Your Points</button>
                     <button class="button active" id="show-shared-points">Show/Filter Shared Points</button>
+                    <div class="category-filter">
+                        <select id="category-filter-select" class="filter-select">
+                            <option value="all">All Categories</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="view-controls">
                     <button class="button zoom-button" id="zoom-in">+</button>
@@ -38,8 +43,14 @@
                 <h2 class="section-title">Your Points</h2>
                 <div class="add-point-form-inline">
                     <div class="form-group">
+                        <label for="category-select">Category</label>
+                        <select id="category-select" class="category-select">
+                            <!-- Categories will be populated by JS -->
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label for="name-input">Point Name</label>
-                        <input type="text" id="name-input" placeholder="e.g. Home">
+                        <input type="text" id="name-input" placeholder="e.g. Diamond Vein">
                     </div>
                     <div class="form-group">
                         <label for="x-input">X Coordinate</label>
@@ -61,6 +72,10 @@
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2 class="modal-title" id="point-name">Point Name</h2>
+            <div class="point-details-info">
+                <div class="point-category-badge" id="point-category-badge"></div>
+                <div class="point-status-badge" id="point-status-badge"></div>
+            </div>
             <p>X Coordinate: <span id="point-x"></span></p>
             <p>Z Coordinate: <span id="point-z"></span></p>
             <div class="modal-buttons">
