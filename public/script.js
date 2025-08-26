@@ -1,134 +1,45 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // === Minecraft Resource Categories ===
-    const MINECRAFT_CATEGORIES = {
-        'structures': { 
-            name: 'Structures', 
-            color: '#8B4513',
-            gradient: 'linear-gradient(135deg, #8B4513 0%, #654321 100%)',
-            icon: '🏰'
-        },
-        'ores': { 
-            name: 'Ores & Mining', 
-            color: '#708090',
-            gradient: 'linear-gradient(135deg, #708090 0%, #556B7D 100%)',
-            icon: '⛏️'
-        },
-        'diamond': { 
-            name: 'Diamond', 
-            color: '#00CED1',
-            gradient: 'linear-gradient(135deg, #00CED1 0%, #00B8CC 100%)',
-            icon: '💎'
-        },
-        'gold': { 
-            name: 'Gold', 
-            color: '#FFD700',
-            gradient: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)',
-            icon: '🟨'
-        },
-        'iron': { 
-            name: 'Iron', 
-            color: '#C0C0C0',
-            gradient: 'linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%)',
-            icon: '⚪'
-        },
-        'emerald': { 
-            name: 'Emerald', 
-            color: '#50C878',
-            gradient: 'linear-gradient(135deg, #50C878 0%, #3CB371 100%)',
-            icon: '💚'
-        },
-        'redstone': { 
-            name: 'Redstone', 
-            color: '#FF0000',
-            gradient: 'linear-gradient(135deg, #FF0000 0%, #DC143C 100%)',
-            icon: '🔴'
-        },
-        'coal': { 
-            name: 'Coal', 
-            color: '#2F2F2F',
-            gradient: 'linear-gradient(135deg, #2F2F2F 0%, #1C1C1C 100%)',
-            icon: '⚫'
-        },
-        'lapis': { 
-            name: 'Lapis Lazuli', 
-            color: '#4169E1',
-            gradient: 'linear-gradient(135deg, #4169E1 0%, #0000CD 100%)',
-            icon: '🔵'
-        },
-        'copper': { 
-            name: 'Copper', 
-            color: '#B87333',
-            gradient: 'linear-gradient(135deg, #B87333 0%, #8B4513 100%)',
-            icon: '🟤'
-        },
-        'netherite': { 
-            name: 'Netherite', 
-            color: '#654321',
-            gradient: 'linear-gradient(135deg, #654321 0%, #3C2415 100%)',
-            icon: '⬛'
-        },
-        'farms': { 
-            name: 'Farms & Food', 
-            color: '#228B22',
-            gradient: 'linear-gradient(135deg, #228B22 0%, #006400 100%)',
-            icon: '🌾'
-        },
-        'villages': { 
-            name: 'Villages', 
-            color: '#8B4513',
-            gradient: 'linear-gradient(135deg, #8B4513 0%, #654321 100%)',
-            icon: '🏘️'
-        },
-        'stronghold': { 
-            name: 'Stronghold', 
-            color: '#2F4F4F',
-            gradient: 'linear-gradient(135deg, #2F4F4F 0%, #1C1C1C 100%)',
-            icon: '🗿'
-        },
-        'dungeon': { 
-            name: 'Dungeons', 
-            color: '#4B0082',
-            gradient: 'linear-gradient(135deg, #4B0082 0%, #301934 100%)',
-            icon: '🏴‍☠️'
-        },
-        'nether': { 
-            name: 'Nether', 
-            color: '#8B0000',
-            gradient: 'linear-gradient(135deg, #8B0000 0%, #640000 100%)',
-            icon: '🔥'
-        },
-        'end': { 
-            name: 'End', 
-            color: '#9400D3',
-            gradient: 'linear-gradient(135deg, #9400D3 0%, #6A0DAD 100%)',
-            icon: '🌌'
-        },
-        'ocean': { 
-            name: 'Ocean Monuments', 
-            color: '#006994',
-            gradient: 'linear-gradient(135deg, #006994 0%, #004A6B 100%)',
-            icon: '🌊'
-        },
-        'base': { 
-            name: 'Base/Home', 
-            color: '#32CD32',
-            gradient: 'linear-gradient(135deg, #32CD32 0%, #228B22 100%)',
-            icon: '🏠'
-        },
-        'spawn': { 
-            name: 'Spawn Point', 
-            color: '#FF69B4',
-            gradient: 'linear-gradient(135deg, #FF69B4 0%, #FF1493 100%)',
-            icon: '⭐'
-        },
-        'other': { 
-            name: 'Other', 
-            color: '#696969',
-            gradient: 'linear-gradient(135deg, #696969 0%, #4F4F4F 100%)',
-            icon: '📍'
-        }
-    };
+// Minecraft resources configuration
+const MINECRAFT_RESOURCES = {
+    // Ores and Minerals
+    'diamond': { name: 'Diamond', color: '#5DADE2', category: 'ore' },
+    'emerald': { name: 'Emerald', color: '#58D68D', category: 'ore' },
+    'gold': { name: 'Gold', color: '#F1C40F', category: 'ore' },
+    'iron': { name: 'Iron', color: '#BDC3C7', category: 'ore' },
+    'coal': { name: 'Coal', color: '#2C3E50', category: 'ore' },
+    'copper': { name: 'Copper', color: '#D68910', category: 'ore' },
+    'redstone': { name: 'Redstone', color: '#E74C3C', category: 'ore' },
+    'lapis': { name: 'Lapis Lazuli', color: '#3498DB', category: 'ore' },
+    
+    // Structures
+    'stronghold': { name: 'Stronghold', color: '#8E44AD', category: 'structure' },
+    'village': { name: 'Village', color: '#A0522D', category: 'structure' },
+    'temple': { name: 'Desert Temple', color: '#F39C12', category: 'structure' },
+    'mineshaft': { name: 'Abandoned Mineshaft', color: '#85929E', category: 'structure' },
+    'fortress': { name: 'Nether Fortress', color: '#C0392B', category: 'structure' },
+    'bastion': { name: 'Bastion Remnant', color: '#884EA0', category: 'structure' },
+    'end_city': { name: 'End City', color: '#D2B4DE', category: 'structure' },
+    
+    // Biomes
+    'mushroom': { name: 'Mushroom Island', color: '#C39BD3', category: 'biome' },
+    'mesa': { name: 'Badlands', color: '#E67E22', category: 'biome' },
+    'ice_spikes': { name: 'Ice Spikes', color: '#AED6F1', category: 'biome' },
+    'jungle': { name: 'Jungle', color: '#27AE60', category: 'biome' },
+    'flower_forest': { name: 'Flower Forest', color: '#F8C471', category: 'biome' },
+    
+    // Resources
+    'slime': { name: 'Slime Chunk', color: '#58D68D', category: 'resource' },
+    'spawner': { name: 'Mob Spawner', color: '#34495E', category: 'resource' },
+    'portal': { name: 'Nether Portal', color: '#9B59B6', category: 'resource' },
+    'farm': { name: 'Farm', color: '#82E0AA', category: 'resource' },
+    
+    // Personal
+    'base': { name: 'Base', color: '#1ABC9C', category: 'personal' },
+    'home': { name: 'Home', color: '#E8DAEF', category: 'personal' },
+    'waypoint': { name: 'Waypoint', color: '#F7DC6F', category: 'personal' },
+    'custom': { name: 'Custom', color: '#95A5A6', category: 'personal' }
+};
 
+document.addEventListener('DOMContentLoaded', () => {
     // === HTML Selectors ===
     const mapContainer = document.querySelector('.map-container');
     const mapImage = document.getElementById('minecraft-map');
@@ -140,14 +51,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const showYourPointsBtn = document.getElementById('show-your-points');
     const showSharedPointsBtn = document.getElementById('show-shared-points');
     const sessionCodeDisplay = document.getElementById('session-code-text');
-    const categoryFilterSelect = document.getElementById('category-filter-select');
     
-    // Add point form
-    const categorySelect = document.getElementById('category-select');
+    // Add point form - UPDATED
+    const resourceSelect = document.getElementById('resource-select');
     const nameInput = document.getElementById('name-input');
     const xInput = document.getElementById('x-input');
     const zInput = document.getElementById('z-input');
     const addPointBtn = document.getElementById('add-point-button');
+    const customNameGroup = document.querySelector('.custom-name-group');
+    
+    // Resource filter
+    const resourceFilter = document.getElementById('resource-filter');
 
     // Modals
     const pointDetailsModal = document.getElementById('point-details-modal');
@@ -167,11 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const promoteSessionCodeInput = document.getElementById('promote-session-code');
     const pendingPointsList = document.getElementById('pending-points-list');
     
-    // Point details elements
-    const pointCategoryBadge = document.getElementById('point-category-badge');
-    const pointStatusBadge = document.getElementById('point-status-badge');
-    
-    // NEW ELEMENTS - owner panel
+    // Owner panel elements
     const newSessionCodeInput = document.getElementById('new-session-code');
     const addSessionBtn = document.getElementById('add-session-btn');
     const allowedSessionsList = document.getElementById('allowed-sessions-list');
@@ -193,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let isShowingPrivate = true;
     let isShowingPublic = true;
-    let selectedCategoryFilter = 'all';
+    let currentResourceFilter = '';
     let isThrottling = false;
     let mouseMoveThrottle = null;
 
@@ -207,43 +117,63 @@ document.addEventListener('DOMContentLoaded', () => {
     let isUserAdmin = false;
     let isUserOwner = false;
 
-    // === Initialize Categories ===
-    function initializeCategories() {
-        // Populate category select for adding points
-        categorySelect.innerHTML = '';
-        Object.keys(MINECRAFT_CATEGORIES).forEach(categoryKey => {
-            const category = MINECRAFT_CATEGORIES[categoryKey];
-            const option = document.createElement('option');
-            option.value = categoryKey;
-            option.textContent = `${category.icon} ${category.name}`;
-            categorySelect.appendChild(option);
+    // === Initialize resource dropdowns ===
+    function initializeResourceDropdowns() {
+        // Clear existing options (except first one)
+        resourceSelect.innerHTML = '<option value="">Select Resource</option>';
+        resourceFilter.innerHTML = '<option value="">All Resources</option>';
+        
+        // Group resources by category
+        const categories = {};
+        Object.entries(MINECRAFT_RESOURCES).forEach(([key, resource]) => {
+            if (!categories[resource.category]) {
+                categories[resource.category] = [];
+            }
+            categories[resource.category].push({ key, ...resource });
         });
 
-        // Populate category filter
-        categoryFilterSelect.innerHTML = '<option value="all">All Categories</option>';
-        Object.keys(MINECRAFT_CATEGORIES).forEach(categoryKey => {
-            const category = MINECRAFT_CATEGORIES[categoryKey];
-            const option = document.createElement('option');
-            option.value = categoryKey;
-            option.textContent = `${category.icon} ${category.name}`;
-            categoryFilterSelect.appendChild(option);
+        // Add options grouped by category
+        Object.entries(categories).forEach(([categoryName, resources]) => {
+            // Create optgroup for resource select
+            const optgroup1 = document.createElement('optgroup');
+            optgroup1.label = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+            
+            const optgroup2 = document.createElement('optgroup');
+            optgroup2.label = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+
+            resources.forEach(resource => {
+                const option1 = document.createElement('option');
+                option1.value = resource.key;
+                option1.textContent = resource.name;
+                optgroup1.appendChild(option1);
+
+                const option2 = document.createElement('option');
+                option2.value = resource.key;
+                option2.textContent = resource.name;
+                optgroup2.appendChild(option2);
+            });
+
+            resourceSelect.appendChild(optgroup1);
+            resourceFilter.appendChild(optgroup2);
         });
     }
 
-    // === Auto-suggest point name based on category ===
-    categorySelect.addEventListener('change', (e) => {
-        const selectedCategory = e.target.value;
-        if (selectedCategory && nameInput.value.trim() === '') {
-            const category = MINECRAFT_CATEGORIES[selectedCategory];
-            if (category) {
-                nameInput.placeholder = `e.g. ${category.name} Site`;
-            }
+    // === Resource select handler ===
+    resourceSelect.addEventListener('change', () => {
+        const selectedResource = resourceSelect.value;
+        if (selectedResource === 'custom' || selectedResource === '') {
+            customNameGroup.style.display = 'block';
+            nameInput.required = true;
+        } else {
+            customNameGroup.style.display = 'none';
+            nameInput.required = false;
+            nameInput.value = MINECRAFT_RESOURCES[selectedResource]?.name || '';
         }
     });
 
-    // === Category filter functionality ===
-    categoryFilterSelect.addEventListener('change', (e) => {
-        selectedCategoryFilter = e.target.value;
+    // === Resource filter handler ===
+    resourceFilter.addEventListener('change', () => {
+        currentResourceFilter = resourceFilter.value;
         filterPoints();
     });
 
@@ -257,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const ownerData = await ownerRes.json();
             if (ownerData.isOwner) {
                 isUserOwner = true;
-                isUserAdmin = true; // Owner always has admin permissions
+                isUserAdmin = true;
                 console.log('User is owner');
                 return;
             }
@@ -272,7 +202,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('User is admin');
                 }
             } catch (err) {
-                // Not an admin
                 console.log('User has no admin permissions');
             }
         } catch (err) {
@@ -316,7 +245,6 @@ document.addEventListener('DOMContentLoaded', () => {
             word-wrap: break-word;
         `;
 
-        // Add animation styles if they don't exist yet
         if (!document.getElementById('notification-styles')) {
             const style = document.createElement('style');
             style.id = 'notification-styles';
@@ -336,12 +264,10 @@ document.addEventListener('DOMContentLoaded', () => {
         notification.textContent = message;
         container.appendChild(notification);
 
-        // Click to close
         notification.addEventListener('click', () => {
             removeNotification(notification);
         });
 
-        // Auto-remove after 5 seconds
         setTimeout(() => {
             if (notification.parentNode) {
                 removeNotification(notification);
@@ -371,10 +297,27 @@ document.addEventListener('DOMContentLoaded', () => {
         return { x: Math.round(mcX), z: Math.round(mcZ) };
     }
 
+    function getResourceColor(resourceType) {
+        return MINECRAFT_RESOURCES[resourceType]?.color || '#95A5A6';
+    }
+
+    function getResourceName(resourceType) {
+        return MINECRAFT_RESOURCES[resourceType]?.name || 'Custom';
+    }
+
+    function getStatusLabel(status) {
+        switch(status) {
+            case 'private': return 'Private';
+            case 'pending': return 'Pending Approval';
+            case 'public': return 'Public (Shared)';
+            default: return 'Unknown';
+        }
+    }
+
     // === Function for point scaling ===
     function updatePointScaling() {
         const points = document.querySelectorAll('.point-wrapper');
-        const pointScale = 1.0 / currentScale;
+        const pointScale = Math.max(0.5, 1.0 / currentScale);
         
         points.forEach(point => {
             point.style.transform = `translate3d(-50%, -50%, 0) scale(${pointScale.toFixed(3)})`;
@@ -448,13 +391,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function clearInputs() {
         try {
-            categorySelect.value = categorySelect.options[0].value;
+            resourceSelect.value = '';
             nameInput.value = '';
             xInput.value = '';
             zInput.value = '';
-            nameInput.placeholder = 'e.g. Diamond Vein';
+            customNameGroup.style.display = 'none';
             
-            [categorySelect, nameInput, xInput, zInput].forEach(input => {
+            [resourceSelect, nameInput, xInput, zInput].forEach(input => {
                 input.blur();
                 input.removeAttribute('readonly');
             });
@@ -490,7 +433,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         points.forEach(point => {
             const { x, z } = mcToPx(point.x, point.z);
-            const category = MINECRAFT_CATEGORIES[point.category] || MINECRAFT_CATEGORIES['other'];
             
             const pointWrapper = document.createElement('div');
             pointWrapper.classList.add('point-wrapper');
@@ -498,32 +440,29 @@ document.addEventListener('DOMContentLoaded', () => {
             pointWrapper.dataset.pointName = point.name;
             pointWrapper.dataset.pointX = point.x;
             pointWrapper.dataset.pointZ = point.z;
-            pointWrapper.dataset.pointCategory = point.category || 'other';
             pointWrapper.dataset.ownerSessionCode = point.ownerSessionCode;
             pointWrapper.dataset.status = point.status;
+            pointWrapper.dataset.resourceType = point.resourceType || 'custom';
             pointWrapper.style.left = `${x}px`;
             pointWrapper.style.top = `${z}px`;
 
             const pointElement = document.createElement('div');
-            pointElement.classList.add('point', 'modern-point');
-            pointElement.style.background = category.gradient;
-            pointElement.style.borderColor = `${category.color}80`;
+            pointElement.classList.add('point');
+            pointElement.classList.add('modern-marker');
             
-            // Add status indicator
-            const statusIndicator = document.createElement('div');
-            statusIndicator.classList.add('status-indicator', point.status);
+            // Set color based on resource type
+            const resourceColor = getResourceColor(point.resourceType);
+            pointElement.style.setProperty('--marker-color', resourceColor);
             
             const pointNameElement = document.createElement('div');
             pointNameElement.classList.add('point-name');
             pointNameElement.innerHTML = `
-                <span class="category-icon">${category.icon}</span>
-                <span class="point-text">${point.name}</span>
-                ${point.status === 'public' ? '<span class="shared-badge">Shared</span>' : ''}
-                ${point.status === 'pending' ? '<span class="pending-badge">Pending</span>' : ''}
+                <span class="point-title">${point.name}</span>
+                <span class="point-status">${getStatusLabel(point.status)}</span>
+                <span class="point-resource">${getResourceName(point.resourceType)}</span>
             `;
 
             pointWrapper.appendChild(pointElement);
-            pointWrapper.appendChild(statusIndicator);
             pointWrapper.appendChild(pointNameElement);
             
             pointWrapper.addEventListener('click', (e) => {
@@ -541,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const points = document.querySelectorAll('.point-wrapper');
         points.forEach(point => {
             const status = point.dataset.status;
-            const category = point.dataset.pointCategory;
+            const resourceType = point.dataset.resourceType;
             let isVisible = false;
 
             // Check status filter
@@ -551,9 +490,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 isVisible = true;
             }
             
-            // Check category filter
-            if (isVisible && selectedCategoryFilter !== 'all') {
-                isVisible = (category === selectedCategoryFilter);
+            // Check resource filter
+            if (isVisible && currentResourceFilter && resourceType !== currentResourceFilter) {
+                isVisible = false;
             }
             
             if (isVisible) {
@@ -636,15 +575,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === Form and modal logic ===
     addPointBtn.addEventListener('click', async () => {
-        const category = categorySelect.value;
-        const name = nameInput.value.trim();
+        const resourceType = resourceSelect.value;
+        const name = nameInput.value.trim() || (resourceType ? getResourceName(resourceType) : '');
         const x = parseInt(xInput.value);
         const z = parseInt(zInput.value);
         const mode = addPointBtn.dataset.mode;
         const pointId = addPointBtn.dataset.pointId;
 
-        if (!category || !name || isNaN(x) || isNaN(z)) {
-            showError('Please fill all fields correctly!');
+        if (!resourceType) {
+            showError('Please select a resource type!');
+            return;
+        }
+
+        if (!name) {
+            showError('Please provide a name for the point!');
+            return;
+        }
+
+        if (isNaN(x) || isNaN(z)) {
+            showError('Please fill all coordinate fields correctly!');
             return;
         }
 
@@ -653,6 +602,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             let response;
+            const pointData = { name, x, z, resourceType };
+
             if (mode === 'edit') {
                 const point = document.querySelector('.point-wrapper[data-point-id="' + pointId + '"]');
                 const isPublic = point.dataset.status === 'public';
@@ -664,7 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         'Content-Type': 'application/json',
                         'X-Session-Code': sessionCode
                     },
-                    body: JSON.stringify({ name, x, z, category })
+                    body: JSON.stringify(pointData)
                 });
 
                 addPointBtn.textContent = 'Add Point';
@@ -678,7 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         'Content-Type': 'application/json',
                         'X-Session-Code': sessionCode
                     },
-                    body: JSON.stringify({ name, x, z, category })
+                    body: JSON.stringify(pointData)
                 });
             }
 
@@ -714,27 +665,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function displayPointDetails(point) {
-        const category = MINECRAFT_CATEGORIES[point.category] || MINECRAFT_CATEGORIES['other'];
-        
         document.getElementById('point-name').textContent = point.name;
+        document.getElementById('point-resource').textContent = getResourceName(point.resourceType);
         document.getElementById('point-x').textContent = point.x;
         document.getElementById('point-z').textContent = point.z;
-
-        // Update category badge
-        pointCategoryBadge.innerHTML = `
-            <span class="category-icon">${category.icon}</span>
-            <span>${category.name}</span>
-        `;
-        pointCategoryBadge.style.background = category.gradient;
-
-        // Update status badge
-        const statusText = {
-            'private': 'Private',
-            'pending': 'Pending Approval',
-            'public': 'Shared'
-        };
-        pointStatusBadge.textContent = statusText[point.status] || 'Unknown';
-        pointStatusBadge.className = `point-status-badge ${point.status}`;
+        document.getElementById('point-status').textContent = getStatusLabel(point.status);
 
         sharePointBtn.style.display = 'none';
         editPointBtn.style.display = 'none';
@@ -785,14 +720,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     editPointBtn.addEventListener('click', () => {
         const pointId = pointDetailsModal.dataset.pointId;
+        const pointWrapper = document.querySelector('.point-wrapper[data-point-id="' + pointId + '"]');
         const pointName = document.getElementById('point-name').textContent;
         const pointX = document.getElementById('point-x').textContent;
         const pointZ = document.getElementById('point-z').textContent;
-        const pointWrapper = document.querySelector('.point-wrapper[data-point-id="' + pointId + '"]');
-        const pointCategory = pointWrapper.dataset.pointCategory;
+        const resourceType = pointWrapper.dataset.resourceType;
 
-        categorySelect.value = pointCategory || 'other';
-        nameInput.value = pointName;
+        resourceSelect.value = resourceType;
+        if (resourceType === 'custom' || !resourceType) {
+            customNameGroup.style.display = 'block';
+            nameInput.value = pointName;
+        } else {
+            customNameGroup.style.display = 'none';
+            nameInput.value = getResourceName(resourceType);
+        }
         xInput.value = pointX;
         zInput.value = pointZ;
         
@@ -957,20 +898,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         points.forEach(point => {
-            const category = MINECRAFT_CATEGORIES[point.category] || MINECRAFT_CATEGORIES['other'];
             const li = document.createElement('li');
             li.innerHTML = `
-                <div class="pending-point-item">
-                    <div class="point-info">
-                        <span class="category-icon">${category.icon}</span>
-                        <span class="point-name">${point.name}</span>
-                        <span class="coordinates">(X: ${point.x}, Z: ${point.z})</span>
-                        <span class="category-name">${category.name}</span>
-                    </div>
-                    <div class="point-actions">
-                        <button class="button accept-btn" data-id="${point._id}">Accept</button>
-                        <button class="button reject-btn" data-id="${point._id}">Reject</button>
-                    </div>
+                <span>${point.name} (${getResourceName(point.resourceType)}) - X: ${point.x}, Z: ${point.z}</span>
+                <div>
+                    <button class="button accept-btn" data-id="${point._id}">Accept</button>
+                    <button class="button reject-btn" data-id="${point._id}">Reject</button>
                 </div>
             `;
             pendingPointsList.appendChild(li);
@@ -1180,7 +1113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    [nameInput, xInput, zInput].forEach(input => {
+    [resourceSelect, nameInput, xInput, zInput].forEach(input => {
         input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 addPointBtn.click();
@@ -1196,10 +1129,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === INITIALIZATION ===
     async function init() {
-        initializeCategories();
+        initializeResourceDropdowns();
         await checkUserPermissions();
         updateMapPosition();
         fetchPoints();
     }
 
     init();
+});
