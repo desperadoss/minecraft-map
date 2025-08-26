@@ -11,25 +11,20 @@ const MINECRAFT_RESOURCES = {
     'lapis': { name: 'Lapis Lazuli', color: '#3498DB', category: 'ore' },
     
     // Structures
-    'stronghold': { name: 'Stronghold', color: '#8E44AD', category: 'structure' },
     'village': { name: 'Village', color: '#A0522D', category: 'structure' },
-    'temple': { name: 'Desert Temple', color: '#F39C12', category: 'structure' },
-    'mineshaft': { name: 'Abandoned Mineshaft', color: '#85929E', category: 'structure' },
     'fortress': { name: 'Nether Fortress', color: '#C0392B', category: 'structure' },
-    'bastion': { name: 'Bastion Remnant', color: '#884EA0', category: 'structure' },
-    'end_city': { name: 'End City', color: '#D2B4DE', category: 'structure' },
     
     // Biomes
-    'mushroom': { name: 'Mushroom Island', color: '#C39BD3', category: 'biome' },
     'mesa': { name: 'Badlands', color: '#E67E22', category: 'biome' },
-    'ice_spikes': { name: 'Ice Spikes', color: '#AED6F1', category: 'biome' },
+    'snow': { name: 'Snow', color: '#AED6F1', category: 'biome' },
     'jungle': { name: 'Jungle', color: '#27AE60', category: 'biome' },
-    'flower_forest': { name: 'Flower Forest', color: '#F8C471', category: 'biome' },
+    'forest': { name: 'Forest', color: '#F8C471', category: 'biome' },
+    'badlands': { name: 'Badlands', color: '#F8C471', category: 'biome' },
+    'taiga': { name: 'Taiga', color: '#F8C471', category: 'biome' },
+    'cherry': { name: 'Cherry', color: '#F8C471', category: 'biome' },
     
     // Resources
     'slime': { name: 'Slime Chunk', color: '#58D68D', category: 'resource' },
-    'spawner': { name: 'Mob Spawner', color: '#34495E', category: 'resource' },
-    'portal': { name: 'Nether Portal', color: '#9B59B6', category: 'resource' },
     'farm': { name: 'Farm', color: '#82E0AA', category: 'resource' },
     
     // Personal
@@ -1137,3 +1132,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     init();
 });
+
