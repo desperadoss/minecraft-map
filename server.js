@@ -207,6 +207,50 @@ app.post('/api/points', async (req, res) => {
             return res.status(400).json({ message: 'Coordinates must be numbers.' });
         }
 
+        const newPoint = new Point({ 
+            name: name.trim(), 
+            x: numX, 
+            z: numZ,
+            category: category || 'other',
+            ownerSessionCode, 
+            status: 'private' 
+        });
+        
+        await newPoint.save();
+        res.status(201).json(newPoint);
+    } catch (err) {
+        console.error('Error adding point:', err);
+        res.status(500).json({ message: 'Error adding point.' });
+    }
+});
+
+// PUT - Edit point (owner only)
+app.put('/api/points/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, x, z, category } = req.body;
+        const sessionCode = req.header('X-Session-Code');
+
+        if (!name || name.trim() === '') {
+            return res.status(400).json({ message: 'Point name is required.' });
+        }
+
+        if (x === undefined || z === undefined) {
+            return res.status(400).json({ message: 'X and Z coordinates are required.' });
+        }
+
+        // Validate category
+        if (category && !VALID_CATEGORIES.includes(category)) {
+            return res.status(400).json({ message: 'Invalid category.' });
+        }
+
+        const numX = parseInt(x);
+        const numZ = parseInt(z);
+
+        if (isNaN(numX) || isNaN(numZ)) {
+            return res.status(400).json({ message: 'Coordinates must be numbers.' });
+        }
+
         const point = await Point.findById(id);
         if (!point) {
             return res.status(404).json({ message: 'Point not found.' });
@@ -636,48 +680,3 @@ startServer().catch(err => {
     console.error('Server startup error:', err);
     process.exit(1);
 });
-        if (category && !VALID_CATEGORIES.includes(category)) {
-            return res.status(400).json({ message: 'Invalid category.' });
-        }
-
-        const numX = parseInt(x);
-        const numZ = parseInt(z);
-
-        if (isNaN(numX) || isNaN(numZ)) {
-            return res.status(400).json({ message: 'Coordinates must be numbers.' });
-        }
-
-        const newPoint = new Point({ 
-            name: name.trim(), 
-            x: numX, 
-            z: numZ,
-            category: category || 'other',
-            ownerSessionCode, 
-            status: 'private' 
-        });
-        
-        await newPoint.save();
-        res.status(201).json(newPoint);
-    } catch (err) {
-        console.error('Error adding point:', err);
-        res.status(500).json({ message: 'Error adding point.' });
-    }
-});
-
-// PUT - Edit point (owner only)
-app.put('/api/points/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name, x, z, category } = req.body;
-        const sessionCode = req.header('X-Session-Code');
-
-        if (!name || name.trim() === '') {
-            return res.status(400).json({ message: 'Point name is required.' });
-        }
-
-        if (x === undefined || z === undefined) {
-            return res.status(400).json({ message: 'X and Z coordinates are required.' });
-        }
-
-        // Validate category
-
