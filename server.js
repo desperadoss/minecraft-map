@@ -103,7 +103,7 @@ const allowedSessionSchema = new mongoose.Schema({
 const AllowedSession = mongoose.model('AllowedSession', allowedSessionSchema);
 
 // Fixed owner session code
-const OWNER_SESSION_CODE = "301263ee-49a9-4575-8c3d-f784bae7b27d";
+const OWNER_SESSION_CODE = "270ea844-8ab8-4ea1-a34c-18ea2e6a920a";
 
 // Middleware to check admin permissions
 const checkAdmin = async (req, res, next) => {
@@ -680,3 +680,4 @@ app.put('/api/points/:id', async (req, res) => {
         }
 
         // Validate category
+
