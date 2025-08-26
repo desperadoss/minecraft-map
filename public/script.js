@@ -1,4 +1,134 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // === Minecraft Resource Categories ===
+    const MINECRAFT_CATEGORIES = {
+        'structures': { 
+            name: 'Structures', 
+            color: '#8B4513',
+            gradient: 'linear-gradient(135deg, #8B4513 0%, #654321 100%)',
+            icon: '🏰'
+        },
+        'ores': { 
+            name: 'Ores & Mining', 
+            color: '#708090',
+            gradient: 'linear-gradient(135deg, #708090 0%, #556B7D 100%)',
+            icon: '⛏️'
+        },
+        'diamond': { 
+            name: 'Diamond', 
+            color: '#00CED1',
+            gradient: 'linear-gradient(135deg, #00CED1 0%, #00B8CC 100%)',
+            icon: '💎'
+        },
+        'gold': { 
+            name: 'Gold', 
+            color: '#FFD700',
+            gradient: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)',
+            icon: '🟨'
+        },
+        'iron': { 
+            name: 'Iron', 
+            color: '#C0C0C0',
+            gradient: 'linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%)',
+            icon: '⚪'
+        },
+        'emerald': { 
+            name: 'Emerald', 
+            color: '#50C878',
+            gradient: 'linear-gradient(135deg, #50C878 0%, #3CB371 100%)',
+            icon: '💚'
+        },
+        'redstone': { 
+            name: 'Redstone', 
+            color: '#FF0000',
+            gradient: 'linear-gradient(135deg, #FF0000 0%, #DC143C 100%)',
+            icon: '🔴'
+        },
+        'coal': { 
+            name: 'Coal', 
+            color: '#2F2F2F',
+            gradient: 'linear-gradient(135deg, #2F2F2F 0%, #1C1C1C 100%)',
+            icon: '⚫'
+        },
+        'lapis': { 
+            name: 'Lapis Lazuli', 
+            color: '#4169E1',
+            gradient: 'linear-gradient(135deg, #4169E1 0%, #0000CD 100%)',
+            icon: '🔵'
+        },
+        'copper': { 
+            name: 'Copper', 
+            color: '#B87333',
+            gradient: 'linear-gradient(135deg, #B87333 0%, #8B4513 100%)',
+            icon: '🟤'
+        },
+        'netherite': { 
+            name: 'Netherite', 
+            color: '#654321',
+            gradient: 'linear-gradient(135deg, #654321 0%, #3C2415 100%)',
+            icon: '⬛'
+        },
+        'farms': { 
+            name: 'Farms & Food', 
+            color: '#228B22',
+            gradient: 'linear-gradient(135deg, #228B22 0%, #006400 100%)',
+            icon: '🌾'
+        },
+        'villages': { 
+            name: 'Villages', 
+            color: '#8B4513',
+            gradient: 'linear-gradient(135deg, #8B4513 0%, #654321 100%)',
+            icon: '🏘️'
+        },
+        'stronghold': { 
+            name: 'Stronghold', 
+            color: '#2F4F4F',
+            gradient: 'linear-gradient(135deg, #2F4F4F 0%, #1C1C1C 100%)',
+            icon: '🗿'
+        },
+        'dungeon': { 
+            name: 'Dungeons', 
+            color: '#4B0082',
+            gradient: 'linear-gradient(135deg, #4B0082 0%, #301934 100%)',
+            icon: '🏴‍☠️'
+        },
+        'nether': { 
+            name: 'Nether', 
+            color: '#8B0000',
+            gradient: 'linear-gradient(135deg, #8B0000 0%, #640000 100%)',
+            icon: '🔥'
+        },
+        'end': { 
+            name: 'End', 
+            color: '#9400D3',
+            gradient: 'linear-gradient(135deg, #9400D3 0%, #6A0DAD 100%)',
+            icon: '🌌'
+        },
+        'ocean': { 
+            name: 'Ocean Monuments', 
+            color: '#006994',
+            gradient: 'linear-gradient(135deg, #006994 0%, #004A6B 100%)',
+            icon: '🌊'
+        },
+        'base': { 
+            name: 'Base/Home', 
+            color: '#32CD32',
+            gradient: 'linear-gradient(135deg, #32CD32 0%, #228B22 100%)',
+            icon: '🏠'
+        },
+        'spawn': { 
+            name: 'Spawn Point', 
+            color: '#FF69B4',
+            gradient: 'linear-gradient(135deg, #FF69B4 0%, #FF1493 100%)',
+            icon: '⭐'
+        },
+        'other': { 
+            name: 'Other', 
+            color: '#696969',
+            gradient: 'linear-gradient(135deg, #696969 0%, #4F4F4F 100%)',
+            icon: '📍'
+        }
+    };
+
     // === HTML Selectors ===
     const mapContainer = document.querySelector('.map-container');
     const mapImage = document.getElementById('minecraft-map');
@@ -10,8 +140,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const showYourPointsBtn = document.getElementById('show-your-points');
     const showSharedPointsBtn = document.getElementById('show-shared-points');
     const sessionCodeDisplay = document.getElementById('session-code-text');
+    const categoryFilterSelect = document.getElementById('category-filter-select');
     
     // Add point form
+    const categorySelect = document.getElementById('category-select');
     const nameInput = document.getElementById('name-input');
     const xInput = document.getElementById('x-input');
     const zInput = document.getElementById('z-input');
@@ -35,6 +167,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const promoteSessionCodeInput = document.getElementById('promote-session-code');
     const pendingPointsList = document.getElementById('pending-points-list');
     
+    // Point details elements
+    const pointCategoryBadge = document.getElementById('point-category-badge');
+    const pointStatusBadge = document.getElementById('point-status-badge');
+    
     // NEW ELEMENTS - owner panel
     const newSessionCodeInput = document.getElementById('new-session-code');
     const addSessionBtn = document.getElementById('add-session-btn');
@@ -57,6 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let isShowingPrivate = true;
     let isShowingPublic = true;
+    let selectedCategoryFilter = 'all';
     let isThrottling = false;
     let mouseMoveThrottle = null;
 
@@ -69,6 +206,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let isUserAdmin = false;
     let isUserOwner = false;
+
+    // === Initialize Categories ===
+    function initializeCategories() {
+        // Populate category select for adding points
+        categorySelect.innerHTML = '';
+        Object.keys(MINECRAFT_CATEGORIES).forEach(categoryKey => {
+            const category = MINECRAFT_CATEGORIES[categoryKey];
+            const option = document.createElement('option');
+            option.value = categoryKey;
+            option.textContent = `${category.icon} ${category.name}`;
+            categorySelect.appendChild(option);
+        });
+
+        // Populate category filter
+        categoryFilterSelect.innerHTML = '<option value="all">All Categories</option>';
+        Object.keys(MINECRAFT_CATEGORIES).forEach(categoryKey => {
+            const category = MINECRAFT_CATEGORIES[categoryKey];
+            const option = document.createElement('option');
+            option.value = categoryKey;
+            option.textContent = `${category.icon} ${category.name}`;
+            categoryFilterSelect.appendChild(option);
+        });
+    }
+
+    // === Auto-suggest point name based on category ===
+    categorySelect.addEventListener('change', (e) => {
+        const selectedCategory = e.target.value;
+        if (selectedCategory && nameInput.value.trim() === '') {
+            const category = MINECRAFT_CATEGORIES[selectedCategory];
+            if (category) {
+                nameInput.placeholder = `e.g. ${category.name} Site`;
+            }
+        }
+    });
+
+    // === Category filter functionality ===
+    categoryFilterSelect.addEventListener('change', (e) => {
+        selectedCategoryFilter = e.target.value;
+        filterPoints();
+    });
 
     // === Check if user is owner and admin ===
     async function checkUserPermissions() {
@@ -271,11 +448,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function clearInputs() {
         try {
+            categorySelect.value = categorySelect.options[0].value;
             nameInput.value = '';
             xInput.value = '';
             zInput.value = '';
+            nameInput.placeholder = 'e.g. Diamond Vein';
             
-            [nameInput, xInput, zInput].forEach(input => {
+            [categorySelect, nameInput, xInput, zInput].forEach(input => {
                 input.blur();
                 input.removeAttribute('readonly');
             });
@@ -311,6 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         points.forEach(point => {
             const { x, z } = mcToPx(point.x, point.z);
+            const category = MINECRAFT_CATEGORIES[point.category] || MINECRAFT_CATEGORIES['other'];
             
             const pointWrapper = document.createElement('div');
             pointWrapper.classList.add('point-wrapper');
@@ -318,20 +498,32 @@ document.addEventListener('DOMContentLoaded', () => {
             pointWrapper.dataset.pointName = point.name;
             pointWrapper.dataset.pointX = point.x;
             pointWrapper.dataset.pointZ = point.z;
+            pointWrapper.dataset.pointCategory = point.category || 'other';
             pointWrapper.dataset.ownerSessionCode = point.ownerSessionCode;
             pointWrapper.dataset.status = point.status;
             pointWrapper.style.left = `${x}px`;
             pointWrapper.style.top = `${z}px`;
 
             const pointElement = document.createElement('div');
-            pointElement.classList.add('point');
-            pointElement.classList.add(point.status);
+            pointElement.classList.add('point', 'modern-point');
+            pointElement.style.background = category.gradient;
+            pointElement.style.borderColor = `${category.color}80`;
+            
+            // Add status indicator
+            const statusIndicator = document.createElement('div');
+            statusIndicator.classList.add('status-indicator', point.status);
             
             const pointNameElement = document.createElement('div');
             pointNameElement.classList.add('point-name');
-            pointNameElement.textContent = point.name;
+            pointNameElement.innerHTML = `
+                <span class="category-icon">${category.icon}</span>
+                <span class="point-text">${point.name}</span>
+                ${point.status === 'public' ? '<span class="shared-badge">Shared</span>' : ''}
+                ${point.status === 'pending' ? '<span class="pending-badge">Pending</span>' : ''}
+            `;
 
             pointWrapper.appendChild(pointElement);
+            pointWrapper.appendChild(statusIndicator);
             pointWrapper.appendChild(pointNameElement);
             
             pointWrapper.addEventListener('click', (e) => {
@@ -349,12 +541,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const points = document.querySelectorAll('.point-wrapper');
         points.forEach(point => {
             const status = point.dataset.status;
+            const category = point.dataset.pointCategory;
             let isVisible = false;
 
+            // Check status filter
             if (status === 'public' && isShowingPublic) {
                 isVisible = true;
             } else if ((status === 'private' || status === 'pending') && isShowingPrivate) {
                 isVisible = true;
+            }
+            
+            // Check category filter
+            if (isVisible && selectedCategoryFilter !== 'all') {
+                isVisible = (category === selectedCategoryFilter);
             }
             
             if (isVisible) {
@@ -437,13 +636,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === Form and modal logic ===
     addPointBtn.addEventListener('click', async () => {
+        const category = categorySelect.value;
         const name = nameInput.value.trim();
         const x = parseInt(xInput.value);
         const z = parseInt(zInput.value);
         const mode = addPointBtn.dataset.mode;
         const pointId = addPointBtn.dataset.pointId;
 
-        if (!name || isNaN(x) || isNaN(z)) {
+        if (!category || !name || isNaN(x) || isNaN(z)) {
             showError('Please fill all fields correctly!');
             return;
         }
@@ -464,7 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         'Content-Type': 'application/json',
                         'X-Session-Code': sessionCode
                     },
-                    body: JSON.stringify({ name, x, z })
+                    body: JSON.stringify({ name, x, z, category })
                 });
 
                 addPointBtn.textContent = 'Add Point';
@@ -478,7 +678,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         'Content-Type': 'application/json',
                         'X-Session-Code': sessionCode
                     },
-                    body: JSON.stringify({ name, x, z })
+                    body: JSON.stringify({ name, x, z, category })
                 });
             }
 
@@ -514,9 +714,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function displayPointDetails(point) {
+        const category = MINECRAFT_CATEGORIES[point.category] || MINECRAFT_CATEGORIES['other'];
+        
         document.getElementById('point-name').textContent = point.name;
         document.getElementById('point-x').textContent = point.x;
         document.getElementById('point-z').textContent = point.z;
+
+        // Update category badge
+        pointCategoryBadge.innerHTML = `
+            <span class="category-icon">${category.icon}</span>
+            <span>${category.name}</span>
+        `;
+        pointCategoryBadge.style.background = category.gradient;
+
+        // Update status badge
+        const statusText = {
+            'private': 'Private',
+            'pending': 'Pending Approval',
+            'public': 'Shared'
+        };
+        pointStatusBadge.textContent = statusText[point.status] || 'Unknown';
+        pointStatusBadge.className = `point-status-badge ${point.status}`;
 
         sharePointBtn.style.display = 'none';
         editPointBtn.style.display = 'none';
@@ -570,7 +788,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const pointName = document.getElementById('point-name').textContent;
         const pointX = document.getElementById('point-x').textContent;
         const pointZ = document.getElementById('point-z').textContent;
+        const pointWrapper = document.querySelector('.point-wrapper[data-point-id="' + pointId + '"]');
+        const pointCategory = pointWrapper.dataset.pointCategory;
 
+        categorySelect.value = pointCategory || 'other';
         nameInput.value = pointName;
         xInput.value = pointX;
         zInput.value = pointZ;
@@ -610,11 +831,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // === NEW OWNER MENU ===
+    // === Owner menu ===
     function showOwnerMenu() {
         hideModals();
         
-        // Create modal with choices
         const menuModal = document.createElement('div');
         menuModal.className = 'modal';
         menuModal.style.display = 'block';
@@ -632,7 +852,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.body.appendChild(menuModal);
         
-        // Button handlers
         menuModal.querySelector('.close-button').addEventListener('click', () => {
             document.body.removeChild(menuModal);
         });
@@ -649,7 +868,6 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchAllowedSessions();
         });
         
-        // Close on background click
         menuModal.addEventListener('click', (e) => {
             if (e.target === menuModal) {
                 document.body.removeChild(menuModal);
@@ -660,7 +878,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // === Admin and owner panels ===
     sessionCodeDisplay.addEventListener('click', () => {
         if (isUserOwner) {
-            showOwnerMenu(); // Show choice menu for owner
+            showOwnerMenu();
         } else if (isUserAdmin) {
             hideModals();
             adminPanelModal.style.display = 'block';
@@ -739,12 +957,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         points.forEach(point => {
+            const category = MINECRAFT_CATEGORIES[point.category] || MINECRAFT_CATEGORIES['other'];
             const li = document.createElement('li');
             li.innerHTML = `
-                <span>${point.name} (X: ${point.x}, Z: ${point.z})</span>
-                <div>
-                    <button class="button accept-btn" data-id="${point._id}">Accept</button>
-                    <button class="button reject-btn" data-id="${point._id}">Reject</button>
+                <div class="pending-point-item">
+                    <div class="point-info">
+                        <span class="category-icon">${category.icon}</span>
+                        <span class="point-name">${point.name}</span>
+                        <span class="coordinates">(X: ${point.x}, Z: ${point.z})</span>
+                        <span class="category-name">${category.name}</span>
+                    </div>
+                    <div class="point-actions">
+                        <button class="button accept-btn" data-id="${point._id}">Accept</button>
+                        <button class="button reject-btn" data-id="${point._id}">Reject</button>
+                    </div>
                 </div>
             `;
             pendingPointsList.appendChild(li);
@@ -801,9 +1027,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // === NEW OWNER PANEL FUNCTIONS ===
-
-    // Fetch allowed sessions list
+    // === Owner panel functions ===
     async function fetchAllowedSessions() {
         try {
             const res = await fetch('/api/owner/allowed-sessions', {
@@ -822,7 +1046,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Render allowed sessions list
     function renderAllowedSessions(sessions) {
         allowedSessionsList.innerHTML = '';
         if (sessions.length === 0) {
@@ -842,7 +1065,6 @@ document.addEventListener('DOMContentLoaded', () => {
             allowedSessionsList.appendChild(li);
         });
 
-        // Add event listeners to remove buttons
         document.querySelectorAll('.remove-session-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const sessionToRemove = e.target.dataset.session;
@@ -862,7 +1084,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     
                     if (res.ok) {
-                        fetchAllowedSessions(); // Refresh list
+                        fetchAllowedSessions();
                         showSuccess('Session code removed from allowed list.');
                     } else {
                         const errorData = await res.json();
@@ -876,7 +1098,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Add new allowed session
     addSessionBtn.addEventListener('click', async () => {
         const newSession = newSessionCodeInput.value.trim();
         if (!newSession) {
@@ -898,7 +1119,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (res.ok) {
                 newSessionCodeInput.value = '';
-                fetchAllowedSessions(); // Refresh list
+                fetchAllowedSessions();
                 showSuccess(data.message);
             } else {
                 showError(data.message || 'Error adding session code.');
@@ -909,10 +1130,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Refresh sessions list
     refreshSessionsBtn.addEventListener('click', fetchAllowedSessions);
 
-    // Promote user to admin
     promoteUserBtn.addEventListener('click', async () => {
         const code = promoteSessionCodeInput.value.trim();
         if (!code) {
@@ -969,7 +1188,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Add Escape key handling for closing modals
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             hideModals();
@@ -978,11 +1196,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === INITIALIZATION ===
     async function init() {
-        await checkUserPermissions(); // Check user permissions
+        initializeCategories();
+        await checkUserPermissions();
         updateMapPosition();
         fetchPoints();
     }
 
-    // Run initialization
     init();
-});
