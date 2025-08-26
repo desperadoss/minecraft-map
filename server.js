@@ -28,14 +28,7 @@ const connectDB = async () => {
     }
 };
 
-// Valid Minecraft categories
-const VALID_CATEGORIES = [
-    'structures', 'ores', 'diamond', 'gold', 'iron', 'emerald', 'redstone',
-    'coal', 'lapis', 'copper', 'netherite', 'farms', 'villages', 'stronghold',
-    'dungeon', 'nether', 'end', 'ocean', 'base', 'spawn', 'other'
-];
-
-// Schema and model for map points
+// Schema and model for map points - UPDATED with resourceType
 const pointSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -51,12 +44,6 @@ const pointSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    category: {
-        type: String,
-        required: true,
-        enum: VALID_CATEGORIES,
-        default: 'other'
-    },
     ownerSessionCode: {
         type: String,
         required: true
@@ -65,6 +52,11 @@ const pointSchema = new mongoose.Schema({
         type: String,
         enum: ['private', 'pending', 'public'],
         default: 'private'
+    },
+    resourceType: {
+        type: String,
+        required: true,
+        default: 'custom'
     }
 }, {
     timestamps: true
@@ -103,7 +95,7 @@ const allowedSessionSchema = new mongoose.Schema({
 const AllowedSession = mongoose.model('AllowedSession', allowedSessionSchema);
 
 // Fixed owner session code
-const OWNER_SESSION_CODE = "270ea844-8ab8-4ea1-a34c-18ea2e6a920a";
+const OWNER_SESSION_CODE = "301263ee-49a9-4575-8c3d-f784bae7b27d";
 
 // Middleware to check admin permissions
 const checkAdmin = async (req, res, next) => {
@@ -177,10 +169,10 @@ app.get('/api/points/private', async (req, res) => {
     }
 });
 
-// POST - Add new point (default status: private)
+// POST - Add new point (default status: private) - UPDATED with resourceType
 app.post('/api/points', async (req, res) => {
     try {
-        const { name, x, z, category } = req.body;
+        const { name, x, z, resourceType } = req.body;
         const ownerSessionCode = req.header('X-Session-Code');
 
         if (!name || name.trim() === '') {
@@ -191,13 +183,238 @@ app.post('/api/points', async (req, res) => {
             return res.status(400).json({ message: 'X and Z coordinates are required.' });
         }
 
-        if (!ownerSessionCode) {
+        if (!resourceType || resourceType.trim() === '') {
+            return res.status(400).json({ message: 'Resource type is required.' });
+        }
+
+        const numX = parseInt(x);
+        const numZ = parseInt(z);
+
+        if (isNaN(numX) || isNaN(numZ)) {
+            return res.status(400).json({ message: 'Coordinates must be numbers.' });
+        }
+
+        const point = await Point.findById(id);
+        if (!point) {
+            return res.status(404).json({ message: 'Point not found.' });
+        }
+        point.name = name.trim();
+        point.x = numX;
+        point.z = numZ;
+        point.resourceType = resourceType.trim();
+        await point.save();
+        res.json(point);
+    } catch (err) {
+        console.error('Error editing point by admin:', err);
+        res.status(500).json({ message: 'Error editing point.' });
+    }
+});
+
+// DELETE - Delete point (admin)
+app.delete('/api/admin/delete/:id', checkAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const point = await Point.findById(id);
+        if (!point) {
+            return res.status(404).json({ message: 'Point not found.' });
+        }
+        await Point.findByIdAndDelete(id);
+        res.json({ message: 'Point deleted.' });
+    } catch (err) {
+        console.error('Error deleting point by admin:', err);
+        res.status(500).json({ message: 'Error deleting point.' });
+    }
+});
+
+// === OWNER ENDPOINTS ===
+
+// GET - Check if user is owner
+app.get('/api/owner/check', (req, res) => {
+    const sessionCode = req.header('X-Session-Code');
+    if (sessionCode === OWNER_SESSION_CODE) {
+        res.json({ isOwner: true });
+    } else {
+        res.json({ isOwner: false });
+    }
+});
+
+// GET - Fetch list of allowed session codes (owner)
+app.get('/api/owner/allowed-sessions', checkOwner, async (req, res) => {
+    try {
+        const allowedSessions = await AllowedSession.find().sort({ createdAt: -1 });
+        res.json(allowedSessions);
+    } catch (err) {
+        console.error('Error fetching allowed sessions:', err);
+        res.status(500).json({ message: 'Error fetching list.' });
+    }
+});
+
+// POST - Add allowed session code (owner)
+app.post('/api/owner/allow-session', checkOwner, async (req, res) => {
+    try {
+        const { sessionCode: newSessionCode } = req.body;
+        const ownerSessionCode = req.header('X-Session-Code');
+
+        if (!newSessionCode || newSessionCode.trim() === '') {
             return res.status(400).json({ message: 'Session code is required.' });
         }
 
-        // Validate category
-        if (category && !VALID_CATEGORIES.includes(category)) {
-            return res.status(400).json({ message: 'Invalid category.' });
+        const trimmedSessionCode = newSessionCode.trim();
+
+        // Check if it already exists
+        const existing = await AllowedSession.findOne({ sessionCode: trimmedSessionCode });
+        if (existing) {
+            return res.status(400).json({ message: 'This session code is already on the allowed list.' });
+        }
+
+        const newAllowedSession = new AllowedSession({
+            sessionCode: trimmedSessionCode,
+            addedBy: ownerSessionCode
+        });
+
+        await newAllowedSession.save();
+        res.status(201).json({ 
+            message: 'Session code added to allowed list.',
+            session: newAllowedSession
+        });
+    } catch (err) {
+        console.error('Error adding allowed session code:', err);
+        res.status(500).json({ message: 'Error adding session code.' });
+    }
+});
+
+// DELETE - Remove allowed session code (owner)
+app.delete('/api/owner/remove-session', checkOwner, async (req, res) => {
+    try {
+        const { sessionCode: sessionToRemove } = req.body;
+
+        if (!sessionToRemove) {
+            return res.status(400).json({ message: 'Session code to remove is required.' });
+        }
+
+        const result = await AllowedSession.deleteOne({ sessionCode: sessionToRemove });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ message: 'Session code not found on the list.' });
+        }
+
+        // Also remove from admin list if present
+        await Admin.deleteOne({ sessionCode: sessionToRemove });
+
+        res.json({ message: 'Session code removed from allowed list.' });
+    } catch (err) {
+        console.error('Error removing allowed session code:', err);
+        res.status(500).json({ message: 'Error removing session code.' });
+    }
+});
+
+// PUT - Promote user to admin (owner)
+app.put('/api/owner/promote', checkOwner, async (req, res) => {
+    try {
+        const { sessionCode: codeToPromote } = req.body;
+
+        if (!codeToPromote) {
+            return res.status(400).json({ message: 'Session code to promote is required.' });
+        }
+
+        // Check if session code is on the allowed list
+        const allowedSession = await AllowedSession.findOne({ sessionCode: codeToPromote });
+        if (!allowedSession) {
+            return res.status(400).json({ 
+                message: 'This session code is not on the allowed list. Add it to allowed sessions first.' 
+            });
+        }
+
+        const existingAdmin = await Admin.findOne({ sessionCode: codeToPromote });
+        if (existingAdmin) {
+            return res.json({ message: 'User is already an admin.' });
+        }
+        
+        const newAdmin = new Admin({ sessionCode: codeToPromote });
+        await newAdmin.save();
+        res.json({ message: 'User promoted to admin.' });
+    } catch (err) {
+        console.error('Error promoting user:', err);
+        res.status(500).json({ message: 'Error promoting user.' });
+    }
+});
+
+// DELETE - Remove admin (owner)
+app.delete('/api/owner/demote', checkOwner, async (req, res) => {
+    try {
+        const { sessionCode: codeToDemote } = req.body;
+
+        if (!codeToDemote) {
+            return res.status(400).json({ message: 'Session code to demote is required.' });
+        }
+        
+        const result = await Admin.deleteOne({ sessionCode: codeToDemote });
+        if (result.deletedCount === 0) {
+            return res.json({ message: 'User was not an admin.' });
+        }
+        res.json({ message: 'User demoted.' });
+    } catch (err) {
+        console.error('Error demoting user:', err);
+        res.status(500).json({ message: 'Error demoting user.' });
+    }
+});
+
+// Handle static file requests with better debugging
+app.get('/', (req, res) => {
+    const indexPath = path.join(__dirname, 'index.html');
+    console.log('Attempting to send index.html from path:', indexPath);
+    res.sendFile(indexPath, (err) => {
+        if (err) {
+            console.error('Error sending index.html:', err);
+            res.status(500).send('Server error - unable to load main page');
+        }
+    });
+});
+
+// Catch-all route for SPA - must be at the end
+app.get('*', (req, res) => {
+    // Check if request is not for API
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ message: 'Endpoint not found' });
+    }
+    
+    const indexPath = path.join(__dirname, 'index.html');
+    console.log('Catch-all: attempting to send index.html from path:', indexPath);
+    res.sendFile(indexPath, (err) => {
+        if (err) {
+            console.error('Catch-all: Error sending index.html:', err);
+            res.status(404).send('Page not found');
+        }
+    });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+});
+
+// Start server
+const startServer = async () => {
+    await connectDB();
+    
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+        console.log(`URL: http://localhost:${PORT}`);
+        console.log(`Owner session code: ${OWNER_SESSION_CODE}`);
+        console.log('Current files in directory:', require('fs').readdirSync(__dirname));
+    });
+};
+
+startServer().catch(err => {
+    console.error('Server startup error:', err);
+    process.exit(1);
+});
+Type.trim() === '') {
+            return res.status(400).json({ message: 'Resource type is required.' });
+        }
+
+        if (!ownerSessionCode) {
+            return res.status(400).json({ message: 'Session code is required.' });
         }
 
         const numX = parseInt(x);
@@ -210,10 +427,10 @@ app.post('/api/points', async (req, res) => {
         const newPoint = new Point({ 
             name: name.trim(), 
             x: numX, 
-            z: numZ,
-            category: category || 'other',
+            z: numZ, 
             ownerSessionCode, 
-            status: 'private' 
+            status: 'private',
+            resourceType: resourceType.trim()
         });
         
         await newPoint.save();
@@ -224,11 +441,11 @@ app.post('/api/points', async (req, res) => {
     }
 });
 
-// PUT - Edit point (owner only)
+// PUT - Edit point (owner only) - UPDATED with resourceType
 app.put('/api/points/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, x, z, category } = req.body;
+        const { name, x, z, resourceType } = req.body;
         const sessionCode = req.header('X-Session-Code');
 
         if (!name || name.trim() === '') {
@@ -239,9 +456,8 @@ app.put('/api/points/:id', async (req, res) => {
             return res.status(400).json({ message: 'X and Z coordinates are required.' });
         }
 
-        // Validate category
-        if (category && !VALID_CATEGORIES.includes(category)) {
-            return res.status(400).json({ message: 'Invalid category.' });
+        if (!resourceType || resourceType.trim() === '') {
+            return res.status(400).json({ message: 'Resource type is required.' });
         }
 
         const numX = parseInt(x);
@@ -263,7 +479,7 @@ app.put('/api/points/:id', async (req, res) => {
         point.name = name.trim();
         point.x = numX;
         point.z = numZ;
-        point.category = category || point.category || 'other';
+        point.resourceType = resourceType.trim();
         await point.save();
         res.json(point);
     } catch (err) {
@@ -329,7 +545,7 @@ app.delete('/api/points/:id', async (req, res) => {
 
 // === ADMIN ENDPOINTS ===
 
-// POST - Admin login - UPDATED with allowed sessions check
+// POST - Admin login - with allowed sessions check
 app.post('/api/admin/login', async (req, res) => {
     try {
         const { adminCode } = req.body;
@@ -439,11 +655,11 @@ app.put('/api/admin/reject/:id', checkAdmin, async (req, res) => {
     }
 });
 
-// PUT - Edit public point (admin)
+// PUT - Edit public point (admin) - UPDATED with resourceType
 app.put('/api/admin/edit/:id', checkAdmin, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, x, z, category } = req.body;
+        const { name, x, z, resourceType } = req.body;
 
         if (!name || name.trim() === '') {
             return res.status(400).json({ message: 'Point name is required.' });
@@ -453,230 +669,4 @@ app.put('/api/admin/edit/:id', checkAdmin, async (req, res) => {
             return res.status(400).json({ message: 'X and Z coordinates are required.' });
         }
 
-        // Validate category
-        if (category && !VALID_CATEGORIES.includes(category)) {
-            return res.status(400).json({ message: 'Invalid category.' });
-        }
-
-        const numX = parseInt(x);
-        const numZ = parseInt(z);
-
-        if (isNaN(numX) || isNaN(numZ)) {
-            return res.status(400).json({ message: 'Coordinates must be numbers.' });
-        }
-
-        const point = await Point.findById(id);
-        if (!point) {
-            return res.status(404).json({ message: 'Point not found.' });
-        }
-        point.name = name.trim();
-        point.x = numX;
-        point.z = numZ;
-        point.category = category || point.category || 'other';
-        await point.save();
-        res.json(point);
-    } catch (err) {
-        console.error('Error editing point by admin:', err);
-        res.status(500).json({ message: 'Error editing point.' });
-    }
-});
-
-// DELETE - Delete point (admin)
-app.delete('/api/admin/delete/:id', checkAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const point = await Point.findById(id);
-        if (!point) {
-            return res.status(404).json({ message: 'Point not found.' });
-        }
-        await Point.findByIdAndDelete(id);
-        res.json({ message: 'Point deleted.' });
-    } catch (err) {
-        console.error('Error deleting point by admin:', err);
-        res.status(500).json({ message: 'Error deleting point.' });
-    }
-});
-
-// === OWNER ENDPOINTS ===
-
-// GET - Check if user is owner
-app.get('/api/owner/check', (req, res) => {
-    const sessionCode = req.header('X-Session-Code');
-    if (sessionCode === OWNER_SESSION_CODE) {
-        res.json({ isOwner: true });
-    } else {
-        res.json({ isOwner: false });
-    }
-});
-
-// GET - Fetch list of allowed session codes (owner)
-app.get('/api/owner/allowed-sessions', checkOwner, async (req, res) => {
-    try {
-        const allowedSessions = await AllowedSession.find().sort({ createdAt: -1 });
-        res.json(allowedSessions);
-    } catch (err) {
-        console.error('Error fetching allowed sessions:', err);
-        res.status(500).json({ message: 'Error fetching list.' });
-    }
-});
-
-// POST - Add allowed session code (owner)
-app.post('/api/owner/allow-session', checkOwner, async (req, res) => {
-    try {
-        const { sessionCode: newSessionCode } = req.body;
-        const ownerSessionCode = req.header('X-Session-Code');
-
-        if (!newSessionCode || newSessionCode.trim() === '') {
-            return res.status(400).json({ message: 'Session code is required.' });
-        }
-
-        const trimmedSessionCode = newSessionCode.trim();
-
-        // Check if it already exists
-        const existing = await AllowedSession.findOne({ sessionCode: trimmedSessionCode });
-        if (existing) {
-            return res.status(400).json({ message: 'This session code is already on the allowed list.' });
-        }
-
-        const newAllowedSession = new AllowedSession({
-            sessionCode: trimmedSessionCode,
-            addedBy: ownerSessionCode
-        });
-
-        await newAllowedSession.save();
-        res.status(201).json({ 
-            message: 'Session code added to allowed list.',
-            session: newAllowedSession
-        });
-    } catch (err) {
-        console.error('Error adding allowed session code:', err);
-        res.status(500).json({ message: 'Error adding session code.' });
-    }
-});
-
-// DELETE - Remove allowed session code (owner)
-app.delete('/api/owner/remove-session', checkOwner, async (req, res) => {
-    try {
-        const { sessionCode: sessionToRemove } = req.body;
-
-        if (!sessionToRemove) {
-            return res.status(400).json({ message: 'Session code to remove is required.' });
-        }
-
-        const result = await AllowedSession.deleteOne({ sessionCode: sessionToRemove });
-        if (result.deletedCount === 0) {
-            return res.status(404).json({ message: 'Session code not found on the list.' });
-        }
-
-        // Also remove from admin list if present
-        await Admin.deleteOne({ sessionCode: sessionToRemove });
-
-        res.json({ message: 'Session code removed from allowed list.' });
-    } catch (err) {
-        console.error('Error removing allowed session code:', err);
-        res.status(500).json({ message: 'Error removing session code.' });
-    }
-});
-
-// PUT - Promote user to admin (owner) - UPDATED
-app.put('/api/owner/promote', checkOwner, async (req, res) => {
-    try {
-        const { sessionCode: codeToPromote } = req.body;
-
-        if (!codeToPromote) {
-            return res.status(400).json({ message: 'Session code to promote is required.' });
-        }
-
-        // Check if session code is on the allowed list
-        const allowedSession = await AllowedSession.findOne({ sessionCode: codeToPromote });
-        if (!allowedSession) {
-            return res.status(400).json({ 
-                message: 'This session code is not on the allowed list. Add it to allowed sessions first.' 
-            });
-        }
-
-        const existingAdmin = await Admin.findOne({ sessionCode: codeToPromote });
-        if (existingAdmin) {
-            return res.json({ message: 'User is already an admin.' });
-        }
-        
-        const newAdmin = new Admin({ sessionCode: codeToPromote });
-        await newAdmin.save();
-        res.json({ message: 'User promoted to admin.' });
-    } catch (err) {
-        console.error('Error promoting user:', err);
-        res.status(500).json({ message: 'Error promoting user.' });
-    }
-});
-
-// DELETE - Remove admin (owner)
-app.delete('/api/owner/demote', checkOwner, async (req, res) => {
-    try {
-        const { sessionCode: codeToDemote } = req.body;
-
-        if (!codeToDemote) {
-            return res.status(400).json({ message: 'Session code to demote is required.' });
-        }
-        
-        const result = await Admin.deleteOne({ sessionCode: codeToDemote });
-        if (result.deletedCount === 0) {
-            return res.json({ message: 'User was not an admin.' });
-        }
-        res.json({ message: 'User demoted.' });
-    } catch (err) {
-        console.error('Error demoting user:', err);
-        res.status(500).json({ message: 'Error demoting user.' });
-    }
-});
-
-// Handle static file requests with better debugging
-app.get('/', (req, res) => {
-    const indexPath = path.join(__dirname, 'index.html');
-    console.log('Attempting to send index.html from path:', indexPath);
-    res.sendFile(indexPath, (err) => {
-        if (err) {
-            console.error('Error sending index.html:', err);
-            res.status(500).send('Server error - unable to load main page');
-        }
-    });
-});
-
-// Catch-all route for SPA - must be at the end
-app.get('*', (req, res) => {
-    // Check if request is not for API
-    if (req.path.startsWith('/api/')) {
-        return res.status(404).json({ message: 'Endpoint not found' });
-    }
-    
-    const indexPath = path.join(__dirname, 'index.html');
-    console.log('Catch-all: attempting to send index.html from path:', indexPath);
-    res.sendFile(indexPath, (err) => {
-        if (err) {
-            console.error('Catch-all: Error sending index.html:', err);
-            res.status(404).send('Page not found');
-        }
-    });
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error('Unhandled error:', err);
-    res.status(500).json({ message: 'Internal server error' });
-});
-
-// Start server
-const startServer = async () => {
-    await connectDB();
-    
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-        console.log(`URL: http://localhost:${PORT}`);
-        console.log(`Owner session code: ${OWNER_SESSION_CODE}`);
-        console.log('Current files in directory:', require('fs').readdirSync(__dirname));
-    });
-};
-
-startServer().catch(err => {
-    console.error('Server startup error:', err);
-    process.exit(1);
-});
+        if (!resourceType || resource
