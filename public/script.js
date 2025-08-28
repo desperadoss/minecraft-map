@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modals
     const pointDetailsModal = document.getElementById('point-details-modal');
     const adminLoginModal = document.getElementById('admin-login-modal');
-    const adminPanelModal = document = document.getElementById('admin-panel-modal');
+    const adminPanelModal = document.getElementById('admin-panel-modal');
     const ownerPanelModal = document.getElementById('owner-panel-modal');
     
     // Buttons and fields in modals
@@ -71,19 +71,18 @@ document.addEventListener('DOMContentLoaded', () => {
     'monument':    { name: 'Monument',     color: '#E67E22', category: 'structure' },
 
     // Biomes (zostawione)
-    'mushroom_biome':     { name: 'Mushroom Island',   color: '#8A2BE2', category: 'biome' },
-    'wastelands':         { name: 'Wastelands',          color: '#A67C52', category: 'biome' },
-    'sandlands':          { name: 'Sandlands',           color: '#E0B95C', category: 'biome' },
-    'savannah_plateau':   { name: 'Savannah Plateau',    color: '#D4C45C', category: 'biome' },
-    'alpine':             { name: 'Alpine',              color: '#A9A9A9', category: 'biome' },
-    'snowy_forest_tundra':{ name: 'Snowy Forest/Tundra', color: '#DCDCDC', category: 'biome' },
-    'sea_ice':            { name: 'Sea Ice',             color: '#B0E0E6', category: 'biome' },
-    'water':              { name: 'Water',               color: '#1F618D', category: 'biome' },
-    'woodlands_plains':   { name: 'Woodlands/Plains',    color: '#58D68D', category: 'biome' },
-    'jungle_tropical':    { name: 'Jungle/Tropical',     color: '#229954', category: 'biome' },
-    'giant_forest':       { name: 'Giant Forest',        color: '#145A32', category: 'biome' },
-    'taiga_highlands':    { name: 'Taiga Highlands',     color: '#1E8449', category: 'biome' },
-    'cherry_forest_mtn':  { name: 'Cherry Forest Mountain', color: '#E6B0AA', category: 'biome' },
+'wastelands':         { name: 'Wastelands',          color: '#A67C52', category: 'biome' },
+'sandlands':          { name: 'Sandlands',           color: '#E0B95C', category: 'biome' },
+'savannah_plateau':   { name: 'Savannah Plateau',    color: '#D4C45C', category: 'biome' },
+'alpine':             { name: 'Alpine',              color: '#A9A9A9', category: 'biome' },
+'snowy_forest_tundra':{ name: 'Snowy Forest/Tundra', color: '#DCDCDC', category: 'biome' },
+'sea_ice':            { name: 'Sea Ice',             color: '#B0E0E6', category: 'biome' },
+'water':              { name: 'Water',               color: '#1F618D', category: 'biome' },
+'woodlands_plains':   { name: 'Woodlands/Plains',    color: '#58D68D', category: 'biome' },
+'jungle_tropical':    { name: 'Jungle/Tropical',     color: '#229954', category: 'biome' },
+'giant_forest':       { name: 'Giant Forest',        color: '#145A32', category: 'biome' },
+'taiga_highlands':    { name: 'Taiga Highlands',     color: '#1E8449', category: 'biome' },
+'cherry_forest_mtn':  { name: 'Cherry Forest Mountain', color: '#E6B0AA', category: 'biome' },
     
     // Other (zostawione)
     'spawn':   { name: 'Spawn Point', color: '#32CD32', category: 'other' },
@@ -94,14 +93,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // === Configuration and global variables ===
-    // NEW MAP DIMENSIONS
     const MAP_WIDTH_PX = 10000;
     const MAP_HEIGHT_PX = 6000;
-    // NEW COORDINATE RANGES (symetrical around 0,0)
     const MAP_X_RANGE = 5000;
     const MAP_Z_RANGE = 3000;
     
-    let currentScale = 0.18;
+    let currentScale = 1;
     let offsetX = 0;
     let offsetY = 0;
     let isDragging = false;
@@ -143,7 +140,9 @@ document.addEventListener('DOMContentLoaded', () => {
     async function checkUserPermissions() {
         try {
             // Check if owner
-            const ownerRes = await fetch('/api/owner/check', { headers: { 'X-Session-Code': sessionCode } });
+            const ownerRes = await fetch('/api/owner/check', {
+                headers: { 'X-Session-Code': sessionCode }
+            });
             const ownerData = await ownerRes.json();
             if (ownerData.isOwner) {
                 isUserOwner = true;
@@ -154,7 +153,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // If not owner, check if admin
             try {
-                const adminRes = await fetch('/api/admin/pending', { headers: { 'X-Session-Code': sessionCode } });
+                const adminRes = await fetch('/api/admin/pending', {
+                    headers: { 'X-Session-Code': sessionCode }
+                });
                 if (adminRes.status === 200) {
                     isUserAdmin = true;
                     console.log('User is admin');
@@ -191,166 +192,425 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const notification = document.createElement('div');
         notification.style.cssText = `
-            background-color: #333;
-            color: #fff;
-            padding: 15px;
+            background: ${type === 'error' ? '#e74c3c' : type === 'success' ? '#27ae60' : '#3498db'};
+            color: white;
+            padding: 12px 16px;
             margin-bottom: 10px;
             border-radius: 5px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            opacity: 0;
-            transform: translateX(100%);
-            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 14px;
+            line-height: 1.4;
+            animation: slideIn 0.3s ease-out;
+            cursor: pointer;
+            word-wrap: break-word;
         `;
 
-        // Type-based styling
-        if (type === 'success') {
-            notification.style.backgroundColor = '#27ae60';
-        } else if (type === 'error') {
-            notification.style.backgroundColor = '#c0392b';
+        // Add animation styles if they don't exist yet
+        if (!document.getElementById('notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'notification-styles';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
         }
 
         notification.textContent = message;
         container.appendChild(notification);
 
-        // Animate in
-        setTimeout(() => {
-            notification.style.opacity = '1';
-            notification.style.transform = 'translateX(0)';
-        }, 10);
+        // Click to close
+        notification.addEventListener('click', () => {
+            removeNotification(notification);
+        });
 
-        // Animate out and remove
+        // Auto-remove after 5 seconds
         setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transform = 'translateX(100%)';
-            notification.addEventListener('transitionend', () => notification.remove());
+            if (notification.parentNode) {
+                removeNotification(notification);
+            }
         }, 5000);
     }
-    
-    function showSuccess(message) {
-        showNotification(message, 'success');
+
+    function removeNotification(notification) {
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }
+
+    // === Helper functions ===
+    function mcToPx(x, z) {
+        const pxX = (x + MAP_X_RANGE) / (MAP_X_RANGE * 2) * MAP_WIDTH_PX;
+        const pxZ = (z + MAP_Z_RANGE) / (MAP_Z_RANGE * 2) * MAP_HEIGHT_PX;
+        return { x: pxX, z: pxZ };
     }
     
+    function pxToMc(pxX, pxZ) {
+        const mcX = (pxX / MAP_WIDTH_PX * (MAP_X_RANGE * 2)) - MAP_X_RANGE;
+        const mcZ = (pxZ / MAP_HEIGHT_PX * (MAP_Z_RANGE * 2)) - MAP_Z_RANGE;
+        return { x: Math.round(mcX), z: Math.round(mcZ) };
+    }
+
+    // === Function for point scaling ===
+    function updatePointScaling() {
+        const points = document.querySelectorAll('.point-wrapper');
+        const pointScale = 1.0 / currentScale;
+        
+        points.forEach(point => {
+            point.style.transform = `translate3d(-50%, -50%, 0) scale(${pointScale.toFixed(3)})`;
+        });
+    }
+
+    function updateMapPosition() {
+        if (isThrottling) return;
+        
+        const containerRect = mapContainer.parentElement.getBoundingClientRect();
+        const scaledWidth = MAP_WIDTH_PX * currentScale;
+        const scaledHeight = MAP_HEIGHT_PX * currentScale;
+
+        const maxOffsetX = (scaledWidth > containerRect.width) ? (scaledWidth - containerRect.width) / 2 : 0;
+        const maxOffsetY = (scaledHeight > containerRect.height) ? (scaledHeight - containerRect.height) / 2 : 0;
+        
+        offsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, offsetX));
+        offsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, offsetY));
+
+        mapContainer.style.transform = `translate3d(-50%, -50%, 0) translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, 0) scale(${currentScale.toFixed(3)})`;
+        zoomInfo.textContent = `Zoom: ${Math.round((currentScale - 0.18) * 100 / 0.82)}%`;
+        
+        updatePointScaling();
+        updateCoordinatesFromMouse(lastMouseX, lastMouseY);
+        
+        isThrottling = true;
+        requestAnimationFrame(() => {
+            isThrottling = false;
+        });
+    }
+
+    function updateCoordinatesFromMouse(clientX, clientY) {
+        const containerRect = mapContainer.parentElement.getBoundingClientRect();
+        
+        const mouseX = clientX - containerRect.left;
+        const mouseY = clientY - containerRect.top;
+        
+        const centerX = containerRect.width / 2;
+        const centerY = containerRect.height / 2;
+        
+        const cursorX = (mouseX - centerX - offsetX) / currentScale;
+        const cursorY = (mouseY - centerY - offsetY) / currentScale;
+        
+        const mcCoords = pxToMc(cursorX + MAP_WIDTH_PX/2, cursorY + MAP_HEIGHT_PX/2);
+        coordinatesInfo.textContent = `X: ${mcCoords.x}, Z: ${mcCoords.z}`;
+    }
+
+    function hideModals() {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => modal.style.display = 'none');
+        
+        document.querySelectorAll('.modal input').forEach(input => {
+            if (input.type === 'text' || input.type === 'password') {
+                setTimeout(() => {
+                    input.value = '';
+                    input.blur();
+                }, 100);
+            }
+        });
+    }
+
     function showError(message) {
+        console.error(message);
         showNotification(message, 'error');
     }
 
-    // === Point management functions ===
-    async function fetchPoints() {
-        try {
-            const publicPointsRes = await fetch('/api/points');
-            const publicPoints = await publicPointsRes.json();
-            
-            const privatePointsRes = await fetch('/api/points/private', {
-                headers: {
-                    'X-Session-Code': sessionCode
-                }
-            });
-            const privatePoints = await privatePointsRes.json();
-            
-            const allPoints = [...publicPoints, ...privatePoints];
-            displayPoints(allPoints);
+    function showSuccess(message) {
+        console.log(message);
+        showNotification(message, 'success');
+    }
 
+    function clearInputs() {
+        try {
+            resourceSelect.value = 'custom';
+            resourceSelect.dispatchEvent(new Event('change'));
+            nameInput.value = '';
+            descriptionInput.value = '';
+            xInput.value = '';
+            zInput.value = '';
+            
+            [nameInput, descriptionInput, xInput, zInput].forEach(input => {
+                input.blur();
+                input.removeAttribute('readonly');
+            });
+            
+            addPointBtn.textContent = 'Add Point';
+            addPointBtn.dataset.mode = 'add';
+            addPointBtn.dataset.pointId = '';
         } catch (err) {
-            console.error('Error fetching points:', err);
-            showError('Could not fetch points from the server.');
+            console.error('Error clearing inputs:', err);
         }
     }
 
-    function displayPoints(points) {
-        // Clear existing points
-        document.querySelectorAll('.point-wrapper').forEach(p => p.remove());
-        
-        // Clear list
-        const yourPointsList = document.getElementById('your-points-list');
-        yourPointsList.innerHTML = '';
-        
-        points.forEach(point => {
-            // Add to map
-            const pointElement = createPointElement(point);
-            mapContainer.appendChild(pointElement);
+    // === Map and point logic ===
+    async function fetchPoints() {
+        try {
+            const publicRes = await fetch('/api/points');
+            const publicPoints = await publicRes.json();
             
-            // Add to list
-            if (point.ownerSessionCode === sessionCode) {
-                const listItem = createPointListItem(point);
-                yourPointsList.appendChild(listItem);
+            const privateRes = await fetch('/api/points/private', {
+                headers: { 'X-Session-Code': sessionCode }
+            });
+            const privatePoints = await privateRes.json();
+            
+            renderPoints([...publicPoints, ...privatePoints]);
+        } catch (err) {
+            console.error('Error fetching points:', err);
+            showError('Error fetching points from server.');
+        }
+    }
+    
+    function renderPoints(points) {
+        document.querySelectorAll('.point-wrapper').forEach(p => p.remove());
+
+        points.forEach(point => {
+            const { x, z } = mcToPx(point.x, point.z);
+            
+            const pointWrapper = document.createElement('div');
+            pointWrapper.classList.add('point-wrapper');
+            pointWrapper.dataset.pointId = point._id;
+            pointWrapper.dataset.pointName = point.name;
+            pointWrapper.dataset.pointX = point.x;
+            pointWrapper.dataset.pointZ = point.z;
+            pointWrapper.dataset.ownerSessionCode = point.ownerSessionCode;
+            pointWrapper.dataset.status = point.status;
+            pointWrapper.dataset.resourceType = point.resourceType || 'custom';
+            pointWrapper.style.left = `${x}px`;
+            pointWrapper.style.top = `${z}px`;
+
+            const pointElement = document.createElement('div');
+            pointElement.classList.add('point');
+            
+            // NEW: Apply resource-specific styling
+            if (point.resourceType && point.resourceType !== 'custom') {
+                const resource = MINECRAFT_RESOURCES[point.resourceType];
+                if (resource) {
+                    pointElement.style.setProperty('--resource-color', resource.color);
+                    pointElement.classList.add('resource-point');
+                    pointElement.classList.add(`resource-${point.resourceType}`);
+                }
+            } else {
+                // Keep original status-based coloring for custom points
+                pointElement.classList.add(point.status);
+            }
+            
+            const pointNameElement = document.createElement('div');
+            pointNameElement.classList.add('point-name');
+            pointNameElement.textContent = point.name;
+
+            pointWrapper.appendChild(pointElement);
+            pointWrapper.appendChild(pointNameElement);
+            
+            pointWrapper.addEventListener('click', (e) => {
+                e.stopPropagation();
+                displayPointDetails(point);
+            });
+            
+            mapContainer.appendChild(pointWrapper);
+        });
+        filterPoints();
+        updatePointScaling();
+    }
+
+    function filterPoints() {
+        const points = document.querySelectorAll('.point-wrapper');
+        points.forEach(point => {
+            const status = point.dataset.status;
+            let isVisible = false;
+
+            if (status === 'public' && isShowingPublic) {
+                isVisible = true;
+            } else if ((status === 'private' || status === 'pending') && isShowingPrivate) {
+                isVisible = true;
+            }
+            
+            if (isVisible) {
+                point.classList.remove('hidden');
+            } else {
+                point.classList.add('hidden');
             }
         });
-        
-        // Update visibility based on filter settings
-        updatePointVisibility();
     }
+
+    // === UI event handling ===
+    mapContainer.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.point-wrapper')) return;
+        
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        mapContainer.style.cursor = 'grabbing';
+        e.preventDefault();
+    });
     
-    function createPointElement(point) {
-        const pointWrapper = document.createElement('div');
-        pointWrapper.classList.add('point-wrapper');
-        pointWrapper.dataset.id = point._id;
-        pointWrapper.dataset.status = point.status;
-        pointWrapper.dataset.owner = point.ownerSessionCode;
-        
-        const resourceInfo = MINECRAFT_RESOURCES[point.resourceType] || { name: 'Custom Point', color: '#888', category: 'custom' };
-        
-        const pointElement = document.createElement('div');
-        pointElement.classList.add('point');
-        pointElement.classList.add(resourceInfo.category);
-        pointElement.style.setProperty('--resource-color', resourceInfo.color);
-        
-        const nameElement = document.createElement('div');
-        nameElement.classList.add('point-name');
-        nameElement.textContent = point.name;
-        
-        pointWrapper.appendChild(pointElement);
-        pointWrapper.appendChild(nameElement);
-
-        pointElement.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showPointDetailsModal(point);
-        });
-
-        updatePointPosition(pointWrapper, point.x, point.z);
-        return pointWrapper;
-    }
+    window.addEventListener('mouseup', () => {
+        isDragging = false;
+        mapContainer.style.cursor = 'grab';
+    });
     
-    function updatePointPosition(pointElement, x, z) {
-        // Calculate point position on the new map dimensions
-        const xPercent = (x + MAP_X_RANGE) / (2 * MAP_X_RANGE) * 100;
-        const zPercent = (z + MAP_Z_RANGE) / (2 * MAP_Z_RANGE) * 100;
+    window.addEventListener('mousemove', (e) => {
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
         
-        pointElement.style.left = `${xPercent}%`;
-        pointElement.style.top = `${zPercent}%`;
-    }
-
-    function createPointListItem(point) {
-        const listItem = document.createElement('li');
-        listItem.classList.add('point-list-item');
-        listItem.dataset.id = point._id;
+        if (!isDragging) {
+            if (!mouseMoveThrottle) {
+                mouseMoveThrottle = setTimeout(() => {
+                    updateCoordinatesFromMouse(e.clientX, e.clientY);
+                    mouseMoveThrottle = null;
+                }, 16);
+            }
+            return;
+        }
         
-        const resourceInfo = MINECRAFT_RESOURCES[point.resourceType] || { name: 'Custom Point', color: '#888', category: 'custom' };
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        offsetX += dx;
+        offsetY += dy;
+        startX = e.clientX;
+        startY = e.clientY;
+        updateMapPosition();
+    });
+    
+    zoomInBtn.addEventListener('click', () => {
+        currentScale = Math.min(5, currentScale + 0.2);
+        updateMapPosition();
+    });
+    
+    zoomOutBtn.addEventListener('click', () => {
+        const containerRect = mapContainer.parentElement.getBoundingClientRect();
+        const minScale = Math.max(containerRect.width / MAP_WIDTH_PX, containerRect.height / MAP_HEIGHT_PX);
+        currentScale = Math.max(minScale, currentScale - 0.2);
+        updateMapPosition();
+    });
 
-        listItem.innerHTML = `
-            <span class="point-list-name">${point.name}</span>
-            <span class="point-list-coords">(X: ${point.x}, Z: ${point.z})</span>
-            <span class="point-list-type">${resourceInfo.name}</span>
-            <span class="point-list-status ${point.status}">${point.status}</span>
-        `;
+    resetViewBtn.addEventListener('click', () => {
+        currentScale = 1;
+        offsetX = 0;
+        offsetY = 0;
+        updateMapPosition();
+    });
+
+    showYourPointsBtn.addEventListener('click', () => {
+        isShowingPrivate = !isShowingPrivate;
+        showYourPointsBtn.classList.toggle('active', isShowingPrivate);
+        filterPoints();
+    });
+
+    showSharedPointsBtn.addEventListener('click', () => {
+        isShowingPublic = !isShowingPublic;
+        showSharedPointsBtn.classList.toggle('active', isShowingPublic);
+        filterPoints();
+    });
+
+    // === Form and modal logic ===
+    addPointBtn.addEventListener('click', async () => {
+        const resourceType = resourceSelect.value;
+        let name;
         
-        listItem.addEventListener('click', () => {
-            showPointDetailsModal(point);
-        });
+        if (resourceType === 'custom') {
+            name = nameInput.value.trim();
+        } else {
+            name = MINECRAFT_RESOURCES[resourceType].name;
+        }
+        
+        const x = parseInt(xInput.value);
+        const z = parseInt(zInput.value);
+        const description = descriptionInput.value.trim();
+        const mode = addPointBtn.dataset.mode;
+        const pointId = addPointBtn.dataset.pointId;
 
-        return listItem;
-    }
+        if (!name || isNaN(x) || isNaN(z)) {
+            showError('Please fill all fields correctly!');
+            return;
+        }
 
-    function showPointDetailsModal(point) {
+        addPointBtn.disabled = true;
+        addPointBtn.textContent = 'Saving...';
+
+        try {
+            let response;
+            const pointData = { 
+                name, 
+                description,
+                x, 
+                z,
+                resourceType: resourceType === 'custom' ? 'custom' : resourceType
+            };
+            
+            if (mode === 'edit') {
+                const point = document.querySelector('.point-wrapper[data-point-id="' + pointId + '"]');
+                const isPublic = point.dataset.status === 'public';
+                const url = isPublic ? `/api/admin/edit/${pointId}` : `/api/points/${pointId}`;
+                
+                response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-Code': sessionCode
+                    },
+                    body: JSON.stringify(pointData)
+                });
+
+                addPointBtn.textContent = 'Add Point';
+                addPointBtn.dataset.mode = 'add';
+                addPointBtn.dataset.pointId = '';
+                
+            } else {
+                response = await fetch('/api/points', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-Code': sessionCode
+                    },
+                    body: JSON.stringify(pointData)
+                });
+            }
+
+            if (response.ok) {
+                clearInputs();
+                fetchPoints();
+                showSuccess(mode === 'edit' ? 'Point updated!' : 'Point added!');
+            } else {
+                const errorData = await response.json();
+                showError(errorData.message || 'Error occurred while saving point.');
+            }
+        } catch (err) {
+            console.error('Error saving point:', err);
+            showError('Server connection error.');
+        } finally {
+            addPointBtn.disabled = false;
+            if (mode === 'edit') {
+                addPointBtn.textContent = 'Save Changes';
+            } else {
+                addPointBtn.textContent = 'Add Point';
+            }
+        }
+    });
+    
+    function displayPointDetails(point) {
         document.getElementById('point-details-name').textContent = point.name;
         document.getElementById('point-details-x').textContent = point.x;
         document.getElementById('point-details-z').textContent = point.z;
 
-        // Set type and description
         const resourceInfo = MINECRAFT_RESOURCES[point.resourceType] || { name: 'Custom Point', color: '#888', category: 'custom' };
         document.getElementById('point-details-type').textContent = resourceInfo.name;
         document.getElementById('point-details-description').textContent = point.description || 'No description provided.';
         
-        // Toggle visibility of description if it's not provided
         const descGroup = document.querySelector('.point-details-description-group');
         if (point.description) {
             descGroup.style.display = 'block';
@@ -360,13 +620,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         pointDetailsModal.style.display = 'flex';
         
-        // Show/hide buttons based on ownership and status
         const isOwner = point.ownerSessionCode === sessionCode;
         editPointBtn.style.display = isOwner ? 'block' : 'none';
         deletePointBtn.style.display = isOwner ? 'block' : 'none';
         sharePointBtn.style.display = (isOwner && point.status === 'private') ? 'block' : 'none';
 
-        // Add event listeners for this specific point
         editPointBtn.onclick = () => {
             pointDetailsModal.style.display = 'none';
             setupEditMode(point);
@@ -386,9 +644,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addPointBtn.dataset.mode = 'edit';
         addPointBtn.dataset.pointId = point._id;
         
-        // Populate the form with point data
         resourceSelect.value = point.resourceType;
-        // Trigger change event to show/hide custom name group
         resourceSelect.dispatchEvent(new Event('change'));
         
         if (point.resourceType === 'custom') {
@@ -400,15 +656,6 @@ document.addEventListener('DOMContentLoaded', () => {
         descriptionInput.value = point.description || '';
         xInput.value = point.x;
         zInput.value = point.z;
-    }
-    
-    function clearInputs() {
-        resourceSelect.value = 'custom';
-        resourceSelect.dispatchEvent(new Event('change')); // Reset name input
-        nameInput.value = '';
-        descriptionInput.value = '';
-        xInput.value = '';
-        zInput.value = '';
     }
 
     async function deletePoint(id) {
@@ -458,259 +705,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === Event Listeners ===
-    
-    // Add/Edit Point Form Submission
-    addPointForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        addPointBtn.disabled = true;
-        const mode = addPointBtn.dataset.mode;
-        
-        const resourceType = resourceSelect.value;
-        const name = resourceType === 'custom' ? nameInput.value.trim() : MINECRAFT_RESOURCES[resourceType].name;
-        const description = descriptionInput.value.trim();
-        const x = xInput.value;
-        const z = zInput.value;
-        
-        const pointData = { name, description, x, z, resourceType };
-        let response;
-        
-        try {
-            if (mode === 'edit') {
-                const pointId = addPointBtn.dataset.pointId;
-                response = await fetch(`/api/points/${pointId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Session-Code': sessionCode
-                    },
-                    body: JSON.stringify(pointData)
-                });
-
-                addPointBtn.textContent = 'Add Point';
-                addPointBtn.dataset.mode = 'add';
-                addPointBtn.dataset.pointId = '';
-                
-            } else {
-                response = await fetch('/api/points', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Session-Code': sessionCode
-                    },
-                    body: JSON.stringify(pointData)
-                });
-            }
-
-            if (response.ok) {
-                clearInputs();
-                fetchPoints();
-                showSuccess(mode === 'edit' ? 'Point updated!' : 'Point added!');
-            } else {
-                const errorData = await response.json();
-                showError(errorData.message || 'Error occurred while saving point.');
-            }
-        } catch (err) {
-            console.error('Error saving point:', err);
-            showError('Server connection error.');
-        } finally {
-            addPointBtn.disabled = false;
-            if (mode === 'edit') {
-                addPointBtn.textContent = 'Save Changes';
-            } else {
-                addPointBtn.textContent = 'Add Point';
-            }
-        }
-    });
-
-    // Map Interaction
-    mapContainer.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        lastMouseX = e.clientX;
-        lastMouseY = e.clientY;
-        mapContainer.style.cursor = 'grabbing';
-    });
-    
-    mapContainer.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        
-        // Throttle mouse movement for performance
-        if (isThrottling) return;
-        isThrottling = true;
-        
-        clearTimeout(mouseMoveThrottle);
-        mouseMoveThrottle = setTimeout(() => {
-            isThrottling = false;
-        }, 16); // ~60 FPS
-
-        const dx = e.clientX - lastMouseX;
-        const dy = e.clientY - lastMouseY;
-        
-        offsetX += dx;
-        offsetY += dy;
-        
-        lastMouseX = e.clientX;
-        lastMouseY = e.clientY;
-
-        mapImage.style.transform = `scale(${currentScale}) translate(${offsetX / currentScale}px, ${offsetY / currentScale}px)`;
-        
-        // Update point positions
-        document.querySelectorAll('.point-wrapper').forEach(pointElement => {
-            pointElement.style.transform = `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px) scale(${1 / currentScale})`;
-            pointElement.style.willChange = 'transform';
-        });
-
-        updateCoordinatesInfo(e);
-        updateZoomInfo();
-    });
-    
-    mapContainer.addEventListener('mouseup', () => {
-        isDragging = false;
-        mapContainer.style.cursor = 'grab';
-    });
-    
-    mapContainer.addEventListener('mouseleave', () => {
-        isDragging = false;
-        mapContainer.style.cursor = 'grab';
-    });
-
-    mapContainer.addEventListener('mousemove', (e) => {
-        if (!isDragging) {
-            updateCoordinatesInfo(e);
-        }
-    });
-
-    mapContainer.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const delta = e.deltaY * -0.001;
-        const newScale = Math.max(0.05, Math.min(1, currentScale + delta));
-        
-        // Get mouse position relative to map container
-        const rect = mapContainer.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        // Calculate a new offset to zoom to the cursor
-        const oldImageLeft = (MAP_WIDTH_PX / 2) * currentScale + offsetX;
-        const oldImageTop = (MAP_HEIGHT_PX / 2) * currentScale + offsetY;
-
-        const newImageLeft = (MAP_WIDTH_PX / 2) * newScale;
-        const newImageTop = (MAP_HEIGHT_PX / 2) * newScale;
-        
-        const newOffsetX = offsetX - (mouseX - oldImageLeft) * (newScale / currentScale - 1);
-        const newOffsetY = offsetY - (mouseY - oldImageTop) * (newScale / currentScale - 1);
-        
-        currentScale = newScale;
-        offsetX = newOffsetX;
-        offsetY = newOffsetY;
-
-        mapImage.style.transform = `scale(${currentScale}) translate(${offsetX / currentScale}px, ${offsetY / currentScale}px)`;
-
-        document.querySelectorAll('.point-wrapper').forEach(pointElement => {
-            pointElement.style.transform = `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px) scale(${1 / currentScale})`;
-            pointElement.style.willChange = 'transform';
-        });
-
-        updateCoordinatesInfo(e);
-        updateZoomInfo();
-    });
-    
-    zoomInBtn.addEventListener('click', () => {
-        const newScale = Math.min(1, currentScale + 0.1);
-        currentScale = newScale;
-        mapImage.style.transform = `scale(${currentScale}) translate(${offsetX / currentScale}px, ${offsetY / currentScale}px)`;
-        document.querySelectorAll('.point-wrapper').forEach(pointElement => {
-            pointElement.style.transform = `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px) scale(${1 / currentScale})`;
-        });
-        updateZoomInfo();
-    });
-    
-    zoomOutBtn.addEventListener('click', () => {
-        const newScale = Math.max(0.05, currentScale - 0.1);
-        currentScale = newScale;
-        mapImage.style.transform = `scale(${currentScale}) translate(${offsetX / currentScale}px, ${offsetY / currentScale}px)`;
-        document.querySelectorAll('.point-wrapper').forEach(pointElement => {
-            pointElement.style.transform = `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px) scale(${1 / currentScale})`;
-        });
-        updateZoomInfo();
-    });
-    
-    resetViewBtn.addEventListener('click', () => {
-        currentScale = 0.18;
-        offsetX = 0;
-        offsetY = 0;
-        mapImage.style.transition = 'transform 0.5s ease-out';
-        mapImage.style.transform = `scale(${currentScale}) translate(${offsetX / currentScale}px, ${offsetY / currentScale}px)`;
-        document.querySelectorAll('.point-wrapper').forEach(pointElement => {
-            pointElement.style.transition = 'transform 0.5s ease-out';
-            pointElement.style.transform = `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px) scale(${1 / currentScale})`;
-        });
-        // Remove transitions after they're done
-        setTimeout(() => {
-            mapImage.style.transition = '';
-            document.querySelectorAll('.point-wrapper').forEach(pointElement => {
-                pointElement.style.transition = '';
-            });
-        }, 500);
-        updateZoomInfo();
-    });
-    
-    // Filter buttons
-    showYourPointsBtn.addEventListener('click', () => {
-        showYourPointsBtn.classList.toggle('active');
-        isShowingPrivate = !isShowingPrivate;
-        updatePointVisibility();
-    });
-    
-    showSharedPointsBtn.addEventListener('click', () => {
-        showSharedPointsBtn.classList.toggle('active');
-        isShowingPublic = !isShowingPublic;
-        updatePointVisibility();
-    });
-
-    function updatePointVisibility() {
-        document.querySelectorAll('.point-wrapper').forEach(pointElement => {
-            const status = pointElement.dataset.status;
-            const owner = pointElement.dataset.owner;
-            
-            const isPrivate = (status === 'private' || status === 'pending') && owner === sessionCode;
-            const isPublic = (status === 'public');
-            
-            let isVisible = false;
-            if (isPrivate && isShowingPrivate) {
-                isVisible = true;
-            }
-            if (isPublic && isShowingPublic) {
-                isVisible = true;
-            }
-            
-            pointElement.style.display = isVisible ? 'block' : 'none';
-        });
-    }
-
-    // Coordinates and Zoom Info
-    function updateCoordinatesInfo(e) {
-        const mapRect = mapImage.getBoundingClientRect();
-        const containerRect = mapContainer.getBoundingClientRect();
-
-        const mapX = (e.clientX - containerRect.left) - mapRect.left;
-        const mapZ = (e.clientY - containerRect.top) - mapRect.top;
-
-        // NEW calculation for coordinates based on new ranges
-        const xCoord = Math.round((mapX / currentScale) - (MAP_WIDTH_PX / 2) - ((MAP_WIDTH_PX / 2) - MAP_X_RANGE));
-        const zCoord = Math.round((mapZ / currentScale) - (MAP_HEIGHT_PX / 2) - ((MAP_HEIGHT_PX / 2) - MAP_Z_RANGE));
-
-        coordinatesInfo.textContent = `X: ${xCoord}, Z: ${zCoord}`;
-    }
-    
-    function updateZoomInfo() {
-        const zoomPercentage = Math.round(currentScale / 0.18 * 100);
-        zoomInfo.textContent = `${zoomPercentage}%`;
-    }
-
     // Modal logic
     closeButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -741,7 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 const data = await response.json();
                 localStorage.setItem('sessionCode', data.sessionCode);
-                sessionCode = data.sessionCode; // Update global sessionCode
+                sessionCode = data.sessionCode;
                 sessionCodeDisplay.textContent = `Session Code: ${sessionCode} (Admin)`;
                 isUserAdmin = true;
                 showSuccess('Admin login successful!');
@@ -754,6 +748,47 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.error('Admin login error:', err);
             showError('Server connection error during login.');
+        }
+    });
+    
+    // Admin panel logic
+    refreshPendingBtn.addEventListener('click', () => {
+        if (!isUserAdmin) {
+            showError('You do not have admin permissions.');
+            return;
+        }
+        fetchPendingPoints();
+    });
+
+    promoteUserBtn.addEventListener('click', async () => {
+        if (!isUserOwner) {
+            showError('You do not have owner permissions.');
+            return;
+        }
+        const sessionCodeToPromote = promoteSessionCodeInput.value.trim();
+        if (!sessionCodeToPromote) {
+            showError('Please enter a session code.');
+            return;
+        }
+        try {
+            const response = await fetch('/api/owner/promote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Session-Code': sessionCode
+                },
+                body: JSON.stringify({ sessionCode: sessionCodeToPromote })
+            });
+            if (response.ok) {
+                showSuccess('User promoted to admin successfully.');
+                promoteSessionCodeInput.value = '';
+            } else {
+                const errorData = await response.json();
+                showError(errorData.message || 'Failed to promote user.');
+            }
+        } catch (err) {
+            console.error('Error promoting user:', err);
+            showError('Server connection error.');
         }
     });
 
@@ -823,5 +858,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial setup
     fetchPoints();
-    updateZoomInfo();
+    updateMapPosition();
 });
