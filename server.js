@@ -9,34 +9,26 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors({
-    origin: true,
-    credentials: true
-}));
+app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Serving static files
+// Serving static files - fixed paths
 app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// MongoDB database connection
+// MongoDB database connection - removed deprecated options
 const connectDB = async () => {
     try {
-        const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/minecraft-map';
-        await mongoose.connect(mongoUri);
+        await mongoose.connect(process.env.MONGODB_URI);
         console.log('MongoDB database connection successful!');
     } catch (err) {
         console.error('Database connection error:', err);
-        // W trybie development kontynuuj bez bazy danych
-        if (process.env.NODE_ENV !== 'production') {
-            console.log('Continuing without database in development mode');
-        } else {
-            process.exit(1);
-        }
+        process.exit(1);
     }
 };
 
-// Schemat i model dla punktów na mapie
+// Schema and model for map points - UPDATED with resourceType
 const pointSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -72,7 +64,7 @@ const pointSchema = new mongoose.Schema({
 
 const Point = mongoose.model('Point', pointSchema);
 
-// Schemat i model dla uprawnień admina
+// Schema and model for admin permissions
 const adminSchema = new mongoose.Schema({
     sessionCode: {
         type: String,
@@ -85,7 +77,7 @@ const adminSchema = new mongoose.Schema({
 
 const Admin = mongoose.model('Admin', adminSchema);
 
-// Schemat dla dozwolonych kodów sesji do logowania admina
+// Schema for allowed session codes for admin login
 const allowedSessionSchema = new mongoose.Schema({
     sessionCode: {
         type: String,
@@ -94,7 +86,7 @@ const allowedSessionSchema = new mongoose.Schema({
     },
     addedBy: {
         type: String,
-        required: true
+        required: true // session code of the owner who added it
     }
 }, {
     timestamps: true
@@ -102,104 +94,104 @@ const allowedSessionSchema = new mongoose.Schema({
 
 const AllowedSession = mongoose.model('AllowedSession', allowedSessionSchema);
 
-// Stały kod sesji ownera
+// Fixed owner session code
 const OWNER_SESSION_CODE = "301263ee-49a9-4575-8c3d-f784bae7b27d";
 
-// Middleware do sprawdzania uprawnień admina
+// Middleware to check admin permissions
 const checkAdmin = async (req, res, next) => {
     try {
         const sessionCode = req.header('X-Session-Code');
         if (!sessionCode) {
-            return res.status(401).json({ message: 'Brak kodu sesji.' });
+            return res.status(401).json({ message: 'Missing session code.' });
         }
         
-        // Sprawdź czy to owner
+        // Check if it's the owner
         if (sessionCode === OWNER_SESSION_CODE) {
             req.isAdmin = true;
             req.isOwner = true;
             return next();
         }
         
-        // Sprawdź czy to admin z bazy danych
+        // Check if it's an admin from the database
         const admin = await Admin.findOne({ sessionCode });
         if (admin) {
             req.isAdmin = true;
             return next();
         }
         
-        return res.status(403).json({ message: 'Wymagane uprawnienia administratora.' });
+        return res.status(403).json({ message: 'Admin permissions required.' });
     } catch (err) {
-        console.error('Błąd sprawdzania uprawnień:', err);
-        return res.status(500).json({ message: 'Błąd serwera.' });
+        console.error('Error checking permissions:', err);
+        return res.status(500).json({ message: 'Server error.' });
     }
 };
 
-// Middleware do sprawdzania uprawnień ownera
+// Middleware to check owner permissions
 const checkOwner = (req, res, next) => {
     const sessionCode = req.header('X-Session-Code');
     if (sessionCode !== OWNER_SESSION_CODE) {
-        return res.status(403).json({ message: 'Wymagane uprawnienia właściciela.' });
+        return res.status(403).json({ message: 'Owner permissions required.' });
     }
     req.isOwner = true;
     next();
 };
 
-// === ENDPOINTY API ===
+// === API ENDPOINTS ===
 
-// Sprawdzenie zdrowia serwera
+// Health check
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// GET - Pobieranie wszystkich publicznych punktów
+// GET - Fetch all public points
 app.get('/api/points', async (req, res) => {
     try {
         const publicPoints = await Point.find({ status: 'public' });
         res.json(publicPoints);
     } catch (err) {
-        console.error('Błąd pobierania publicznych punktów:', err);
-        res.status(500).json({ message: 'Błąd pobierania punktów.' });
+        console.error('Error fetching public points:', err);
+        res.status(500).json({ message: 'Error fetching points.' });
     }
 });
 
-// GET - Pobieranie prywatnych punktów dla sesji
+// GET - Fetch private points for a session
 app.get('/api/points/private', async (req, res) => {
     try {
         const sessionCode = req.header('X-Session-Code');
         if (!sessionCode) {
-            return res.status(401).json({ message: 'Brak kodu sesji.' });
+            return res.status(401).json({ message: 'Missing session code.' });
         }
         const privatePoints = await Point.find({ ownerSessionCode: sessionCode });
         res.json(privatePoints);
     } catch (err) {
-        console.error('Błąd pobierania prywatnych punktów:', err);
-        res.status(500).json({ message: 'Błąd pobierania punktów.' });
+        console.error('Error fetching private points:', err);
+        res.status(500).json({ message: 'Error fetching points.' });
     }
 });
 
-// POST - Dodawanie nowego punktu (domyślnie status: private)
+// POST - Add new point (default status: private) - UPDATED with resourceType
 app.post('/api/points', async (req, res) => {
     try {
         const { name, x, z, resourceType } = req.body;
         const ownerSessionCode = req.header('X-Session-Code');
 
         if (!name || name.trim() === '') {
-            return res.status(400).json({ message: 'Nazwa punktu jest wymagana.' });
+            return res.status(400).json({ message: 'Point name is required.' });
         }
 
         if (x === undefined || z === undefined) {
-            return res.status(400).json({ message: 'Wymagane są współrzędne X i Z.' });
+            return res.status(400).json({ message: 'X and Z coordinates are required.' });
         }
 
         if (!ownerSessionCode) {
-            return res.status(400).json({ message: 'Wymagany jest kod sesji.' });
+            return res.status(400).json({ message: 'Session code is required.' });
         }
 
         const numX = parseInt(x);
         const numZ = parseInt(z);
 
         if (isNaN(numX) || isNaN(numZ)) {
-            return res.status(400).json({ message: 'Współrzędne muszą być liczbami.' });
+            return res.status(400).json({ message: 'Coordinates must be numbers.' });
         }
 
         const newPoint = new Point({ 
@@ -214,12 +206,12 @@ app.post('/api/points', async (req, res) => {
         await newPoint.save();
         res.status(201).json(newPoint);
     } catch (err) {
-        console.error('Błąd dodawania punktu:', err);
-        res.status(500).json({ message: 'Błąd dodawania punktu.' });
+        console.error('Error adding point:', err);
+        res.status(500).json({ message: 'Error adding point.' });
     }
 });
 
-// PUT - Edycja punktu (tylko właściciel)
+// PUT - Edit point (owner only) - UPDATED with resourceType
 app.put('/api/points/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -227,27 +219,27 @@ app.put('/api/points/:id', async (req, res) => {
         const sessionCode = req.header('X-Session-Code');
 
         if (!name || name.trim() === '') {
-            return res.status(400).json({ message: 'Nazwa punktu jest wymagana.' });
+            return res.status(400).json({ message: 'Point name is required.' });
         }
 
         if (x === undefined || z === undefined) {
-            return res.status(400).json({ message: 'Wymagane są współrzędne X i Z.' });
+            return res.status(400).json({ message: 'X and Z coordinates are required.' });
         }
 
         const numX = parseInt(x);
         const numZ = parseInt(z);
 
         if (isNaN(numX) || isNaN(numZ)) {
-            return res.status(400).json({ message: 'Współrzędne muszą być liczbami.' });
+            return res.status(400).json({ message: 'Coordinates must be numbers.' });
         }
 
         const point = await Point.findById(id);
         if (!point) {
-            return res.status(404).json({ message: 'Punkt nie znaleziony.' });
+            return res.status(404).json({ message: 'Point not found.' });
         }
 
         if (point.ownerSessionCode !== sessionCode) {
-            return res.status(403).json({ message: 'Brak uprawnień do edycji tego punktu.' });
+            return res.status(403).json({ message: 'No permission to edit this point.' });
         }
 
         point.name = name.trim();
@@ -257,12 +249,12 @@ app.put('/api/points/:id', async (req, res) => {
         await point.save();
         res.json(point);
     } catch (err) {
-        console.error('Błąd edycji punktu:', err);
-        res.status(500).json({ message: 'Błąd edycji punktu.' });
+        console.error('Error editing point:', err);
+        res.status(500).json({ message: 'Error editing point.' });
     }
 });
 
-// PUT - Udostępnianie punktu do akceptacji admina
+// PUT - Share point for admin approval
 app.put('/api/points/share/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -270,31 +262,31 @@ app.put('/api/points/share/:id', async (req, res) => {
 
         const point = await Point.findById(id);
         if (!point) {
-            return res.status(404).json({ message: 'Punkt nie znaleziony.' });
+            return res.status(404).json({ message: 'Point not found.' });
         }
 
         if (point.ownerSessionCode !== sessionCode) {
-            return res.status(403).json({ message: 'Brak uprawnień do udostępnienia tego punktu.' });
+            return res.status(403).json({ message: 'No permission to share this point.' });
         }
 
         if (point.status === 'pending') {
-            return res.status(400).json({ message: 'Punkt oczekuje już na akceptację.' });
+            return res.status(400).json({ message: 'Point is already pending approval.' });
         }
 
         if (point.status === 'public') {
-            return res.status(400).json({ message: 'Punkt jest już publiczny.' });
+            return res.status(400).json({ message: 'Point is already public.' });
         }
 
         point.status = 'pending';
         await point.save();
         res.json(point);
     } catch (err) {
-        console.error('Błąd udostępniania punktu:', err);
-        res.status(500).json({ message: 'Błąd udostępniania punktu.' });
+        console.error('Error sharing point:', err);
+        res.status(500).json({ message: 'Error sharing point.' });
     }
 });
 
-// DELETE - Usuwanie punktu (tylko właściciel)
+// DELETE - Delete point (owner only)
 app.delete('/api/points/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -302,56 +294,56 @@ app.delete('/api/points/:id', async (req, res) => {
 
         const point = await Point.findById(id);
         if (!point) {
-            return res.status(404).json({ message: 'Punkt nie znaleziony.' });
+            return res.status(404).json({ message: 'Point not found.' });
         }
 
         if (point.ownerSessionCode !== sessionCode) {
-            return res.status(403).json({ message: 'Brak uprawnień do usunięcia tego punktu.' });
+            return res.status(403).json({ message: 'No permission to delete this point.' });
         }
 
         await Point.findByIdAndDelete(id);
-        res.json({ message: 'Punkt usunięty.' });
+        res.json({ message: 'Point deleted.' });
     } catch (err) {
-        console.error('Błąd usuwania punktu:', err);
-        res.status(500).json({ message: 'Błąd usuwania punktu.' });
+        console.error('Error deleting point:', err);
+        res.status(500).json({ message: 'Error deleting point.' });
     }
 });
 
-// === ENDPOINTY ADMINA ===
+// === ADMIN ENDPOINTS ===
 
-// POST - Logowanie admina
+// POST - Admin login - with allowed sessions check
 app.post('/api/admin/login', async (req, res) => {
     try {
         const { adminCode } = req.body;
         const sessionCode = req.header('X-Session-Code');
         
         if (!sessionCode) {
-            return res.status(400).json({ success: false, message: 'Brak kodu sesji.' });
+            return res.status(400).json({ success: false, message: 'Missing session code.' });
         }
         
         if (!adminCode) {
-            return res.status(400).json({ success: false, message: 'Brak kodu admina.' });
+            return res.status(400).json({ success: false, message: 'Missing admin code.' });
         }
         
-        // Sprawdź czy to owner - może się zawsze zalogować
+        // Check if it's the owner - can always login
         if (sessionCode === OWNER_SESSION_CODE) {
             if (adminCode === process.env.ADMIN_CODE) {
-                return res.json({ success: true, message: 'Zalogowano jako właściciel' });
+                return res.json({ success: true, message: 'Logged in as owner' });
             } else {
-                return res.status(401).json({ success: false, message: 'Nieprawidłowy kod admina' });
+                return res.status(401).json({ success: false, message: 'Invalid admin code' });
             }
         }
         
-        // Sprawdź czy kod sesji jest na liście dozwolonych
+        // Check if session code is on the allowed list
         const allowedSession = await AllowedSession.findOne({ sessionCode });
         if (!allowedSession) {
             return res.status(403).json({ 
                 success: false, 
-                message: 'Twój kod sesji nie jest uprawniony do logowania jako admin.' 
+                message: 'Your session code is not authorized for admin login.' 
             });
         }
         
-        // Sprawdź czy kod admina jest poprawny
+        // Check if admin code is correct
         if (adminCode === process.env.ADMIN_CODE) {
             try {
                 const existingAdmin = await Admin.findOne({ sessionCode });
@@ -359,100 +351,100 @@ app.post('/api/admin/login', async (req, res) => {
                     const newAdmin = new Admin({ sessionCode });
                     await newAdmin.save();
                 }
-                res.json({ success: true, message: 'Zalogowano jako admin' });
+                res.json({ success: true, message: 'Logged in as admin' });
             } catch (err) {
                 if (err.code === 11000) {
-                    // Użytkownik jest już adminem
-                    res.json({ success: true, message: 'Zalogowano jako admin' });
+                    // User is already an admin
+                    res.json({ success: true, message: 'Logged in as admin' });
                 } else {
-                    console.error('Błąd zapisywania admina:', err);
-                    res.status(500).json({ success: false, message: 'Błąd serwera' });
+                    console.error('Error saving admin:', err);
+                    res.status(500).json({ success: false, message: 'Server error' });
                 }
             }
         } else {
-            res.status(401).json({ success: false, message: 'Nieprawidłowy kod admina' });
+            res.status(401).json({ success: false, message: 'Invalid admin code' });
         }
     } catch (err) {
-        console.error('Błąd logowania admina:', err);
-        res.status(500).json({ success: false, message: 'Błąd serwera' });
+        console.error('Admin login error:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 
-// GET - Pobieranie punktów oczekujących na akceptację (admin)
+// GET - Fetch points awaiting approval (admin)
 app.get('/api/admin/pending', checkAdmin, async (req, res) => {
     try {
         const pendingPoints = await Point.find({ status: 'pending' });
         res.json(pendingPoints);
     } catch (err) {
-        console.error('Błąd pobierania oczekujących punktów:', err);
-        res.status(500).json({ message: 'Błąd pobierania oczekujących punktów.' });
+        console.error('Error fetching pending points:', err);
+        res.status(500).json({ message: 'Error fetching pending points.' });
     }
 });
 
-// PUT - Akceptowanie punktu (admin)
+// PUT - Approve point (admin)
 app.put('/api/admin/accept/:id', checkAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const point = await Point.findById(id);
         if (!point) {
-            return res.status(404).json({ message: 'Punkt nie znaleziony.' });
+            return res.status(404).json({ message: 'Point not found.' });
         }
         if (point.status !== 'pending') {
-            return res.status(400).json({ message: 'Punkt nie oczekuje na akceptację.' });
+            return res.status(400).json({ message: 'Point is not awaiting approval.' });
         }
         point.status = 'public';
         await point.save();
         res.json(point);
     } catch (err) {
-        console.error('Błąd akceptowania punktu:', err);
-        res.status(500).json({ message: 'Błąd akceptowania punktu.' });
+        console.error('Error approving point:', err);
+        res.status(500).json({ message: 'Error approving point.' });
     }
 });
 
-// PUT - Odrzucanie punktu (zmiana z pending na private)
+// PUT - Reject point (change from pending to private)
 app.put('/api/admin/reject/:id', checkAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const point = await Point.findById(id);
         if (!point) {
-            return res.status(404).json({ message: 'Punkt nie znaleziony.' });
+            return res.status(404).json({ message: 'Point not found.' });
         }
         if (point.status !== 'pending') {
-            return res.status(400).json({ message: 'Punkt nie oczekuje na akceptację.' });
+            return res.status(400).json({ message: 'Point is not awaiting approval.' });
         }
         point.status = 'private';
         await point.save();
         res.json(point);
     } catch (err) {
-        console.error('Błąd odrzucania punktu:', err);
-        res.status(500).json({ message: 'Błąd odrzucania punktu.' });
+        console.error('Error rejecting point:', err);
+        res.status(500).json({ message: 'Error rejecting point.' });
     }
 });
 
-// PUT - Edycja publicznego punktu (admin)
+// PUT - Edit public point (admin) - UPDATED with resourceType
 app.put('/api/admin/edit/:id', checkAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { name, x, z, resourceType } = req.body;
 
         if (!name || name.trim() === '') {
-            return res.status(400).json({ message: 'Nazwa punktu jest wymagana.' });
+            return res.status(400).json({ message: 'Point name is required.' });
         }
 
         if (x === undefined || z === undefined) {
-            return res.status(400).json({ message: 'Wymagane są współrzędne X i Z.' });
+            return res.status(400).json({ message: 'X and Z coordinates are required.' });
         }
 
         const numX = parseInt(x);
         const numZ = parseInt(z);
 
         if (isNaN(numX) || isNaN(numZ)) {
-            return res.status(400).json({ message: 'Współrzędne muszą być liczbami.' });
+            return res.status(400).json({ message: 'Coordinates must be numbers.' });
         }
 
         const point = await Point.findById(id);
         if (!point) {
-            return res.status(404).json({ message: 'Punkt nie znaleziony.' });
+            return res.status(404).json({ message: 'Point not found.' });
         }
         point.name = name.trim();
         point.x = numX;
@@ -461,30 +453,30 @@ app.put('/api/admin/edit/:id', checkAdmin, async (req, res) => {
         await point.save();
         res.json(point);
     } catch (err) {
-        console.error('Błąd edycji punktu przez admina:', err);
-        res.status(500).json({ message: 'Błąd edycji punktu.' });
+        console.error('Error editing point by admin:', err);
+        res.status(500).json({ message: 'Error editing point.' });
     }
 });
 
-// DELETE - Usuwanie punktu (admin)
+// DELETE - Delete point (admin)
 app.delete('/api/admin/delete/:id', checkAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const point = await Point.findById(id);
         if (!point) {
-            return res.status(404).json({ message: 'Punkt nie znaleziony.' });
+            return res.status(404).json({ message: 'Point not found.' });
         }
         await Point.findByIdAndDelete(id);
-        res.json({ message: 'Punkt usunięty.' });
+        res.json({ message: 'Point deleted.' });
     } catch (err) {
-        console.error('Błąd usuwania punktu przez admina:', err);
-        res.status(500).json({ message: 'Błąd usuwania punktu.' });
+        console.error('Error deleting point by admin:', err);
+        res.status(500).json({ message: 'Error deleting point.' });
     }
 });
 
-// === ENDPOINTY WŁAŚCICIELA ===
+// === OWNER ENDPOINTS ===
 
-// GET - Sprawdzenie czy użytkownik jest właścicielem
+// GET - Check if user is owner
 app.get('/api/owner/check', (req, res) => {
     const sessionCode = req.header('X-Session-Code');
     if (sessionCode === OWNER_SESSION_CODE) {
@@ -494,33 +486,33 @@ app.get('/api/owner/check', (req, res) => {
     }
 });
 
-// GET - Pobieranie listy dozwolonych kodów sesji (właściciel)
+// GET - Fetch list of allowed session codes (owner)
 app.get('/api/owner/allowed-sessions', checkOwner, async (req, res) => {
     try {
         const allowedSessions = await AllowedSession.find().sort({ createdAt: -1 });
         res.json(allowedSessions);
     } catch (err) {
-        console.error('Błąd pobierania dozwolonych sesji:', err);
-        res.status(500).json({ message: 'Błąd pobierania listy.' });
+        console.error('Error fetching allowed sessions:', err);
+        res.status(500).json({ message: 'Error fetching list.' });
     }
 });
 
-// POST - Dodawanie dozwolonego kodu sesji (właściciel)
+// POST - Add allowed session code (owner)
 app.post('/api/owner/allow-session', checkOwner, async (req, res) => {
     try {
         const { sessionCode: newSessionCode } = req.body;
         const ownerSessionCode = req.header('X-Session-Code');
 
         if (!newSessionCode || newSessionCode.trim() === '') {
-            return res.status(400).json({ message: 'Wymagany jest kod sesji.' });
+            return res.status(400).json({ message: 'Session code is required.' });
         }
 
         const trimmedSessionCode = newSessionCode.trim();
 
-        // Sprawdź czy już istnieje
+        // Check if it already exists
         const existing = await AllowedSession.findOne({ sessionCode: trimmedSessionCode });
         if (existing) {
-            return res.status(400).json({ message: 'Ten kod sesji jest już na liście dozwolonych.' });
+            return res.status(400).json({ message: 'This session code is already on the allowed list.' });
         }
 
         const newAllowedSession = new AllowedSession({
@@ -530,122 +522,138 @@ app.post('/api/owner/allow-session', checkOwner, async (req, res) => {
 
         await newAllowedSession.save();
         res.status(201).json({ 
-            message: 'Kod sesji dodany do listy dozwolonych.',
+            message: 'Session code added to allowed list.',
             session: newAllowedSession
         });
     } catch (err) {
-        console.error('Błąd dodawania dozwolonego kodu sesji:', err);
-        res.status(500).json({ message: 'Błąd dodawania kodu sesji.' });
+        console.error('Error adding allowed session code:', err);
+        res.status(500).json({ message: 'Error adding session code.' });
     }
 });
 
-// DELETE - Usuwanie dozwolonego kodu sesji (właściciel)
+// DELETE - Remove allowed session code (owner)
 app.delete('/api/owner/remove-session', checkOwner, async (req, res) => {
     try {
         const { sessionCode: sessionToRemove } = req.body;
 
         if (!sessionToRemove) {
-            return res.status(400).json({ message: 'Wymagany jest kod sesji do usunięcia.' });
+            return res.status(400).json({ message: 'Session code to remove is required.' });
         }
 
         const result = await AllowedSession.deleteOne({ sessionCode: sessionToRemove });
         if (result.deletedCount === 0) {
-            return res.status(404).json({ message: 'Kod sesji nie znaleziony na liście.' });
+            return res.status(404).json({ message: 'Session code not found on the list.' });
         }
 
-        // Usuń również z listy adminów jeśli jest obecny
+        // Also remove from admin list if present
         await Admin.deleteOne({ sessionCode: sessionToRemove });
 
-        res.json({ message: 'Kod sesji usunięty z listy dozwolonych.' });
+        res.json({ message: 'Session code removed from allowed list.' });
     } catch (err) {
-        console.error('Błąd usuwania dozwolonego kodu sesji:', err);
-        res.status(500).json({ message: 'Błąd usuwania kodu sesji.' });
+        console.error('Error removing allowed session code:', err);
+        res.status(500).json({ message: 'Error removing session code.' });
     }
 });
 
-// PUT - Awansowanie użytkownika na admina (właściciel)
+// PUT - Promote user to admin (owner)
 app.put('/api/owner/promote', checkOwner, async (req, res) => {
     try {
         const { sessionCode: codeToPromote } = req.body;
 
         if (!codeToPromote) {
-            return res.status(400).json({ message: 'Wymagany jest kod sesji do awansowania.' });
+            return res.status(400).json({ message: 'Session code to promote is required.' });
         }
 
-        // Sprawdź czy kod sesji jest na liście dozwolonych
+        // Check if session code is on the allowed list
         const allowedSession = await AllowedSession.findOne({ sessionCode: codeToPromote });
         if (!allowedSession) {
             return res.status(400).json({ 
-                message: 'Ten kod sesji nie jest na liście dozwolonych. Najpierw dodaj go do dozwolonych sesji.' 
+                message: 'This session code is not on the allowed list. Add it to allowed sessions first.' 
             });
         }
 
         const existingAdmin = await Admin.findOne({ sessionCode: codeToPromote });
         if (existingAdmin) {
-            return res.json({ message: 'Użytkownik jest już adminem.' });
+            return res.json({ message: 'User is already an admin.' });
         }
         
         const newAdmin = new Admin({ sessionCode: codeToPromote });
         await newAdmin.save();
-        res.json({ message: 'Użytkownik awansowany na admina.' });
+        res.json({ message: 'User promoted to admin.' });
     } catch (err) {
-        console.error('Błąd awansowania użytkownika:', err);
-        res.status(500).json({ message: 'Błąd awansowania użytkownika.' });
+        console.error('Error promoting user:', err);
+        res.status(500).json({ message: 'Error promoting user.' });
     }
 });
 
-// DELETE - Usunięcie admina (właściciel)
+// DELETE - Remove admin (owner)
 app.delete('/api/owner/demote', checkOwner, async (req, res) => {
     try {
         const { sessionCode: codeToDemote } = req.body;
 
         if (!codeToDemote) {
-            return res.status(400).json({ message: 'Wymagany jest kod sesji do degradowania.' });
+            return res.status(400).json({ message: 'Session code to demote is required.' });
         }
         
         const result = await Admin.deleteOne({ sessionCode: codeToDemote });
         if (result.deletedCount === 0) {
-            return res.json({ message: 'Użytkownik nie był adminem.' });
+            return res.json({ message: 'User was not an admin.' });
         }
-        res.json({ message: 'Użytkownik zdegradowany.' });
+        res.json({ message: 'User demoted.' });
     } catch (err) {
-        console.error('Błąd degradowania użytkownika:', err);
-        res.status(500).json({ message: 'Błąd degradowania użytkownika.' });
+        console.error('Error demoting user:', err);
+        res.status(500).json({ message: 'Error demoting user.' });
     }
 });
 
-// Obsługa żądań do nieistniejących endpointów API
-app.use('/api/*', (req, res) => {
-    res.status(404).json({ message: 'Endpoint API nie znaleziony.' });
-});
-
-// Obsługa pozostałych żądań - serwowanie strony głównej
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'), (err) => {
+// Handle static file requests with better debugging
+app.get('/', (req, res) => {
+    const indexPath = path.join(__dirname, 'index.html');
+    console.log('Attempting to send index.html from path:', indexPath);
+    res.sendFile(indexPath, (err) => {
         if (err) {
-            console.log('Serwowanie index.html dla SPA');
+            console.error('Error sending index.html:', err);
+            res.status(500).send('Server error - unable to load main page');
         }
     });
 });
 
-// Middleware do obsługi błędów
-app.use((err, req, res, next) => {
-    console.error('Nieobsłużony błąd:', err);
-    res.status(500).json({ message: 'Wewnętrzny błąd serwera' });
+// Catch-all route for SPA - must be at the end
+app.get('*', (req, res) => {
+    // Check if request is not for API
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ message: 'Endpoint not found' });
+    }
+    
+    const indexPath = path.join(__dirname, 'index.html');
+    console.log('Catch-all: attempting to send index.html from path:', indexPath);
+    res.sendFile(indexPath, (err) => {
+        if (err) {
+            console.error('Catch-all: Error sending index.html:', err);
+            res.status(404).send('Page not found');
+        }
+    });
 });
 
-// Uruchomienie serwera
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+});
+
+// Start server
 const startServer = async () => {
     await connectDB();
     
-    app.listen(PORT, '0.0.0.0', () => {
-        console.log(`Serwer działa na porcie ${PORT}`);
-        console.log(`Kod sesji właściciela: ${OWNER_SESSION_CODE}`);
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
         console.log(`URL: http://localhost:${PORT}`);
+        console.log(`Owner session code: ${OWNER_SESSION_CODE}`);
+        console.log('Current files in directory:', require('fs').readdirSync(__dirname));
     });
 };
 
 startServer().catch(err => {
-    console.error('Błąd uruchamiania serwera:', err);
+    console.error('Server startup error:', err);
     process.exit(1);
 });
