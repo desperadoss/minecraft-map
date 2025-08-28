@@ -608,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelectorAll('.point-wrapper').forEach(pointElement => {
             pointElement.style.transform = `translate(-50%, -50%) translate(${offsetX}px, ${offsetY}px) scale(${1 / currentScale})`;
-            pointElement.style.will-change = 'transform';
+            pointElement.style.willChange = 'transform';
         });
 
         updateCoordinatesInfo(e);
