@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const MAP_WIDTH_PX = 10000;
     const MAP_HEIGHT_PX = 6000;
     const MAP_X_RANGE = 5000;
-    const MAP_Z_RANGE = 3000;
+    const MAP_Z_RANGE = 3250;
     
     let currentScale = 1;
     let offsetX = 0;
@@ -860,3 +860,4 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchPoints();
     updateMapPosition();
 });
+
