@@ -245,11 +245,7 @@ body, html {
 
 @keyframes pulse {
     0% { box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
-    50% { 
-        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5), 
-                    0 0 20px rgba(231, 76, 60, 0.6),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.3); 
-    }
+    50% { box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(231, 76, 60, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
     100% { box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
 }
 
@@ -273,153 +269,202 @@ body, html {
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
     pointer-events: none;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.point-wrapper:hover .point-name {
+    opacity: 1;
+}
+
+/* === LAYOUT AND UI ELEMENTS === */
+.footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #2e3034;
+    padding: 10px 20px;
+    border-top: 2px solid #5a5c60;
+}
+
+.session-code {
+    font-family: monospace;
+    font-size: 0.9em;
+    color: #aaa;
 }
 
 .your-points-section {
-    margin-top: 20px;
     background-color: #2e3034;
+    padding: 20px;
     border: 1px solid #5a5c60;
-    border-radius: 5px;
-    padding: 15px;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    margin-top: -1px; /* Overlap with map-view-container border */
 }
 
 .section-title {
     color: #90ee90;
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.5em;
     border-bottom: 1px solid #5a5c60;
     padding-bottom: 5px;
-    margin-bottom: 15px;
 }
 
 .add-point-form-inline {
     display: flex;
+    gap: 10px;
     align-items: flex-end;
-    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    flex-grow: 1;
+    flex: 1;
+    min-width: 100px;
 }
 
-/* NEW: Hide custom name group by default */
-#custom-name-group {
-    display: none;
+.form-group label {
+    font-size: 0.8em;
+    color: #9b9b9b;
+    margin-bottom: 5px;
 }
 
-.add-button {
-    background-color: #90ee90;
-    color: #212224;
-    border: none;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-radius: 3px;
-    font-weight: bold;
-    transition: background-color 0.2s;
-}
-
-.add-button:hover {
-    background-color: #83d47d;
-}
-
-/* Form inputs and select styling */
-input[type="text"], input[type="number"], select {
-    background-color: #3b3d40;
+.add-point-form-inline input[type="text"],
+.add-point-form-inline input[type="number"],
+.add-point-form-inline select,
+.add-point-form-inline textarea {
+    background-color: #38393d;
     border: 1px solid #5a5c60;
     color: #c9c9c9;
     padding: 8px;
     border-radius: 3px;
-    outline: none;
-    transition: border-color 0.2s;
+    font-size: 1em;
 }
 
-input[type="text"]:focus, input[type="number"]:focus, select:focus {
-    border-color: #90ee90;
-    background-color: #444548;
+.add-point-form-inline textarea {
+    resize: vertical;
+    min-height: 50px;
 }
 
-input[type="text"]:disabled, input[type="number"]:disabled, select:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+.add-point-form-inline button {
+    align-self: flex-end;
+    flex-grow: 0;
 }
 
-/* Select styling */
-select {
+/* === Points List === */
+.points-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #5a5c60;
+    border-radius: 3px;
+}
+
+.point-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #5a5c60;
     cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    background-size: 16px;
-    padding-right: 32px;
+    transition: background-color 0.2s;
 }
 
-select option {
-    background-color: #3b3d40;
-    color: #c9c9c9;
+.point-list-item:last-child {
+    border-bottom: none;
 }
 
-select optgroup {
-    background-color: #2e3034;
-    color: #90ee90;
+.point-list-item:hover {
+    background-color: #38393d;
+}
+
+.point-list-name {
     font-weight: bold;
+    color: #90ee90;
+    flex-grow: 1;
 }
 
-.session-code-display {
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    padding: 8px 12px;
+.point-list-coords {
     font-size: 0.9em;
     color: #9b9b9b;
-    cursor: pointer;
+    margin-left: 10px;
 }
 
-/* Modals */
+.point-list-type {
+    font-size: 0.8em;
+    font-style: italic;
+    color: #9b9b9b;
+    margin-left: 10px;
+}
+
+.point-list-status {
+    font-size: 0.7em;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 10px;
+    text-transform: uppercase;
+}
+
+.point-list-status.private {
+    background-color: #f1c40f;
+    color: #212224;
+}
+
+.point-list-status.pending {
+    background-color: #e74c3c;
+    color: #212224;
+}
+
+.point-list-status.public {
+    background-color: #2ecc71;
+    color: #212224;
+}
+
+/* === MODAL === */
 .modal {
     display: none;
     position: fixed;
-    z-index: 2000;
+    z-index: 1000;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.6);
+    background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
 }
 
 .modal-content {
     background-color: #2e3034;
-    border: 1px solid #5a5c60;
     padding: 20px;
     border-radius: 8px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 300px;
-    max-width: 90%;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    color: #c9c9c9;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    width: 90%;
+    max-width: 500px;
+    position: relative;
 }
 
-/* Owner panel styling */
+.modal-content.admin-panel {
+    max-width: 600px;
+}
+
 .modal-content.owner-panel {
-    width: 500px;
-    max-width: 95%;
-    max-height: 80vh;
-    overflow-y: auto;
+    max-width: 700px;
 }
 
 .close-button {
     color: #aaa;
-    float: right;
+    position: absolute;
+    top: 10px;
+    right: 15px;
     font-size: 28px;
     font-weight: bold;
     cursor: pointer;
@@ -428,138 +473,25 @@ select optgroup {
 .close-button:hover,
 .close-button:focus {
     color: #fff;
-    text-decoration: none;
 }
 
 .modal-title {
     color: #90ee90;
     margin-top: 0;
-}
-
-/* NEW: Point type and status info styling */
-.point-type-info, .point-status-info {
-    margin: 10px 0;
-    font-size: 0.9em;
-}
-
-.point-status-info {
-    padding: 5px 8px;
-    border-radius: 4px;
-    font-weight: 500;
-    text-align: center;
-}
-
-.point-status-info.status-private {
-    background-color: rgba(241, 196, 15, 0.2);
-    border: 1px solid rgba(241, 196, 15, 0.5);
-    color: #f1c40f;
-}
-
-.point-status-info.status-pending {
-    background-color: rgba(231, 76, 60, 0.2);
-    border: 1px solid rgba(231, 76, 60, 0.5);
-    color: #e74c3c;
-}
-
-.point-status-info.status-public {
-    background-color: rgba(46, 204, 113, 0.2);
-    border: 1px solid rgba(46, 204, 113, 0.5);
-    color: #2ecc71;
+    border-bottom: 1px solid #5a5c60;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
 }
 
 .modal-section {
-    margin-bottom: 25px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #5a5c60;
-}
-
-.modal-section:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
+    margin-bottom: 20px;
 }
 
 .modal-section h3 {
     color: #90ee90;
-    margin-top: 0;
+    border-bottom: 1px dotted #5a5c60;
+    padding-bottom: 5px;
     margin-bottom: 10px;
-    font-size: 1.1em;
-}
-
-.modal-section h4 {
-    color: #c9c9c9;
-    margin-top: 15px;
-    margin-bottom: 10px;
-    font-size: 1em;
-}
-
-.add-session-form {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.add-session-form input {
-    flex-grow: 1;
-}
-
-.allowed-sessions-list {
-    background-color: #212224;
-    border: 1px solid #5a5c60;
-    border-radius: 5px;
-    padding: 10px;
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-#allowed-sessions-list {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-}
-
-#allowed-sessions-list li {
-    margin-bottom: 10px;
-}
-
-.session-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #2e3034;
-    padding: 8px 12px;
-    border-radius: 3px;
-    border: 1px solid #444548;
-}
-
-.session-code {
-    font-family: monospace;
-    color: #90ee90;
-    font-weight: bold;
-    flex-grow: 1;
-    margin-right: 10px;
-    word-break: break-all;
-}
-
-.session-date {
-    color: #9b9b9b;
-    font-size: 0.8em;
-    margin-right: 10px;
-    white-space: nowrap;
-}
-
-.remove-session-btn {
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 0.8em;
-    transition: background-color 0.2s;
-}
-
-.remove-session-btn:hover {
-    background-color: #c0392b;
 }
 
 .modal-buttons {
@@ -569,126 +501,160 @@ select optgroup {
     margin-top: 20px;
 }
 
-ul#pending-points-list {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #5a5c60;
-    padding: 5px;
+#point-details-description {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-style: italic;
+    color: #b0b0b0;
+    margin-top: 5px;
 }
 
-#pending-points-list li {
-    background-color: #212224;
-    padding: 8px;
+.pending-points-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.pending-points-list li {
+    background-color: #38393d;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.pending-point-info {
+    flex-grow: 1;
+}
+
+.pending-point-name {
+    font-weight: bold;
+    color: #90ee90;
+}
+
+.pending-point-coords {
+    font-size: 0.9em;
+    color: #9b9b9b;
+}
+
+.pending-point-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.admin-panel .button {
+    padding: 5px 10px;
+    font-size: 0.9em;
+}
+
+.admin-panel .button.approve {
+    background-color: #2ecc71;
+    color: #212224;
+    border-color: #2ecc71;
+}
+
+.admin-panel .button.reject {
+    background-color: #e74c3c;
+    color: #212224;
+    border-color: #e74c3c;
+}
+
+/* Owner Panel */
+.add-session-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.add-session-form input[type="text"] {
+    flex-grow: 1;
+}
+
+.allowed-sessions-list h4 {
+    margin-top: 0;
     margin-bottom: 5px;
-    border-radius: 3px;
+}
+
+.allowed-sessions-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.session-item {
+    background-color: #38393d;
+    padding: 8px 12px;
+    border-radius: 5px;
+    margin-bottom: 5px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-#pending-points-list button {
-    background-color: #55575a;
+.session-item .session-code {
+    flex-grow: 1;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+.session-item .session-date {
+    font-size: 0.8em;
+    color: #9b9b9b;
+    margin-right: 10px;
+    white-space: nowrap;
+}
+
+.delete-session {
+    background-color: #e74c3c;
+    color: #fff;
     border: none;
     padding: 5px 10px;
-    color: white;
     cursor: pointer;
     border-radius: 3px;
 }
 
-#admin-login-modal input, #owner-login-modal input {
-    width: 100%;
-    box-sizing: border-box;
+.delete-session:hover {
+    background-color: #c0392b;
 }
 
-/* === MODERN ENHANCEMENTS === */
-
-/* Improved scrollbars for webkit browsers */
-.allowed-sessions-list::-webkit-scrollbar,
-#pending-points-list::-webkit-scrollbar {
-    width: 8px;
+/* For modals with scrollable content */
+.scrollable-content {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 10px; /* For scrollbar space */
 }
 
-.allowed-sessions-list::-webkit-scrollbar-track,
-#pending-points-list::-webkit-scrollbar-track {
-    background: #212224;
-    border-radius: 4px;
+/* General improvements */
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23c9c9c9" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 20px;
 }
 
-.allowed-sessions-list::-webkit-scrollbar-thumb,
-#pending-points-list::-webkit-scrollbar-thumb {
-    background: #5a5c60;
-    border-radius: 4px;
-}
-
-.allowed-sessions-list::-webkit-scrollbar-thumb:hover,
-#pending-points-list::-webkit-scrollbar-thumb:hover {
-    background: #7a7d81;
-}
-
-/* Enhanced form focus states */
-input[type="text"]:focus, input[type="number"]:focus, select:focus {
+/* Hover and focus states for inputs */
+input:focus, select:focus, textarea:focus, button:focus {
+    outline: none;
     border-color: #90ee90;
-    background-color: #444548;
-    box-shadow: 0 0 0 2px rgba(144, 238, 144, 0.2);
+    box-shadow: 0 0 5px #90ee90;
 }
 
-/* Button hover enhancements */
-.button:hover:not(.active) {
-    background-color: #55575a;
-    border-color: #7a7d81;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+/* New point details modal description style */
+.point-details-description-group {
+    background-color: #38393d;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #5a5c60;
 }
 
-.add-button:hover {
-    background-color: #83d47d;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(144, 238, 144, 0.3);
-}
-
-/* Improved modal animations */
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -60%);
-    }
-    to {
-        opacity: 1;
-        transform: translate(-50%, -50%);
-    }
-}
-
-.modal.show .modal-content {
-    animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-/* Enhanced point wrapper animations */
-.point-wrapper {
-    animation: pointFadeIn 0.5s ease-out;
-}
-
-@keyframes pointFadeIn {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.5);
-    }
-    to {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
-}
-
-/* Loading states */
-.button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none !important;
-}
-
-.button:disabled:hover {
+/* Disable buttons on hover for modals */
+.modal-content .button:hover {
     background-color: #444548 !important;
     border-color: #5a5c60 !important;
     box-shadow: none !important;
@@ -739,32 +705,11 @@ input[type="text"]:focus, input[type="number"]:focus, select:focus {
     .point-name {
         font-size: 10px;
         padding: 3px 6px;
-        top: 28px;
-    }
-}
-
-/* Dark mode compatibility */
-@media (prefers-color-scheme: dark) {
-    body, html {
-        background-color: #1a1a1a;
     }
     
-    .main-content {
-        background-color: #1a1a1a;
-    }
-}
-
-/* Reduced motion for accessibility */
-@media (prefers-reduced-motion: reduce) {
-    .point,
-    .button,
-    .add-button,
-    .point-wrapper {
-        transition: none;
-        animation: none;
-    }
-    
-    .point:hover {
-        transform: translate3d(0, 0, 0) scale(1.1);
+    .footer {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
     }
 }
