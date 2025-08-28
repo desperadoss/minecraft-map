@@ -45,41 +45,49 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // === MINECRAFT RESOURCE DEFINITIONS ===
     const MINECRAFT_RESOURCES = {
-        // Ores
-        'diamond_ore': { name: 'Diamond Ore', color: '#5DADE2', category: 'ore' },
-        'iron_ore': { name: 'Iron Ore', color: '#B7950B', category: 'ore' },
-        'gold_ore': { name: 'Gold Ore', color: '#F1C40F', category: 'ore' },
-        'coal_ore': { name: 'Coal Ore', color: '#2C3E50', category: 'ore' },
-        'copper_ore': { name: 'Copper Ore', color: '#E67E22', category: 'ore' },
-        'redstone_ore': { name: 'Redstone Ore', color: '#E74C3C', category: 'ore' },
-        'lapis_ore': { name: 'Lapis Lazuli Ore', color: '#3498DB', category: 'ore' },
-        'emerald_ore': { name: 'Emerald Ore', color: '#2ECC71', category: 'ore' },
-        'netherite': { name: 'Ancient Debris', color: '#8B4513', category: 'ore' },
-        
-        // Structures
-        'village': { name: 'Village', color: '#D2691E', category: 'structure' },
-        'stronghold': { name: 'Stronghold', color: '#696969', category: 'structure' },
-        'nether_fortress': { name: 'Nether Fortress', color: '#8B0000', category: 'structure' },
-        'end_city': { name: 'End City', color: '#9370DB', category: 'structure' },
-        'ocean_monument': { name: 'Ocean Monument', color: '#008B8B', category: 'structure' },
-        'woodland_mansion': { name: 'Woodland Mansion', color: '#556B2F', category: 'structure' },
-        'desert_temple': { name: 'Desert Temple', color: '#DEB887', category: 'structure' },
-        'jungle_temple': { name: 'Jungle Temple', color: '#228B22', category: 'structure' },
-        'igloo': { name: 'Igloo', color: '#F0F8FF', category: 'structure' },
-        'shipwreck': { name: 'Shipwreck', color: '#8FBC8F', category: 'structure' },
-        
-        // Biomes
-        'mushroom_biome': { name: 'Mushroom Island', color: '#FF69B4', category: 'biome' },
-        'mesa': { name: 'Badlands', color: '#CD853F', category: 'biome' },
-        'ice_spikes': { name: 'Ice Spikes', color: '#B0E0E6', category: 'biome' },
-        'flower_forest': { name: 'Flower Forest', color: '#FFB6C1', category: 'biome' },
-        
-        // Other
-        'spawn': { name: 'Spawn Point', color: '#32CD32', category: 'other' },
-        'base': { name: 'Base', color: '#4169E1', category: 'other' },
-        'farm': { name: 'Farm', color: '#9ACD32', category: 'other' },
-        'portal': { name: 'Nether Portal', color: '#8A2BE2', category: 'other' },
-        'treasure': { name: 'Treasure', color: '#FFD700', category: 'other' }
+    // Ores
+    'diamond_ore': { name: 'Diamond Ore', color: '#5DADE2', category: 'ore' },
+    'iron_ore':    { name: 'Iron Ore',    color: '#B7950B', category: 'ore' },
+    'gold_ore':    { name: 'Gold Ore',    color: '#F1C40F', category: 'ore' },
+    'coal_ore':    { name: 'Coal Ore',    color: '#2C3E50', category: 'ore' },
+    'copper_ore':  { name: 'Copper Ore',  color: '#E67E22', category: 'ore' },
+    'redstone_ore':{ name: 'Redstone Ore',color: '#E74C3C', category: 'ore' },
+    'lapis_ore':   { name: 'Lapis Lazuli Ore', color: '#3498DB', category: 'ore' },
+    'emerald_ore': { name: 'Emerald Ore', color: '#2ECC71', category: 'ore' },
+    'netherite':   { name: 'Ancient Debris',  color: '#8B4513', category: 'ore' },
+    
+    // Structures → podmienione na "civilization style"
+    'village':     { name: 'Village',      color: '#D2691E', category: 'structure' },
+    'city':        { name: 'City',         color: '#2E86C1', category: 'structure' },
+    'town':        { name: 'Town',         color: '#5DADE2', category: 'structure' },
+    'capital_city':{ name: 'Capital City', color: '#1F618D', category: 'structure' },
+    'fortress':    { name: 'Fortress',     color: '#7B241C', category: 'structure' },
+    'castle':      { name: 'Castle',       color: '#884EA0', category: 'structure' },
+    'harbor':      { name: 'Harbor',       color: '#1ABC9C', category: 'structure' },
+    'market':      { name: 'Marketplace',  color: '#F39C12', category: 'structure' },
+    'academy':     { name: 'Academy',      color: '#117A65', category: 'structure' },
+    'monument':    { name: 'Monument',     color: '#E67E22', category: 'structure' },
+
+    // Biomes (zostawione)
+'wastelands':         { name: 'Wastelands',          color: '#A67C52', category: 'biome' },
+'sandlands':          { name: 'Sandlands',           color: '#E0B95C', category: 'biome' },
+'savannah_plateau':   { name: 'Savannah Plateau',    color: '#D4C45C', category: 'biome' },
+'alpine':             { name: 'Alpine',              color: '#A9A9A9', category: 'biome' },
+'snowy_forest_tundra':{ name: 'Snowy Forest/Tundra', color: '#DCDCDC', category: 'biome' },
+'sea_ice':            { name: 'Sea Ice',             color: '#B0E0E6', category: 'biome' },
+'water':              { name: 'Water',               color: '#1F618D', category: 'biome' },
+'woodlands_plains':   { name: 'Woodlands/Plains',    color: '#58D68D', category: 'biome' },
+'jungle_tropical':    { name: 'Jungle/Tropical',     color: '#229954', category: 'biome' },
+'giant_forest':       { name: 'Giant Forest',        color: '#145A32', category: 'biome' },
+'taiga_highlands':    { name: 'Taiga Highlands',     color: '#1E8449', category: 'biome' },
+'cherry_forest_mtn':  { name: 'Cherry Forest Mountain', color: '#E6B0AA', category: 'biome' },
+    
+    // Other (zostawione)
+    'spawn':   { name: 'Spawn Point', color: '#32CD32', category: 'other' },
+    'base':    { name: 'Base',        color: '#4169E1', category: 'other' },
+    'farm':    { name: 'Farm',        color: '#9ACD32', category: 'other' },
+    'portal':  { name: 'Nether Portal', color: '#8A2BE2', category: 'other' },
+    'treasure':{ name: 'Treasure',    color: '#FFD700', category: 'other' }
     };
     
     // === Configuration and global variables ===
@@ -588,3 +596,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
