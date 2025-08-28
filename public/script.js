@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modals
     const pointDetailsModal = document.getElementById('point-details-modal');
     const adminLoginModal = document.getElementById('admin-login-modal');
-    const adminPanelModal = document.getElementById('admin-panel-modal');
+    const adminPanelModal = document = document.getElementById('admin-panel-modal');
     const ownerPanelModal = document.getElementById('owner-panel-modal');
     
     // Buttons and fields in modals
@@ -94,10 +94,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // === Configuration and global variables ===
+    // NEW MAP DIMENSIONS
     const MAP_WIDTH_PX = 10000;
-    const MAP_HEIGHT_PX = 5500;
-    const MAP_X_RANGE = 4200;
-    const MAP_Z_RANGE = 2750;
+    const MAP_HEIGHT_PX = 6000;
+    // NEW COORDINATE RANGES (symetrical around 0,0)
+    const MAP_X_RANGE = 5000;
+    const MAP_Z_RANGE = 3000;
     
     let currentScale = 0.18;
     let offsetX = 0;
@@ -309,8 +311,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function updatePointPosition(pointElement, x, z) {
-        const xPercent = (x - -MAP_X_RANGE) / (2 * MAP_X_RANGE) * 100;
-        const zPercent = (z - -MAP_Z_RANGE) / (2 * MAP_Z_RANGE) * 100;
+        // Calculate point position on the new map dimensions
+        const xPercent = (x + MAP_X_RANGE) / (2 * MAP_X_RANGE) * 100;
+        const zPercent = (z + MAP_Z_RANGE) / (2 * MAP_Z_RANGE) * 100;
         
         pointElement.style.left = `${xPercent}%`;
         pointElement.style.top = `${zPercent}%`;
@@ -696,8 +699,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const mapX = (e.clientX - containerRect.left) - mapRect.left;
         const mapZ = (e.clientY - containerRect.top) - mapRect.top;
 
-        const xCoord = Math.round((mapX / currentScale) - MAP_WIDTH_PX / 2);
-        const zCoord = Math.round((mapZ / currentScale) - MAP_HEIGHT_PX / 2);
+        // NEW calculation for coordinates based on new ranges
+        const xCoord = Math.round((mapX / currentScale) - (MAP_WIDTH_PX / 2) - ((MAP_WIDTH_PX / 2) - MAP_X_RANGE));
+        const zCoord = Math.round((mapZ / currentScale) - (MAP_HEIGHT_PX / 2) - ((MAP_HEIGHT_PX / 2) - MAP_Z_RANGE));
 
         coordinatesInfo.textContent = `X: ${xCoord}, Z: ${zCoord}`;
     }
