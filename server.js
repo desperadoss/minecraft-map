@@ -173,6 +173,93 @@ app.get('/api/points/private', async (req, res) => {
     }
 });
 
+// Function to check if a session code has admin/owner privileges
+const checkAdminAuth = async (req, res, next) => {
+    const sessionCode = req.header('X-Session-Code');
+    if (!sessionCode) {
+        return res.status(401).json({ message: 'No session code provided.' });
+    }
+    const session = await Session.findOne({ code: sessionCode });
+    if (!session || !session.isAdmin) {
+        return res.status(403).json({ message: 'Forbidden. Admin privileges required.' });
+    }
+    req.session = session;
+    next();
+};
+
+// API route to get all allowed session codes (for the owner panel)
+app.get('/api/owner/allowed-sessions', checkAdminAuth, async (req, res) => {
+    try {
+        const sessions = await Session.find({}).sort({ createdAt: -1 });
+        res.json(sessions);
+    } catch (err) {
+        console.error('Error fetching allowed sessions:', err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// API route to add a new session code to the allowed list (owner only)
+app.post('/api/owner/add-session', checkAdminAuth, async (req, res) => {
+    const { code } = req.body;
+    if (!code) {
+        return res.status(400).json({ message: 'Session code is required.' });
+    }
+
+    try {
+        let session = await Session.findOne({ code });
+        if (session) {
+            return res.status(409).json({ message: 'Session code already exists.' });
+        }
+        session = new Session({ code, isAdmin: false });
+        await session.save();
+        res.status(201).json({ message: 'Session added successfully.' });
+    } catch (err) {
+        console.error('Error adding session code:', err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// API route to promote a user to admin (owner only)
+app.post('/api/owner/promote', checkAdminAuth, async (req, res) => {
+    const { sessionCode } = req.body;
+    if (!sessionCode) {
+        return res.status(400).json({ message: 'Session code is required for promotion.' });
+    }
+
+    try {
+        const userSession = await Session.findOneAndUpdate(
+            { code: sessionCode },
+            { isAdmin: true },
+            { new: true }
+        );
+
+        if (!userSession) {
+            return res.status(404).json({ message: 'Session code not found.' });
+        }
+
+        res.json({ message: `Session code ${userSession.code} promoted to admin successfully.` });
+    } catch (err) {
+        console.error('Error promoting session:', err);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+});
+
+// API route to remove a session code (owner only)
+app.delete('/api/owner/remove-session', checkAdminAuth, async (req, res) => {
+    const { code } = req.body;
+
+    try {
+        const result = await Session.deleteOne({ code });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ message: 'Session code not found.' });
+        }
+        res.json({ message: `Session code ${code} removed successfully.` });
+    } catch (err) {
+        console.error('Error removing session:', err);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+});
+
 // POST - Add new point (default status: private)
 app.post('/api/points', async (req, res) => {
     try {
@@ -465,3 +552,4 @@ const startServer = async () => {
 };
 
 startServer();
+
