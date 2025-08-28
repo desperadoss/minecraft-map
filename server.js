@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const cors = require('cors');
+const fs = require('fs');
 
 require('dotenv').config();
 
@@ -14,7 +15,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Serving static files - fixed paths
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB database connection - removed deprecated options
@@ -134,6 +135,31 @@ const checkOwner = (req, res, next) => {
     }
     req.isOwner = true;
     next();
+};
+
+// Function to find index.html path
+const findIndexPath = () => {
+    const possiblePaths = [
+        path.join(__dirname, 'index.html'),
+        path.join(__dirname, 'public', 'index.html'),
+        path.join(process.cwd(), 'index.html'),
+        path.join(process.cwd(), 'public', 'index.html')
+    ];
+    
+    for (const indexPath of possiblePaths) {
+        if (fs.existsSync(indexPath)) {
+            console.log(`Found index.html at: ${indexPath}`);
+            return indexPath;
+        }
+    }
+    
+    console.error('index.html not found in any expected location');
+    console.log('Checked paths:', possiblePaths);
+    console.log('Current working directory:', process.cwd());
+    console.log('__dirname:', __dirname);
+    console.log('Files in current directory:', fs.readdirSync(process.cwd()));
+    
+    return possiblePaths[0]; // fallback to first option
 };
 
 // === API ENDPOINTS ===
@@ -608,7 +634,7 @@ app.delete('/api/owner/demote', checkOwner, async (req, res) => {
 
 // Handle static file requests with better debugging
 app.get('/', (req, res) => {
-    const indexPath = path.join(__dirname, 'index.html');
+    const indexPath = findIndexPath();
     console.log('Attempting to send index.html from path:', indexPath);
     res.sendFile(indexPath, (err) => {
         if (err) {
@@ -625,7 +651,7 @@ app.get('*', (req, res) => {
         return res.status(404).json({ message: 'Endpoint not found' });
     }
     
-    const indexPath = path.join(__dirname, 'index.html');
+    const indexPath = findIndexPath();
     console.log('Catch-all: attempting to send index.html from path:', indexPath);
     res.sendFile(indexPath, (err) => {
         if (err) {
@@ -649,7 +675,9 @@ const startServer = async () => {
         console.log(`Server running on port ${PORT}`);
         console.log(`URL: http://localhost:${PORT}`);
         console.log(`Owner session code: ${OWNER_SESSION_CODE}`);
-        console.log('Current files in directory:', require('fs').readdirSync(__dirname));
+        console.log('Current working directory:', process.cwd());
+        console.log('__dirname:', __dirname);
+        console.log('Current files in directory:', fs.readdirSync(process.cwd()));
     });
 };
 
