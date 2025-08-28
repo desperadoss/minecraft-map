@@ -55,8 +55,8 @@ const pointSchema = new mongoose.Schema({
     },
     resourceType: {
         type: String,
-        required: true,
-        default: 'custom'
+        default: 'custom',
+        trim: true
     }
 }, {
     timestamps: true
@@ -183,10 +183,6 @@ app.post('/api/points', async (req, res) => {
             return res.status(400).json({ message: 'X and Z coordinates are required.' });
         }
 
-        if (!resourceType || resourceType.trim() === '') {
-            return res.status(400).json({ message: 'Resource type is required.' });
-        }
-
         if (!ownerSessionCode) {
             return res.status(400).json({ message: 'Session code is required.' });
         }
@@ -204,7 +200,7 @@ app.post('/api/points', async (req, res) => {
             z: numZ, 
             ownerSessionCode, 
             status: 'private',
-            resourceType: resourceType.trim()
+            resourceType: resourceType || 'custom'
         });
         
         await newPoint.save();
@@ -230,10 +226,6 @@ app.put('/api/points/:id', async (req, res) => {
             return res.status(400).json({ message: 'X and Z coordinates are required.' });
         }
 
-        if (!resourceType || resourceType.trim() === '') {
-            return res.status(400).json({ message: 'Resource type is required.' });
-        }
-
         const numX = parseInt(x);
         const numZ = parseInt(z);
 
@@ -253,7 +245,7 @@ app.put('/api/points/:id', async (req, res) => {
         point.name = name.trim();
         point.x = numX;
         point.z = numZ;
-        point.resourceType = resourceType.trim();
+        point.resourceType = resourceType || 'custom';
         await point.save();
         res.json(point);
     } catch (err) {
@@ -443,10 +435,6 @@ app.put('/api/admin/edit/:id', checkAdmin, async (req, res) => {
             return res.status(400).json({ message: 'X and Z coordinates are required.' });
         }
 
-        if (!resourceType || resourceType.trim() === '') {
-            return res.status(400).json({ message: 'Resource type is required.' });
-        }
-
         const numX = parseInt(x);
         const numZ = parseInt(z);
 
@@ -461,7 +449,7 @@ app.put('/api/admin/edit/:id', checkAdmin, async (req, res) => {
         point.name = name.trim();
         point.x = numX;
         point.z = numZ;
-        point.resourceType = resourceType.trim();
+        point.resourceType = resourceType || 'custom';
         await point.save();
         res.json(point);
     } catch (err) {
