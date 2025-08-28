@@ -36,10 +36,10 @@
 
             <div class="your-points-section">
                 <h2 class="section-title">Your Points</h2>
-                <div class="add-point-form-inline">
+                <form class="add-point-form-inline" id="add-point-form">
                     <div class="form-group">
                         <label for="resource-select">Resource Type</label>
-                        <select id="resource-select">
+                        <select id="resource-select" required>
                             <option value="custom">Custom Name</option>
                             <optgroup label="Ores">
                                 <option value="diamond_ore">Diamond Ore</option>
@@ -66,81 +66,94 @@
                             </optgroup>
                             <optgroup label="Biomes">
                                 <option value="mushroom_biome">Mushroom Island</option>
-                                <option value="mesa">Badlands</option>
-                                <option value="ice_spikes">Ice Spikes</option>
-                                <option value="flower_forest">Flower Forest</option>
-                            </optgroup>
-                            <optgroup label="Other">
-                                <option value="spawn">Spawn Point</option>
-                                <option value="base">Base</option>
-                                <option value="farm">Farm</option>
-                                <option value="portal">Nether Portal</option>
-                                <option value="treasure">Treasure</option>
+                                <option value="wastelands">Wastelands</option>
+                                <option value="sandlands">Sandlands</option>
+                                <option value="savannah_plateau">Savannah Plateau</option>
+                                <option value="alpine">Alpine</option>
+                                <option value="snowy_forest_tundra">Snowy Forest/Tundra</option>
+                                <option value="sea_ice">Sea Ice</option>
+                                <option value="water">Water</option>
+                                <option value="woodlands_plains">Woodlands/Plains</option>
+                                <option value="jungle_tropical">Jungle/Tropical</option>
+                                <option value="giant_forest">Giant Forest</option>
+                                <option value="taiga_highlands">Taiga Highlands</option>
+                                <option value="cherry_forest_mtn">Cherry Forest Mountain</option>
                             </optgroup>
                         </select>
                     </div>
-                    <div class="form-group" id="custom-name-group">
+                    <div class="form-group" id="custom-name-group" style="display: none;">
                         <label for="name-input">Point Name</label>
-                        <input type="text" id="name-input" placeholder="e.g. Home">
+                        <input type="text" id="name-input" placeholder="Enter name" required>
                     </div>
                     <div class="form-group">
-                        <label for="x-input">X Coordinate</label>
-                        <input type="number" id="x-input" placeholder="e.g. 123">
+                        <label for="x-input">X Coord</label>
+                        <input type="number" id="x-input" placeholder="X" required>
                     </div>
                     <div class="form-group">
-                        <label for="z-input">Z Coordinate</label>
-                        <input type="number" id="z-input" placeholder="e.g. -456">
+                        <label for="z-input">Z Coord</label>
+                        <input type="number" id="z-input" placeholder="Z" required>
                     </div>
-                    <button class="add-button" id="add-point-button">Add Point</button>
-                </div>
-            </div>
-            
-            <div class="session-code-display" id="session-code-text"></div>
-        </div>
-    </div>
-
-    <div id="point-details-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2 class="modal-title" id="point-name">Point Name</h2>
-            <p>X Coordinate: <span id="point-x"></span></p>
-            <p>Z Coordinate: <span id="point-z"></span></p>
-            <p class="point-type-info">Type: <span id="point-type"></span></p>
-            <div class="point-status-info" id="point-status-info"></div>
-            <div class="modal-buttons">
-                <button class="button" id="share-point">Share</button>
-                <button class="button" id="edit-point">Edit</button>
-                <button class="button" id="delete-point">Delete</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="admin-login-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2 class="modal-title">Login as Admin</h2>
-            <p>Enter admin code:</p>
-            <input type="text" id="admin-login-input">
-            <div class="modal-buttons">
-                <button class="button" id="admin-login-btn">Login</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="admin-panel-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2 class="modal-title">Admin Panel</h2>
-            <div class="modal-section">
-                <h3>Pending Points</h3>
-                <ul id="pending-points-list"></ul>
-                <div class="modal-buttons">
-                    <button class="button" id="refresh-pending">Refresh</button>
-                </div>
+                    <div class="form-group">
+                        <label for="description-input">Description (Optional)</label>
+                        <textarea id="description-input" placeholder="Add a description..."></textarea>
+                    </div>
+                    <button class="button" type="submit" id="add-point-button" data-mode="add">Add Point</button>
+                </form>
+                <ul id="your-points-list" class="points-list"></ul>
             </div>
         </div>
     </div>
     
+    <div class="footer">
+        <p class="session-code" id="session-code-text"></p>
+        <button class="button" id="admin-login-btn">Admin Login</button>
+        <button class="button" id="owner-panel-btn">Owner Panel</button>
+    </div>
+
+    <div id="point-details-modal" class="modal">
+        <div class="modal-content point-details">
+            <span class="close-button">&times;</span>
+            <h2 class="modal-title" id="point-details-name"></h2>
+            <div class="modal-section point-details-info">
+                <p><strong>Type:</strong> <span id="point-details-type"></span></p>
+                <p><strong>Coordinates:</strong> (<span id="point-details-x"></span>, <span id="point-details-z"></span>)</p>
+                <p class="point-details-description-group"><strong>Description:</strong> <span id="point-details-description"></span></p>
+            </div>
+            <div class="modal-buttons">
+                <button class="button" id="share-point">Share Point (for Admin Approval)</button>
+                <button class="button" id="edit-point">Edit Point</button>
+                <button class="button" id="delete-point">Delete Point</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="admin-login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="modal-title">Admin Login</h2>
+            <p>Enter an allowed session code to login as admin:</p>
+            <input type="text" id="admin-login-input" placeholder="Enter session code">
+            <div class="modal-buttons">
+                <button class="button" id="admin-login-submit">Login</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="admin-panel-modal" class="modal">
+        <div class="modal-content admin-panel">
+            <span class="close-button">&times;</span>
+            <h2 class="modal-title">Admin Panel</h2>
+            <div class="modal-section">
+                <h3>Pending Points</h3>
+                <p>Below is a list of points waiting for your approval to be shared publicly.</p>
+                <div class="pending-points-list">
+                    <ul id="pending-points-list"></ul>
+                    <button class="button" id="refresh-pending">Refresh List</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="owner-panel-modal" class="modal">
         <div class="modal-content owner-panel">
             <span class="close-button">&times;</span>
