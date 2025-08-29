@@ -440,6 +440,55 @@ document.addEventListener('DOMContentLoaded', () => {
             privatePoints.forEach(addPointToMap);
         }
     }
+function renderPoints(publicPoints, privatePoints) {
+    document.querySelectorAll('.point-wrapper').forEach(p => p.remove());
+
+    const allPoints = [];
+    if (isShowingPublic) {
+        allPoints.push(...publicPoints);
+    }
+    if (isShowingPrivate) {
+        allPoints.push(...privatePoints);
+    }
+    
+    allPoints.forEach(point => {
+        const pxCoords = mcToPx(point.x, point.z);
+        
+        const pointWrapper = document.createElement('div');
+        pointWrapper.className = 'point-wrapper';
+        pointWrapper.style.left = `${(pxCoords.x / MAP_WIDTH_PX) * 100}%`;
+        pointWrapper.style.top = `${(pxCoords.z / MAP_HEIGHT_PX) * 100}%`;
+        pointWrapper.dataset.id = point._id;
+        pointWrapper.dataset.x = point.x;
+        pointWrapper.dataset.z = point.z;
+        pointWrapper.dataset.status = point.status;
+        pointWrapper.dataset.resourceType = point.resourceType;
+        
+        // Domyślnie ukrywaj punkty
+        // pointWrapper.classList.add('hidden'); // Alternatywa dla CSS opacity
+
+        const pointElement = document.createElement('div');
+        pointElement.className = 'point';
+        pointElement.style.backgroundColor = MINECRAFT_RESOURCES[point.resourceType]?.color || '#888';
+        pointElement.style.boxShadow = `0 0 10px ${MINECRAFT_RESOURCES[point.resourceType]?.color || '#888'}`;
+        
+        const pointName = document.createElement('span');
+        pointName.className = 'point-name';
+        pointName.textContent = point.name;
+        
+        pointWrapper.appendChild(pointElement);
+        pointWrapper.appendChild(pointName);
+        
+        pointWrapper.addEventListener('click', (e) => {
+            e.stopPropagation();
+            displayPointDetails(point);
+        });
+
+        mapContainer.appendChild(pointWrapper);
+    });
+
+    updatePointScaling();
+}
     
     function renderPointList(listId, points, isEditable) {
         const list = document.getElementById(listId);
@@ -1033,4 +1082,5 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchPoints();
     updateMapPosition();
 });
+
 
