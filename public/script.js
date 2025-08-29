@@ -819,9 +819,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="session-date">${new Date(s.createdAt).toLocaleDateString()}</span>
                         <button class="button delete-session" data-code="${s.sessionCode}">Delete</button>
                     `;
-                    li.querySelector('.delete-session').addEventListener('click', () => {
-                        deleteAllowedSession(s.sessionCode);
-                    });
                     list.appendChild(li);
                 });
             } else {
@@ -852,6 +849,56 @@ document.addEventListener('DOMContentLoaded', () => {
             showError('Server connection error.');
         }
     }
+    // Dodanie logiki dla przycisku "Add Session"
+    addSessionBtn.addEventListener('click', async () => {
+        const code = newSessionCodeInput.value.trim();
+        if (!code) {
+            showError('Please enter a session code.');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/owner/sessions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Session-Code': sessionCode
+                },
+                body: JSON.stringify({ sessionCode: code })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showSuccess(data.message);
+                newSessionCodeInput.value = '';
+                fetchAllowedSessions(); // Odśwież listę po dodaniu sesji
+            } else {
+                showError(data.message || 'Failed to add session.');
+            }
+        } catch (err) {
+            showError('Server connection error.');
+            console.error('Error adding session:', err);
+        }
+    });
+
+    // Dodanie logiki dla przycisku "Refresh List"
+    refreshSessionsBtn.addEventListener('click', () => {
+        fetchAllowedSessions();
+    });
+
+    // Dodanie nasłuchiwania dla dynamicznych przycisków "Delete"
+    allowedSessionsList.addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-session')) {
+            const sessionCodeToDelete = e.target.dataset.code;
+            if (confirm(`Are you sure you want to remove session ${sessionCodeToDelete}?`)) {
+                deleteAllowedSession(sessionCodeToDelete);
+            }
+        }
+    });
+
+    // Uruchomienie początkowego pobierania listy sesji
+    fetchAllowedSessions();
 
     // Call checkUserPermissions on load
     checkUserPermissions();
@@ -860,3 +907,4 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchPoints();
     updateMapPosition();
 });
+
