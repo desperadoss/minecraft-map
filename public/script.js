@@ -25,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const pointDetailsModal = document.getElementById('point-details-modal');
     const adminLoginModal = document.getElementById('admin-login-modal');
     const adminPanelModal = document.getElementById('admin-panel-modal');
-    const ownerPanelModal = document.getElementById('owner-panel-modal');
     
     // Buttons and fields in modals
     const closeButtons = document.querySelectorAll('.close-button');
@@ -875,40 +874,46 @@ function renderPoints(publicPoints, privatePoints) {
     }
 
     // Owner Panel Logic
-    ownerLoginBtn.addEventListener('click', () => {
-        hideModals();
-        adminLoginModal.style.display = 'block';
-    });
+ownerLoginBtn.addEventListener('click', () => {
+    hideModals();
+    if (isUserOwner) {
+        ownerPanelModal.style.display = 'block';
+        fetchAllowedSessions();
+    } else {
+        showError('You do not have owner permissions.');
+    }
+});
 
-    document.getElementById('login-as-admin').addEventListener('click', async () => {
-        const code = adminLoginInput.value;
-        try {
-            const response = await fetch('/api/owner/check', {
-                method: 'GET',
-                headers: { 'X-Session-Code': code }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                if (data.isOwner) {
-                    localStorage.setItem('sessionCode', code);
-                    sessionCode = code;
-                    isUserOwner = true;
-                    isUserAdmin = true;
-                    hideModals();
-                    ownerPanelModal.style.display = 'block';
-                    fetchAllowedSessions();
-                    showSuccess('Owner login successful!');
-                } else {
-                    showError('Invalid owner code. Not an owner.');
-                }
-            } else {
-                const data = await response.json();
-                showError(data.message || 'Failed to check owner status.');
-            }
-        } catch (err) {
-            showError('Server connection error.');
+// Zmień logikę przycisku logowania, aby działał tylko dla admina
+document.getElementById('login-as-admin').addEventListener('click', async () => {
+    const code = adminLoginInput.value;
+    // Pominąć, jeśli to kod właściciela, ponieważ właściciel loguje się bezpośrednio
+    if (OWNER_SESSION_CODES.includes(code)) {
+        showError('Use the owner panel button to log in as an owner.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/admin/pending', {
+            method: 'GET',
+            headers: { 'X-Session-Code': code }
+        });
+        if (response.ok) {
+            localStorage.setItem('sessionCode', code);
+            sessionCode = code;
+            isUserAdmin = true;
+            hideModals();
+            adminPanelModal.style.display = 'block';
+            fetchPendingPoints();
+            showSuccess('Admin login successful!');
+        } else {
+            const data = await response.json();
+            showError(data.message || 'Invalid admin code.');
         }
-    });
+    } catch (err) {
+        showError('Server connection error.');
+    }
+});
 
     if (promoteUserBtn) {
         promoteUserBtn.addEventListener('click', async () => {
@@ -1097,12 +1102,38 @@ function renderPoints(publicPoints, privatePoints) {
     });
 
     // Call checkUserPermissions on load
-    checkUserPermissions();
+    // === Check if user is owner and admin ===
+const OWNER_SESSION_CODES = [
+    '270ea844-8ab8-4ea1-a34c-18ea2e6a920a',
+    '301263ee-49a9-4575-8c3d-f784bae7b27d'
+];
+
+async function checkUserPermissions() {
+    isUserOwner = OWNER_SESSION_CODES.includes(sessionCode);
+    if (isUserOwner) {
+        ownerLoginBtn.style.display = 'block';
+        console.log('User is owner.');
+    }
+
+    try {
+        const adminRes = await fetch('/api/admin/pending', {
+            headers: { 'X-Session-Code': sessionCode }
+        });
+        if (adminRes.status === 200) {
+            isUserAdmin = true;
+            console.log('User is admin.');
+            adminLoginBtn.style.display = 'block';
+        }
+    } catch (err) {
+        console.log('User has no admin permissions.');
+    }
+}
 
     // Initial setup
     fetchPoints();
     updateMapPosition();
 });
+
 
 
 
