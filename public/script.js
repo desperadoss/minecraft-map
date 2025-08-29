@@ -48,6 +48,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshSessionsBtn = document.getElementById('refresh-sessions');
     
     const pendingPointsList = document.getElementById('pending-points-list');
+
+// W sekcji Event Listeners, dodaj nowy listener na map-container
+mapContainer.addEventListener('click', (e) => {
+    // Sprawdź, czy kliknięcie nie jest na punkcie
+    if (e.target.closest('.point-wrapper') === null) {
+        // Pokaż wszystkie punkty, jeśli kliknięto w tło mapy
+        const allPoints = document.querySelectorAll('.point-wrapper');
+        allPoints.forEach(point => point.classList.add('visible'));
+    }
+});
+
+// Dodaj funkcję do ukrywania punktów po kliknięciu na tło modala
+document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            hideModals();
+            // Ukryj punkty, gdy zamykasz modal
+            document.querySelectorAll('.point-wrapper').forEach(point => point.classList.remove('visible'));
+        }
+    });
+});
     
     // === MINECRAFT RESOURCE DEFINITIONS ===
     const MINECRAFT_RESOURCES = {
@@ -1082,5 +1103,6 @@ function renderPoints(publicPoints, privatePoints) {
     fetchPoints();
     updateMapPosition();
 });
+
 
 
