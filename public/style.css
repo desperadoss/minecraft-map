@@ -1,35 +1,43 @@
-body {
+body, html {
     margin: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #121212;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #1a1a1a;
     color: #e0e0e0;
+    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
     overflow: hidden;
 }
 
 .main-container {
     display: flex;
-    flex-direction: row;
     width: 95%;
     max-width: 1400px;
     height: 95%;
-    background-color: #1e1e1e;
+    max-height: 900px;
+    background-color: #2b2b2b;
     border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
     overflow: hidden;
 }
 
-.map-wrapper {
-    flex-grow: 1;
+/* Lewa strona: Mapa */
+.map-area {
     position: relative;
+    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    background-color: #000;
+    background-color: #121212;
+}
+
+.map-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
 }
 
 /* Wymiary mapy dostosowane do 8004 x 4500 px */
@@ -47,6 +55,50 @@ body {
     height: 100%;
     display: block;
     image-rendering: pixelated;
+}
+
+.map-overlay-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    pointer-events: none; /* Aby klikanie przechodziło na mapę */
+}
+
+.map-info {
+    pointer-events: auto;
+    background-color: rgba(43, 43, 43, 0.8);
+    padding: 10px 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    color: #f0f0f0;
+    font-size: 0.9em;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-buttons {
+    pointer-events: auto;
+    background-color: rgba(43, 43, 43, 0.8);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    display: flex;
+    gap: 10px;
+}
+
+.view-controls {
+    pointer-events: auto;
+    background-color: rgba(43, 43, 43, 0.8);
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    display: flex;
+    gap: 10px;
 }
 
 .point-wrapper {
@@ -84,86 +136,129 @@ body {
     opacity: 1;
 }
 
-.coordinates-info, .zoom-info {
-    position: absolute;
-    bottom: 15px;
-    left: 15px;
-    background-color: rgba(30, 30, 30, 0.8);
-    padding: 8px 12px;
-    border-radius: 5px;
-    font-size: 0.9em;
-    z-index: 20;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-}
-
-.zoom-info {
-    left: 200px;
-}
-
-/* Panel Kontrolny */
-.controls-panel {
-    width: 350px;
-    background-color: #2b2b2b;
+/* Prawa strona: Sidebar */
+.sidebar-panel {
+    width: 320px;
+    min-width: 280px;
+    background-color: #212121;
     padding: 20px;
-    box-shadow: inset 2px 0 5px rgba(0, 0, 0, 0.3);
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    overflow-y: auto;
+    box-shadow: inset 2px 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.panel-title {
+    font-size: 1.8em;
+    margin: 0 0 5px;
+    color: #90ee90;
+    text-align: center;
+}
+
+.panel-subtitle {
+    font-size: 1em;
+    color: #a0a0a0;
+    margin: 0 0 10px;
+    text-align: center;
+}
+
+.session-info {
+    text-align: center;
+    font-size: 0.8em;
+    color: #888;
+    word-break: break-all;
+    margin-bottom: 20px;
+}
+
+.panel-divider {
+    border: 0;
+    height: 1px;
+    background-color: #444;
+    margin: 20px 0;
 }
 
 .panel-section {
-    background-color: #212121;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+    margin-bottom: 20px;
 }
 
-.panel-section h3 {
+.section-title {
     margin-top: 0;
-    border-bottom: 1px solid #3a3a3a;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
     font-size: 1.2em;
     color: #f0f0f0;
+    border-bottom: 1px solid #444;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
 }
 
-.control-group,
-.point-visibility-toggles {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.controls-panel button {
-    background-color: #3a3a3a;
-    color: #e0e0e0;
-    border: 1px solid #555;
+/* Przyciski */
+.button {
+    background-color: #444;
+    color: #f0f0f0;
+    border: none;
     padding: 10px 15px;
     border-radius: 5px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s, transform 0.1s;
     font-size: 0.9em;
-    flex-grow: 1;
+    white-space: nowrap;
 }
 
-.controls-panel button:hover {
-    background-color: #4a4a4a;
-    border-color: #666;
+.button:hover {
+    background-color: #555;
 }
 
-.controls-panel button.active {
+.button:active {
+    transform: scale(0.98);
+}
+
+.button-primary {
     background-color: #4CAF50;
-    border-color: #45a049;
-    color: white;
-    font-weight: bold;
 }
 
-/* Formularz */
+.button-primary:hover {
+    background-color: #45a049;
+}
+
+.button.active {
+    background-color: #6a6a6a;
+}
+
+.button-delete {
+    background-color: #d32f2f;
+}
+
+.button-delete:hover {
+    background-color: #c81f1f;
+}
+
+.button-admin {
+    background-color: #3f51b5;
+}
+
+.button-admin:hover {
+    background-color: #3949ab;
+}
+
+.button-owner {
+    background-color: #FF9800;
+}
+
+.button-owner:hover {
+    background-color: #fb8c00;
+}
+
+.admin-login-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: auto;
+}
+
+/* Formularze */
 .form-group {
     display: flex;
     flex-direction: column;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
 .form-group label {
@@ -172,12 +267,11 @@ body {
     font-size: 0.9em;
 }
 
-.form-group input,
-.form-group select {
-    padding: 8px;
-    border: 1px solid #444;
-    border-radius: 4px;
-    background-color: #3a3a3a;
+.form-group input, .form-group select, .form-group textarea {
+    padding: 10px;
+    border: 1px solid #555;
+    border-radius: 5px;
+    background-color: #333;
     color: #f0f0f0;
     font-size: 1em;
 }
@@ -185,23 +279,25 @@ body {
 .coords-group {
     flex-direction: row;
     gap: 10px;
-    align-items: center;
 }
 
 .coords-group input {
-    flex-grow: 1;
+    flex: 1;
 }
 
 /* Listy punktów */
-.point-list-section ul {
+.point-list {
     list-style: none;
     padding: 0;
     margin: 0;
-    max-height: 250px;
+}
+
+.point-list-section {
+    max-height: 200px;
     overflow-y: auto;
 }
 
-.point-list-section li {
+.point-list-section .point-list li {
     background-color: #333;
     padding: 10px;
     border-radius: 5px;
@@ -210,20 +306,6 @@ body {
     justify-content: space-between;
     align-items: center;
     font-size: 0.9em;
-}
-
-.point-list-item-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.point-list-item-info strong {
-    font-size: 1em;
-}
-
-.point-list-item-info small {
-    color: #bbb;
 }
 
 .point-list-item-actions button {
@@ -242,7 +324,7 @@ body {
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.85);
     justify-content: center;
     align-items: center;
 }
@@ -265,6 +347,12 @@ body {
     cursor: pointer;
 }
 
+.modal-title {
+    border-bottom: 1px solid #444;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
 .modal-buttons {
     display: flex;
     justify-content: flex-end;
@@ -272,19 +360,6 @@ body {
     margin-top: 20px;
 }
 
-/* Sekcje Admina/Ownera */
-.admin-owner-section {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    border-top: 1px solid #3a3a3a;
-    padding-top: 20px;
-    margin-top: auto;
-    text-align: center;
-}
-
-.admin-owner-section p {
-    margin: 0;
-    font-size: 0.8em;
-    color: #bbb;
+.modal-section {
+    margin-bottom: 20px;
 }
