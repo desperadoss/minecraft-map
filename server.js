@@ -13,9 +13,8 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from the root of the project
+// Serving static files
 app.use(express.static(path.join(__dirname)));
-// Optionally serve a public folder if one exists
 app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB database connection
@@ -29,7 +28,7 @@ const connectDB = async () => {
     }
 };
 
-// Schema and model for map points - UPDATED with 'description'
+// Schemas & Models
 const pointSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -67,10 +66,8 @@ const pointSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
-
 const Point = mongoose.model('Point', pointSchema);
 
-// Schema and model for admin permissions
 const adminSchema = new mongoose.Schema({
     sessionCode: {
         type: String,
@@ -80,10 +77,8 @@ const adminSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
-
 const Admin = mongoose.model('Admin', adminSchema);
 
-// Schema for allowed session codes for admin login
 const allowedSessionSchema = new mongoose.Schema({
     sessionCode: {
         type: String,
@@ -97,7 +92,6 @@ const allowedSessionSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
-
 const AllowedSession = mongoose.model('AllowedSession', allowedSessionSchema);
 
 // Fixed owner session code
@@ -111,6 +105,7 @@ const checkAdmin = async (req, res, next) => {
             return res.status(401).json({ message: 'Missing session code.' });
         }
         
+        // Owner always has admin permissions
         if (sessionCode === OWNER_SESSION_CODE) {
             req.isAdmin = true;
             req.isOwner = true;
@@ -173,93 +168,6 @@ app.get('/api/points/private', async (req, res) => {
     }
 });
 
-// Function to check if a session code has admin/owner privileges
-const checkAdminAuth = async (req, res, next) => {
-    const sessionCode = req.header('X-Session-Code');
-    if (!sessionCode) {
-        return res.status(401).json({ message: 'No session code provided.' });
-    }
-    const session = await Session.findOne({ code: sessionCode });
-    if (!session || !session.isAdmin) {
-        return res.status(403).json({ message: 'Forbidden. Admin privileges required.' });
-    }
-    req.session = session;
-    next();
-};
-
-// API route to get all allowed session codes (for the owner panel)
-app.get('/api/owner/allowed-sessions', checkAdminAuth, async (req, res) => {
-    try {
-        const sessions = await Session.find({}).sort({ createdAt: -1 });
-        res.json(sessions);
-    } catch (err) {
-        console.error('Error fetching allowed sessions:', err);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
-
-// API route to add a new session code to the allowed list (owner only)
-app.post('/api/owner/add-session', checkAdminAuth, async (req, res) => {
-    const { code } = req.body;
-    if (!code) {
-        return res.status(400).json({ message: 'Session code is required.' });
-    }
-
-    try {
-        let session = await Session.findOne({ code });
-        if (session) {
-            return res.status(409).json({ message: 'Session code already exists.' });
-        }
-        session = new Session({ code, isAdmin: false });
-        await session.save();
-        res.status(201).json({ message: 'Session added successfully.' });
-    } catch (err) {
-        console.error('Error adding session code:', err);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
-
-// API route to promote a user to admin (owner only)
-app.post('/api/owner/promote', checkAdminAuth, async (req, res) => {
-    const { sessionCode } = req.body;
-    if (!sessionCode) {
-        return res.status(400).json({ message: 'Session code is required for promotion.' });
-    }
-
-    try {
-        const userSession = await Session.findOneAndUpdate(
-            { code: sessionCode },
-            { isAdmin: true },
-            { new: true }
-        );
-
-        if (!userSession) {
-            return res.status(404).json({ message: 'Session code not found.' });
-        }
-
-        res.json({ message: `Session code ${userSession.code} promoted to admin successfully.` });
-    } catch (err) {
-        console.error('Error promoting session:', err);
-        res.status(500).json({ message: 'Internal server error.' });
-    }
-});
-
-// API route to remove a session code (owner only)
-app.delete('/api/owner/remove-session', checkAdminAuth, async (req, res) => {
-    const { code } = req.body;
-
-    try {
-        const result = await Session.deleteOne({ code });
-        if (result.deletedCount === 0) {
-            return res.status(404).json({ message: 'Session code not found.' });
-        }
-        res.json({ message: `Session code ${code} removed successfully.` });
-    } catch (err) {
-        console.error('Error removing session:', err);
-        res.status(500).json({ message: 'Internal server error.' });
-    }
-});
-
 // POST - Add new point (default status: private)
 app.post('/api/points', async (req, res) => {
     try {
@@ -286,8 +194,8 @@ app.post('/api/points', async (req, res) => {
         }
 
         const newPoint = new Point({ 
-            name: name.trim(),
-            description: description,
+            name: name.trim(), 
+            description,
             x: numX, 
             z: numZ, 
             ownerSessionCode, 
@@ -400,22 +308,32 @@ app.delete('/api/points/:id', async (req, res) => {
 
 // === ADMIN ENDPOINTS ===
 
-// POST - Admin login - with allowed sessions check
+// POST - Admin login
 app.post('/api/admin/login', async (req, res) => {
     try {
-        const { sessionCode } = req.body;
+        const sessionCode = req.header('X-Session-Code');
         if (!sessionCode) {
-            return res.status(400).json({ message: 'Session code is required.' });
+            return res.status(400).json({ message: 'Session code is required in header.' });
+        }
+
+        // Owner always can log in as admin
+        if (sessionCode === OWNER_SESSION_CODE) {
+            return res.json({ message: 'Admin login successful.' });
         }
 
         const allowedSession = await AllowedSession.findOne({ sessionCode });
         if (!allowedSession) {
             return res.status(401).json({ message: 'Session code not allowed for admin login.' });
         }
+        
+        // Automatically add to Admin collection if not there
+        const existingAdmin = await Admin.findOne({ sessionCode });
+        if (!existingAdmin) {
+            const newAdmin = new Admin({ sessionCode });
+            await newAdmin.save();
+        }
 
-        const admin = new Admin({ sessionCode });
-        await admin.save();
-        res.status(200).json({ message: 'Admin login successful.', sessionCode });
+        res.status(200).json({ message: 'Admin login successful.' });
     } catch (err) {
         console.error('Error during admin login:', err);
         res.status(500).json({ message: 'Error during admin login.' });
@@ -478,6 +396,8 @@ app.delete('/api/admin/reject/:id', checkAdmin, async (req, res) => {
     }
 });
 
+// === OWNER ENDPOINTS ===
+
 // GET - Check if user is owner
 app.get('/api/owner/check', (req, res) => {
     const sessionCode = req.header('X-Session-Code');
@@ -488,15 +408,25 @@ app.get('/api/owner/check', (req, res) => {
 app.post('/api/owner/sessions', checkOwner, async (req, res) => {
     try {
         const { sessionCode } = req.body;
+        const ownerSessionCode = req.header('X-Session-Code');
+
         if (!sessionCode) {
             return res.status(400).json({ message: 'Session code is required.' });
         }
 
-        const newAllowedSession = new AllowedSession({ sessionCode, addedBy: req.header('X-Session-Code') });
+        const existing = await AllowedSession.findOne({ sessionCode });
+        if (existing) {
+            return res.status(400).json({ message: 'This session code is already on the allowed list.' });
+        }
+
+        const newAllowedSession = new AllowedSession({ sessionCode, addedBy: ownerSessionCode });
         await newAllowedSession.save();
-        res.status(201).json({ message: 'Session code added successfully.' });
+        res.status(201).json({ 
+            message: 'Session code added to allowed list.',
+            session: newAllowedSession
+        });
     } catch (err) {
-        console.error('Error adding session:', err);
+        console.error('Error adding allowed session code:', err);
         res.status(500).json({ message: 'Error adding session code.' });
     }
 });
@@ -504,7 +434,7 @@ app.post('/api/owner/sessions', checkOwner, async (req, res) => {
 // GET - Get all allowed sessions (owner only)
 app.get('/api/owner/sessions', checkOwner, async (req, res) => {
     try {
-        const allowedSessions = await AllowedSession.find({});
+        const allowedSessions = await AllowedSession.find({}).sort({ createdAt: -1 });
         res.json(allowedSessions);
     } catch (err) {
         console.error('Error fetching allowed sessions:', err);
@@ -516,16 +446,75 @@ app.get('/api/owner/sessions', checkOwner, async (req, res) => {
 app.delete('/api/owner/sessions/:sessionCode', checkOwner, async (req, res) => {
     try {
         const { sessionCode } = req.params;
-        await AllowedSession.findOneAndDelete({ sessionCode });
-        res.json({ message: 'Session code deleted successfully.' });
+        const result = await AllowedSession.deleteOne({ sessionCode });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ message: 'Session code not found on the list.' });
+        }
+
+        // Also remove from admin list if present
+        await Admin.deleteOne({ sessionCode });
+
+        res.json({ message: 'Session code removed from allowed list.' });
     } catch (err) {
-        console.error('Error deleting session:', err);
-        res.status(500).json({ message: 'Error deleting session code.' });
+        console.error('Error removing allowed session code:', err);
+        res.status(500).json({ message: 'Error removing session code.' });
+    }
+});
+
+// POST - Promote user to admin (owner only)
+app.post('/api/owner/promote', checkOwner, async (req, res) => {
+    try {
+        const { sessionCode: codeToPromote } = req.body;
+        if (!codeToPromote) {
+            return res.status(400).json({ message: 'Session code to promote is required.' });
+        }
+
+        const allowedSession = await AllowedSession.findOne({ sessionCode: codeToPromote });
+        if (!allowedSession) {
+            return res.status(400).json({ 
+                message: 'This session code is not on the allowed list. Add it to allowed sessions first.' 
+            });
+        }
+
+        const existingAdmin = await Admin.findOne({ sessionCode: codeToPromote });
+        if (existingAdmin) {
+            return res.json({ message: 'User is already an admin.' });
+        }
+        
+        const newAdmin = new Admin({ sessionCode: codeToPromote });
+        await newAdmin.save();
+        res.json({ message: 'User promoted to admin.' });
+    } catch (err) {
+        console.error('Error promoting user:', err);
+        res.status(500).json({ message: 'Error promoting user.' });
+    }
+});
+
+// DELETE - Remove admin (owner only)
+app.delete('/api/owner/demote', checkOwner, async (req, res) => {
+    try {
+        const { sessionCode: codeToDemote } = req.body;
+        if (!codeToDemote) {
+            return res.status(400).json({ message: 'Session code to demote is required.' });
+        }
+        
+        const result = await Admin.deleteOne({ sessionCode: codeToDemote });
+        if (result.deletedCount === 0) {
+            return res.json({ message: 'User was not an admin.' });
+        }
+        res.json({ message: 'User demoted.' });
+    } catch (err) {
+        console.error('Error demoting user:', err);
+        res.status(500).json({ message: 'Error demoting user.' });
     }
 });
 
 // Catch-all route for SPA - must be at the end
 app.get('*', (req, res) => {
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ message: 'Endpoint not found' });
+    }
+    
     const indexPath = path.join(__dirname, 'index.html');
     res.sendFile(indexPath, (err) => {
         if (err) {
@@ -548,8 +537,11 @@ const startServer = async () => {
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
         console.log(`URL: http://localhost:${PORT}`);
+        console.log(`Owner session code: ${OWNER_SESSION_CODE}`);
     });
 };
 
-startServer();
-
+startServer().catch(err => {
+    console.error('Server startup error:', err);
+    process.exit(1);
+});
