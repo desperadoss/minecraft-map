@@ -310,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const containerRect = mapContainer.parentElement.getBoundingClientRect();
         
         const mouseX = clientX - containerRect.left;
-        const mouseY = clientY - containerY.top;
+        const mouseY = clientY - containerRect.top;
         
         const centerX = containerRect.width / 2;
         const centerY = containerRect.height / 2;
