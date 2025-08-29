@@ -102,8 +102,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastMouseX = 0;
     let lastMouseY = 0;
     
-    let isShowingPrivate = true;
-    let isShowingPublic = true;
+    let isShowingPrivate = false;
+    let isShowingPublic = false;
     let isThrottling = false;
     let mouseMoveThrottle = null;
 
@@ -1033,3 +1033,4 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchPoints();
     updateMapPosition();
 });
+
