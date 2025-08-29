@@ -47,6 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const allowedSessionsList = document.getElementById('allowed-sessions-list');
     const refreshSessionsBtn = document.getElementById('refresh-sessions');
     
+    // NEW: Admin login password input
+    const adminPasswordInput = document.getElementById('admin-login-password-input');
+
     // === MINECRAFT RESOURCE DEFINITIONS ===
     const MINECRAFT_RESOURCES = {
     // Ores
@@ -153,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('User is owner');
                     ownerPanelButton.style.display = 'block';
                     adminPanelButton.style.display = 'block';
-                    adminLoginButton.style.display = 'none';
+                    adminLoginBtn.style.display = 'none';
                     return;
                 }
             }
@@ -170,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 isUserAdmin = true;
                 console.log('User is admin');
                 adminPanelButton.style.display = 'block';
-                adminLoginButton.style.display = 'none';
+                adminLoginBtn.style.display = 'none';
             }
         } catch (err) {
             console.error('Error checking admin permissions:', err);
@@ -307,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const containerRect = mapContainer.parentElement.getBoundingClientRect();
         
         const mouseX = clientX - containerRect.left;
-        const mouseY = clientY - containerRect.top;
+        const mouseY = clientY - containerY.top;
         
         const centerX = containerRect.width / 2;
         const centerY = containerRect.height / 2;
@@ -781,24 +784,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Admin login logic
+    // Admin login logic - MODIFIED to use a password
     document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const enteredCode = adminLoginInput.value;
+        const enteredPassword = adminLoginInput.value;
         try {
             const response = await fetch('/api/admin/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sessionCode: enteredCode })
+                body: JSON.stringify({ password: enteredPassword, sessionCode: sessionCode })
             });
 
             const data = await response.json();
             if (response.ok) {
-                localStorage.setItem('sessionCode', enteredCode);
-                sessionCode = enteredCode;
-                sessionCodeDisplay.textContent = `Session Code: ${sessionCode}`;
                 checkUserPermissions();
-                showSuccess('Admin login successful!');
+                showSuccess(data.message);
                 hideModals();
             } else {
                 showError(data.message || 'Login failed.');
