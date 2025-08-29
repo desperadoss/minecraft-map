@@ -90,9 +90,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // === Configuration and global variables ===
     const MAP_WIDTH_PX = 8000;
-    const MAP_HEIGHT_PX = 5500;
+    const MAP_HEIGHT_PX = 4500;
     const MAP_X_RANGE = 4000;
-    const MAP_Z_RANGE = 2750;
+    const MAP_Z_RANGE = 2250;
     
     let currentScale = 1;
     let offsetX = 0;
