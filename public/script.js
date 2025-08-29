@@ -717,41 +717,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // === Admin Login Logic - Poprawiona wersja ===
-    adminLoginBtn.addEventListener('click', async () => {
-        const sessionCodeToLogin = adminLoginInput.value.trim();
+// === Admin Login Logic ===
+document.getElementById('admin-login-btn').addEventListener('click', async () => {
+    const sessionCodeToLogin = document.getElementById('admin-login-input').value.trim();
 
-        if (!sessionCodeToLogin) {
-            showError('Please enter a session code.');
-            return;
-        }
+    if (!sessionCodeToLogin) {
+        showError('Please enter a session code.');
+        return;
+    }
 
-        try {
-            const response = await fetch('/api/admin/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // Kluczowa zmiana: wysyłanie kodu sesji w nagłówku
-                    'X-Session-Code': sessionCodeToLogin
-                }
-            });
-
-            if (response.ok) {
-                showSuccess('Admin login successful!');
-                hideModals();
-                adminPanelModal.style.display = 'block';
-                fetchPendingPoints(); // Załaduj punkty po zalogowaniu
-            } else {
-                const errorData = await response.json();
-                showError(errorData.message || 'Login failed. Invalid session code.');
+    try {
+        const response = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Session-Code': sessionCodeToLogin
             }
-        } catch (err) {
-            console.error('Error during admin login:', err);
-            showError('Server connection error.');
-        } finally {
-            adminLoginInput.value = '';
+        });
+
+        if (response.ok) {
+            showSuccess('Admin login successful!');
+            hideModals();
+            adminPanelModal.style.display = 'block';
+            fetchPendingPoints();
+        } else {
+            const errorData = await response.json();
+            showError(errorData.message || 'Login failed. Invalid session code.');
         }
-    });
+    } catch (err) {
+        console.error('Error during admin login:', err);
+        showError('Server connection error.');
+    } finally {
+        document.getElementById('admin-login-input').value = '';
+    }
+});
+
+// === Logic for showing/hiding modals ===
+document.getElementById('admin-login-button').addEventListener('click', () => {
+    hideModals();
+    adminLoginModal.style.display = 'block';
+});
 
     
     // Admin panel logic
@@ -910,5 +915,6 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchPoints();
     updateMapPosition();
 });
+
 
 
