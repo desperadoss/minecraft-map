@@ -1,226 +1,71 @@
-:root {
-    --primary-bg: #1a1a1a;
-    --secondary-bg: #212121;
-    --panel-bg: #2b2b2b;
-    --text-color: #f0f0f0;
-    --sub-text-color: #aaa;
-    --accent-color: #4CAF50; /* Green for active/prominent elements */
-    --border-color: #3a3a3a;
-    --hover-bg: #3a3a3a;
-}
-
 body {
     margin: 0;
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background-color: var(--primary-bg);
-    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121212;
+    color: #e0e0e0;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    width: 100vw;
-    overflow: hidden; /* No scrolling for body */
-}
-
-.app-layout {
-    display: flex;
-    width: 98%; /* Slightly smaller than 100% to give some border */
-    max-width: 1600px; /* Max width for a large display */
-    height: 98%;
-    max-height: 900px; /* Max height for a large display */
-    background-color: var(--secondary-bg);
-    border-radius: 12px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
     overflow: hidden;
 }
 
-/* Sidebar */
-.sidebar {
-    width: 200px; /* Fixed width for sidebar */
-    background-color: var(--panel-bg);
-    padding: 20px 0;
+.main-container {
     display: flex;
-    flex-direction: column;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+    flex-direction: row;
+    width: 95%;
+    max-width: 1400px;
+    height: 95%;
+    background-color: #1e1e1e;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
 }
 
-.sidebar-header {
-    padding: 0 20px 20px 20px;
-    text-align: center;
-    border-bottom: 1px solid var(--border-color);
-    margin-bottom: 20px;
-}
-
-.sidebar-header h2 {
-    margin: 0;
-    color: var(--accent-color);
-    font-size: 1.4em;
-    font-weight: 600;
-}
-
-.sidebar-nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.sidebar-nav li {
-    margin-bottom: 5px;
-}
-
-.nav-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 20px;
-    color: var(--sub-text-color);
-    text-decoration: none;
-    font-size: 1em;
-    transition: background-color 0.2s, color 0.2s;
-}
-
-.nav-item:hover {
-    background-color: var(--hover-bg);
-    color: var(--text-color);
-}
-
-.nav-item.active {
-    background-color: #333; /* Slightly different shade for active */
-    color: var(--accent-color);
-    border-left: 3px solid var(--accent-color);
-    font-weight: bold;
-}
-
-.session-info-sidebar {
-    margin-top: auto; /* Pushes it to the bottom */
-    padding: 20px;
-    font-size: 0.8em;
-    color: var(--sub-text-color);
-    border-top: 1px solid var(--border-color);
-    word-break: break-all; /* Break long session codes */
-}
-
-/* Main Content Area */
-.content-area {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
-
-/* Top Bar */
-.top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color: var(--panel-bg);
-    border-bottom: 1px solid var(--border-color);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    z-index: 100;
-}
-
-.top-bar-left {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.live-status {
-    background-color: var(--accent-color);
-    color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 0.8em;
-    font-weight: bold;
-}
-
-.utc-time {
-    font-size: 0.9em;
-    color: var(--sub-text-color);
-}
-
-.top-bar-right {
-    display: flex;
-    gap: 10px;
-}
-
-.icon-button {
-    background: none;
-    border: none;
-    padding: 8px;
-    border-radius: 5px;
-    cursor: pointer;
-    color: var(--sub-text-color);
-    transition: background-color 0.2s, color 0.2s;
-}
-
-.icon-button:hover {
-    background-color: var(--hover-bg);
-    color: var(--text-color);
-}
-
-.icon-button img {
-    width: 20px;
-    height: 20px;
-    filter: invert(70%) sepia(0%) saturate(0%) hue-rotate(190deg) brightness(100%) contrast(80%); /* To make them light gray */
-}
-.icon-button:hover img {
-    filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(190deg) brightness(100%) contrast(100%); /* To make them white on hover */
-}
-
-
-/* Dashboard Content (Map + Right Panel) */
-.dashboard-content {
-    display: flex;
-    flex-grow: 1;
-    position: relative; /* For map controls overlay */
-}
-
-.map-view-wrapper {
+.map-wrapper {
     flex-grow: 1;
     position: relative;
-    overflow: hidden; /* Crucial for map dragging/zooming within its bounds */
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #000; /* Solid black background for the map area */
+    overflow: hidden;
+    background-color: #000;
 }
 
 .map-container {
     position: relative;
-    width: 8000px; /* Actual width of your map image */
-    height: 5500px; /* Actual height of your map image */
+    width: 8000px;
+    height: 5500px;
     transform-origin: center center;
     cursor: grab;
     user-select: none;
-    /* Map will be scaled down to fit map-view-wrapper initially by JS */
 }
 
 #minecraft-map {
     width: 100%;
     height: 100%;
     display: block;
-    image-rendering: pixelated; /* For crisp Minecraft look */
+    image-rendering: pixelated;
 }
 
 .point-wrapper {
     position: absolute;
-    transform: translate3d(-50%, -50%, 0); /* Center the point on its coordinates */
+    transform: translate3d(-50%, -50%, 0);
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 3px;
     z-index: 10;
-    transition: transform 0.1s ease;
 }
 
 .point {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.7);
     box-sizing: border-box;
+    transition: transform 0.2s ease;
 }
 
 .point-name {
@@ -230,13 +75,19 @@ body {
     border-radius: 3px;
     font-size: 0.8em;
     white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.point-wrapper:hover .point-name {
+    opacity: 1;
 }
 
 .coordinates-info, .zoom-info {
     position: absolute;
     bottom: 15px;
     left: 15px;
-    background-color: rgba(33, 33, 33, 0.8);
+    background-color: rgba(30, 30, 30, 0.8);
     padding: 8px 12px;
     border-radius: 5px;
     font-size: 0.9em;
@@ -245,148 +96,69 @@ body {
 }
 
 .zoom-info {
-    left: 150px;
+    left: 200px;
 }
 
-/* Map Controls Overlay (Zoom buttons) */
-.map-controls-overlay {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    z-index: 100;
-}
-
-.map-control-button {
-    background-color: var(--accent-color);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    font-size: 1.5em;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    transition: background-color 0.2s;
-}
-
-.map-control-button:hover {
-    background-color: #3e8e41; /* Darker green */
-}
-
-/* Right Panel (Filters & Add Point) */
-.right-panel {
-    width: 300px; /* Fixed width for the right panel */
-    background-color: var(--panel-bg);
+/* Panel Kontrolny */
+.controls-panel {
+    width: 350px;
+    background-color: #2b2b2b;
     padding: 20px;
-    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 2px 0 5px rgba(0, 0, 0, 0.3);
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-.filters-section, .add-point-section {
-    background-color: var(--secondary-bg);
+.panel-section {
+    background-color: #212121;
     padding: 15px;
     border-radius: 8px;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
 }
 
-.filter-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.panel-section h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #3a3a3a;
+    padding-bottom: 10px;
     margin-bottom: 15px;
-    color: var(--accent-color);
-}
-
-.filter-header h3 {
-    margin: 0;
-    font-size: 1.1em;
-}
-
-.filter-icon {
     font-size: 1.2em;
+    color: #f0f0f0;
 }
 
-.filter-option {
+.control-group,
+.point-visibility-toggles {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
-.filter-option label {
-    font-size: 0.9em;
-    color: var(--text-color);
-}
-
-/* Toggle Switch Styles */
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 40px;
-    height: 22px;
-}
-
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.slider {
-    position: absolute;
+.controls-panel button {
+    background-color: #3a3a3a;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    padding: 10px 15px;
+    border-radius: 5px;
     cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    -webkit-transition: .4s;
-    transition: .4s;
+    transition: all 0.2s ease;
+    font-size: 0.9em;
+    flex-grow: 1;
 }
 
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 16px;
-    width: 16px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    -webkit-transition: .4s;
-    transition: .4s;
+.controls-panel button:hover {
+    background-color: #4a4a4a;
+    border-color: #666;
 }
 
-input:checked + .slider {
-    background-color: var(--accent-color);
+.controls-panel button.active {
+    background-color: #4CAF50;
+    border-color: #45a049;
+    color: white;
+    font-weight: bold;
 }
 
-input:focus + .slider {
-    box-shadow: 0 0 1px var(--accent-color);
-}
-
-input:checked + .slider:before {
-    -webkit-transform: translateX(18px);
-    -ms-transform: translateX(18px);
-    transform: translateX(18px);
-}
-
-.slider.round {
-    border-radius: 22px;
-}
-
-.slider.round:before {
-    border-radius: 50%;
-}
-
+/* Formularz */
 .form-group {
     display: flex;
     flex-direction: column;
@@ -395,124 +167,100 @@ input:checked + .slider:before {
 
 .form-group label {
     margin-bottom: 5px;
-    color: var(--sub-text-color);
-    font-size: 0.85em;
+    color: #bbb;
+    font-size: 0.9em;
 }
 
 .form-group input,
 .form-group select {
     padding: 8px;
-    border: 1px solid var(--border-color);
+    border: 1px solid #444;
     border-radius: 4px;
-    background-color: var(--hover-bg);
-    color: var(--text-color);
-    font-size: 0.9em;
-}
-
-.form-group input::placeholder {
-    color: #888;
+    background-color: #3a3a3a;
+    color: #f0f0f0;
+    font-size: 1em;
 }
 
 .coords-group {
     flex-direction: row;
     gap: 10px;
-}
-
-.coords-group label {
-    align-self: center;
-    margin-bottom: 0;
+    align-items: center;
 }
 
 .coords-group input {
-    flex: 1;
+    flex-grow: 1;
 }
 
-.add-point-section button, .admin-owner-buttons button {
-    background-color: var(--accent-color);
-    color: white;
-    border: none;
-    padding: 10px 15px;
+/* Listy punktów */
+.point-list-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.point-list-section li {
+    background-color: #333;
+    padding: 10px;
     border-radius: 5px;
-    cursor: pointer;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 0.9em;
-    transition: background-color 0.2s;
-    width: 100%; /* Make buttons full width */
-    margin-top: 10px;
 }
 
-.add-point-section button:hover, .admin-owner-buttons button:hover {
-    background-color: #3e8e41;
-}
-
-.admin-owner-buttons {
+.point-list-item-info {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-top: auto; /* Pushes buttons to the bottom of the panel */
-    padding-top: 20px;
-    border-top: 1px solid var(--border-color);
+    gap: 2px;
 }
 
+.point-list-item-info strong {
+    font-size: 1em;
+}
 
-/* Modal Styles (pozostały niemal takie same, są ogólne) */
+.point-list-item-info small {
+    color: #bbb;
+}
+
+.point-list-item-actions button {
+    padding: 5px 8px;
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+
+/* Modale */
 .modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1000; /* Sit on top */
+    display: none;
+    position: fixed;
+    z-index: 1000;
     left: 0;
     top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.8);
     justify-content: center;
     align-items: center;
 }
 
 .modal-content {
-    background-color: var(--panel-bg);
-    margin: auto;
+    background-color: #2b2b2b;
     padding: 25px;
     border-radius: 10px;
-    width: 80%;
+    width: 90%;
     max-width: 500px;
-    position: relative;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.7);
-    color: var(--text-color);
-}
-
-.modal-content h2 {
-    margin-top: 0;
-    color: var(--text-color);
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-}
-
-.modal-content p {
-    margin-bottom: 10px;
-    font-size: 0.95em;
-}
-
-.modal-content strong {
-    color: var(--sub-text-color);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.7);
+    color: #f0f0f0;
 }
 
 .close-button {
-    color: var(--sub-text-color);
+    color: #aaa;
     float: right;
     font-size: 30px;
     font-weight: bold;
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    cursor: pointer;
-}
-
-.close-button:hover,
-.close-button:focus {
-    color: var(--text-color);
-    text-decoration: none;
     cursor: pointer;
 }
 
@@ -523,82 +271,19 @@ input:checked + .slider:before {
     margin-top: 20px;
 }
 
-.modal-buttons button {
-    background-color: var(--accent-color);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.9em;
-    transition: background-color 0.2s;
-}
-
-.modal-buttons button:hover {
-    background-color: #3e8e41;
-}
-
-
-/* Admin/Owner Panel specific styles in modals */
-.modal .owner-section {
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: var(--secondary-bg);
-    border-radius: 8px;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
-}
-
-.modal .owner-section h3 {
-    font-size: 1.1em;
-    margin-bottom: 10px;
-    color: var(--text-color);
-    border-bottom: none;
-}
-
-.modal .session-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #333;
-    padding: 8px 12px;
-    margin-bottom: 5px;
-    border-radius: 5px;
-}
-
-.modal .session-info {
+/* Sekcje Admina/Ownera */
+.admin-owner-section {
     display: flex;
     flex-direction: column;
-    font-size: 0.9em;
-    border-bottom: none;
-    padding: 0;
+    gap: 10px;
+    border-top: 1px solid #3a3a3a;
+    padding-top: 20px;
+    margin-top: auto;
+    text-align: center;
+}
+
+.admin-owner-section p {
     margin: 0;
-}
-
-.modal .session-code {
-    font-weight: bold;
-    color: #aaffaa; /* Light green for session codes */
-}
-
-.modal .session-date {
     font-size: 0.8em;
-    color: var(--sub-text-color);
-}
-
-.modal .delete-session {
-    background-color: #dc3545; /* Red for delete button */
-    padding: 6px 10px;
-    font-size: 0.8em;
-}
-
-.modal .delete-session:hover {
-    background-color: #c82333;
-}
-
-/* Notification System (unaffected by UI changes) */
-#notification-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 9999;
-    max-width: 350px;
+    color: #bbb;
 }
