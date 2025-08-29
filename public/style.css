@@ -32,10 +32,11 @@ body {
     background-color: #000;
 }
 
+/* Wymiary mapy dostosowane do 8004 x 4500 px */
 .map-container {
     position: relative;
-    width: 8000px;
-    height: 5500px;
+    width: 8004px; 
+    height: 4500px; 
     transform-origin: center center;
     cursor: grab;
     user-select: none;
