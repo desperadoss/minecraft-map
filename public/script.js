@@ -44,7 +44,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const addSessionBtn = document.getElementById('add-session-btn');
     const allowedSessionsList = document.getElementById('allowed-sessions-list');
     const refreshSessionsBtn = document.getElementById('refresh-sessions');
-    
+
+    // === Buttons in header ===
+    const adminLoginButton = document.getElementById('admin-login-button');
+    const ownerPanelButton = document.getElementById('owner-panel-button');
+
     // === MINECRAFT RESOURCE DEFINITIONS ===
     const MINECRAFT_RESOURCES = {
     // Ores
@@ -71,18 +75,18 @@ document.addEventListener('DOMContentLoaded', () => {
     'monument':    { name: 'Monument',     color: '#E67E22', category: 'structure' },
 
     // Biomes (zostawione)
-'wastelands':         { name: 'Wastelands',          color: '#A67C52', category: 'biome' },
-'sandlands':          { name: 'Sandlands',           color: '#E0B95C', category: 'biome' },
-'savannah_plateau':   { name: 'Savannah Plateau',    color: '#D4C45C', category: 'biome' },
-'alpine':             { name: 'Alpine',              color: '#A9A9A9', category: 'biome' },
-'snowy_forest_tundra':{ name: 'Snowy Forest/Tundra', color: '#DCDCDC', category: 'biome' },
-'sea_ice':            { name: 'Sea Ice',             color: '#B0E0E6', category: 'biome' },
-'water':              { name: 'Water',               color: '#1F618D', category: 'biome' },
-'woodlands_plains':   { name: 'Woodlands/Plains',    color: '#58D68D', category: 'biome' },
-'jungle_tropical':    { name: 'Jungle/Tropical',     color: '#229954', category: 'biome' },
-'giant_forest':       { name: 'Giant Forest',        color: '#145A32', category: 'biome' },
-'taiga_highlands':    { name: 'Taiga Highlands',     color: '#1E8449', category: 'biome' },
-'cherry_forest_mtn':  { name: 'Cherry Forest Mountain', color: '#E6B0AA', category: 'biome' },
+    'wastelands':         { name: 'Wastelands',          color: '#A67C52', category: 'biome' },
+    'sandlands':          { name: 'Sandlands',           color: '#E0B95C', category: 'biome' },
+    'savannah_plateau':   { name: 'Savannah Plateau',    color: '#D4C45C', category: 'biome' },
+    'alpine':             { name: 'Alpine',              color: '#A9A9A9', category: 'biome' },
+    'snowy_forest_tundra':{ name: 'Snowy Forest/Tundra', color: '#DCDCDC', category: 'biome' },
+    'sea_ice':            { name: 'Sea Ice',             color: '#B0E0E6', category: 'biome' },
+    'water':              { name: 'Water',               color: '#1F618D', category: 'biome' },
+    'woodlands_plains':   { name: 'Woodlands/Plains',    color: '#58D68D', category: 'biome' },
+    'jungle_tropical':    { name: 'Jungle/Tropical',     color: '#229954', category: 'biome' },
+    'giant_forest':       { name: 'Giant Forest',        color: '#145A32', category: 'biome' },
+    'taiga_highlands':    { name: 'Taiga Highlands',     color: '#1E8449', category: 'biome' },
+    'cherry_forest_mtn':  { name: 'Cherry Forest Mountain', color: '#E6B0AA', category: 'biome' },
     
     // Other (zostawione)
     'spawn':   { name: 'Spawn Point', color: '#32CD32', category: 'other' },
@@ -129,7 +133,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             customNameGroup.style.display = 'none';
             nameInput.required = false;
-            nameInput.value = MINECRAFT_RESOURCES[resourceSelect.value].name;
+            if (MINECRAFT_RESOURCES[resourceSelect.value]) {
+                nameInput.value = MINECRAFT_RESOURCES[resourceSelect.value].name;
+            }
         }
     });
 
@@ -148,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 isUserOwner = true;
                 isUserAdmin = true; // Owner always has admin permissions
                 console.log('User is owner');
+                ownerPanelButton.style.display = 'block';
                 return;
             }
 
@@ -159,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (adminRes.status === 200) {
                     isUserAdmin = true;
                     console.log('User is admin');
+                    adminLoginButton.style.display = 'none';
                 }
             } catch (err) {
                 // Not an admin
@@ -306,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const cursorX = (mouseX - centerX - offsetX) / currentScale;
         const cursorY = (mouseY - centerY - offsetY) / currentScale;
-        
+
         const mcCoords = pxToMc(cursorX + MAP_WIDTH_PX/2, cursorY + MAP_HEIGHT_PX/2);
         coordinatesInfo.textContent = `X: ${mcCoords.x}, Z: ${mcCoords.z}`;
     }
@@ -314,7 +322,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function hideModals() {
         const modals = document.querySelectorAll('.modal');
         modals.forEach(modal => modal.style.display = 'none');
-        
         document.querySelectorAll('.modal input').forEach(input => {
             if (input.type === 'text' || input.type === 'password') {
                 setTimeout(() => {
@@ -343,12 +350,10 @@ document.addEventListener('DOMContentLoaded', () => {
             descriptionInput.value = '';
             xInput.value = '';
             zInput.value = '';
-            
             [nameInput, descriptionInput, xInput, zInput].forEach(input => {
                 input.blur();
                 input.removeAttribute('readonly');
             });
-            
             addPointBtn.textContent = 'Add Point';
             addPointBtn.dataset.mode = 'add';
             addPointBtn.dataset.pointId = '';
@@ -362,25 +367,21 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const publicRes = await fetch('/api/points');
             const publicPoints = await publicRes.json();
-            
             const privateRes = await fetch('/api/points/private', {
                 headers: { 'X-Session-Code': sessionCode }
             });
             const privatePoints = await privateRes.json();
-            
             renderPoints([...publicPoints, ...privatePoints]);
         } catch (err) {
             console.error('Error fetching points:', err);
             showError('Error fetching points from server.');
         }
     }
-    
+
     function renderPoints(points) {
         document.querySelectorAll('.point-wrapper').forEach(p => p.remove());
-
         points.forEach(point => {
             const { x, z } = mcToPx(point.x, point.z);
-            
             const pointWrapper = document.createElement('div');
             pointWrapper.classList.add('point-wrapper');
             pointWrapper.dataset.pointId = point._id;
@@ -408,93 +409,74 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Keep original status-based coloring for custom points
                 pointElement.classList.add(point.status);
             }
-            
+
             const pointNameElement = document.createElement('div');
             pointNameElement.classList.add('point-name');
             pointNameElement.textContent = point.name;
 
             pointWrapper.appendChild(pointElement);
             pointWrapper.appendChild(pointNameElement);
-            
+
             pointWrapper.addEventListener('click', (e) => {
                 e.stopPropagation();
                 displayPointDetails(point);
             });
-            
+
             mapContainer.appendChild(pointWrapper);
         });
         filterPoints();
         updatePointScaling();
     }
-
+    
     function filterPoints() {
         const points = document.querySelectorAll('.point-wrapper');
         points.forEach(point => {
             const status = point.dataset.status;
             let isVisible = false;
-
+            
             if (status === 'public' && isShowingPublic) {
                 isVisible = true;
             } else if ((status === 'private' || status === 'pending') && isShowingPrivate) {
                 isVisible = true;
             }
             
-            if (isVisible) {
-                point.classList.remove('hidden');
-            } else {
-                point.classList.add('hidden');
-            }
+            point.style.display = isVisible ? 'block' : 'none';
         });
     }
 
-    // === UI event handling ===
-    mapContainer.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.point-wrapper')) return;
+    function displayPointDetails(point) {
+        hideModals();
+        pointDetailsModal.style.display = 'block';
+        document.getElementById('details-name').textContent = point.name;
+        document.getElementById('details-coords').textContent = `X: ${point.x}, Z: ${point.z}`;
+        document.getElementById('details-desc').textContent = point.description || 'No description provided.';
+        document.getElementById('details-type').textContent = MINECRAFT_RESOURCES[point.resourceType]?.name || 'Custom';
         
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        mapContainer.style.cursor = 'grabbing';
-        e.preventDefault();
-    });
-    
-    window.addEventListener('mouseup', () => {
-        isDragging = false;
-        mapContainer.style.cursor = 'grab';
-    });
-    
-    window.addEventListener('mousemove', (e) => {
-        lastMouseX = e.clientX;
-        lastMouseY = e.clientY;
+        // Check if current user is owner of the point
+        const isOwner = point.ownerSessionCode === sessionCode;
+        editPointBtn.style.display = isOwner ? 'block' : 'none';
+        deletePointBtn.style.display = isOwner ? 'block' : 'none';
+        sharePointBtn.style.display = isOwner ? 'block' : 'none';
         
-        if (!isDragging) {
-            if (!mouseMoveThrottle) {
-                mouseMoveThrottle = setTimeout(() => {
-                    updateCoordinatesFromMouse(e.clientX, e.clientY);
-                    mouseMoveThrottle = null;
-                }, 16);
-            }
-            return;
+        // Hide share button if point is already public or pending
+        if (point.status === 'public' || point.status === 'pending') {
+            sharePointBtn.style.display = 'none';
         }
-        
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        offsetX += dx;
-        offsetY += dy;
-        startX = e.clientX;
-        startY = e.clientY;
-        updateMapPosition();
-    });
-    
+
+        // Store point ID for edit/delete actions
+        editPointBtn.dataset.pointId = point._id;
+        deletePointBtn.dataset.pointId = point._id;
+        sharePointBtn.dataset.pointId = point._id;
+    }
+
+    // === Event Listeners ===
     zoomInBtn.addEventListener('click', () => {
-        currentScale = Math.min(5, currentScale + 0.2);
+        currentScale = Math.min(2.5, currentScale + 0.2);
         updateMapPosition();
     });
-    
+
     zoomOutBtn.addEventListener('click', () => {
-        const containerRect = mapContainer.parentElement.getBoundingClientRect();
-        const minScale = Math.max(containerRect.width / MAP_WIDTH_PX, containerRect.height / MAP_HEIGHT_PX);
-        currentScale = Math.max(minScale, currentScale - 0.2);
+        currentScale = Math.max(0.1, currentScale - 0.2);
         updateMapPosition();
     });
 
@@ -503,6 +485,35 @@ document.addEventListener('DOMContentLoaded', () => {
         offsetX = 0;
         offsetY = 0;
         updateMapPosition();
+    });
+
+    mapImage.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startX = e.clientX - offsetX;
+        startY = e.clientY - offsetY;
+        mapContainer.style.cursor = 'grabbing';
+    });
+
+    mapImage.addEventListener('mouseup', () => {
+        isDragging = false;
+        mapContainer.style.cursor = 'grab';
+    });
+    
+    mapImage.addEventListener('mouseleave', () => {
+        isDragging = false;
+        mapContainer.style.cursor = 'grab';
+    });
+
+    mapImage.addEventListener('mousemove', (e) => {
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+        if (isDragging) {
+            offsetX = e.clientX - startX;
+            offsetY = e.clientY - startY;
+            updateMapPosition();
+        } else {
+            updateCoordinatesFromMouse(e.clientX, e.clientY);
+        }
     });
 
     showYourPointsBtn.addEventListener('click', () => {
@@ -517,47 +528,31 @@ document.addEventListener('DOMContentLoaded', () => {
         filterPoints();
     });
 
-    // === Form and modal logic ===
-    addPointBtn.addEventListener('click', async () => {
-        const resourceType = resourceSelect.value;
-        let name;
+    closeButtons.forEach(btn => {
+        btn.addEventListener('click', hideModals);
+    });
+
+    // Add Point Form Logic
+    addPointForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
         
-        if (resourceType === 'custom') {
-            name = nameInput.value.trim();
-        } else {
-            name = MINECRAFT_RESOURCES[resourceType].name;
-        }
-        
-        const x = parseInt(xInput.value);
-        const z = parseInt(zInput.value);
-        const description = descriptionInput.value.trim();
         const mode = addPointBtn.dataset.mode;
         const pointId = addPointBtn.dataset.pointId;
-
-        if (!name || isNaN(x) || isNaN(z)) {
-            showError('Please fill all fields correctly!');
-            return;
-        }
-
+        
+        const name = nameInput.value.trim();
+        const description = descriptionInput.value.trim();
+        const x = xInput.value.trim();
+        const z = zInput.value.trim();
+        const resourceType = resourceSelect.value;
+        
+        const pointData = { name, description, x, z, resourceType };
+        
+        let response;
         addPointBtn.disabled = true;
-        addPointBtn.textContent = 'Saving...';
 
         try {
-            let response;
-            const pointData = { 
-                name, 
-                description,
-                x, 
-                z,
-                resourceType: resourceType === 'custom' ? 'custom' : resourceType
-            };
-            
             if (mode === 'edit') {
-                const point = document.querySelector('.point-wrapper[data-point-id="' + pointId + '"]');
-                const isPublic = point.dataset.status === 'public';
-                const url = isPublic ? `/api/admin/edit/${pointId}` : `/api/points/${pointId}`;
-                
-                response = await fetch(url, {
+                response = await fetch(`/api/points/${pointId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -565,11 +560,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     body: JSON.stringify(pointData)
                 });
-
-                addPointBtn.textContent = 'Add Point';
-                addPointBtn.dataset.mode = 'add';
-                addPointBtn.dataset.pointId = '';
-                
             } else {
                 response = await fetch('/api/points', {
                     method: 'POST',
@@ -601,231 +591,105 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-    
-    function displayPointDetails(point) {
-        document.getElementById('point-details-name').textContent = point.name;
-        document.getElementById('point-details-x').textContent = point.x;
-        document.getElementById('point-details-z').textContent = point.z;
 
-        const resourceInfo = MINECRAFT_RESOURCES[point.resourceType] || { name: 'Custom Point', color: '#888', category: 'custom' };
-        document.getElementById('point-details-type').textContent = resourceInfo.name;
-        document.getElementById('point-details-description').textContent = point.description || 'No description provided.';
+    editPointBtn.addEventListener('click', () => {
+        const pointId = editPointBtn.dataset.pointId;
+        const point = document.querySelector(`.point-wrapper[data-point-id="${pointId}"]`);
         
-        const descGroup = document.querySelector('.point-details-description-group');
-        if (point.description) {
-            descGroup.style.display = 'block';
-        } else {
-            descGroup.style.display = 'none';
-        }
+        hideModals();
         
-        pointDetailsModal.style.display = 'flex';
+        // Populate form for editing
+        const name = point.dataset.pointName;
+        const x = point.dataset.pointX;
+        const z = point.dataset.pointZ;
+        const resourceType = point.dataset.resourceType;
         
-        const isOwner = point.ownerSessionCode === sessionCode;
-        editPointBtn.style.display = isOwner ? 'block' : 'none';
-        deletePointBtn.style.display = isOwner ? 'block' : 'none';
-        sharePointBtn.style.display = (isOwner && point.status === 'private') ? 'block' : 'none';
+        // Description is not in dataset, so we can't pre-populate it from here.
+        // It would require fetching the point details from the server.
+        // For now, we'll leave it blank, but a proper implementation would fetch it.
+        
+        nameInput.value = name;
+        xInput.value = x;
+        zInput.value = z;
+        
+        resourceSelect.value = resourceType;
+        resourceSelect.dispatchEvent(new Event('change'));
 
-        editPointBtn.onclick = () => {
-            pointDetailsModal.style.display = 'none';
-            setupEditMode(point);
-        };
-        deletePointBtn.onclick = () => {
-            if (confirm('Are you sure you want to delete this point?')) {
-                deletePoint(point._id);
-            }
-        };
-        sharePointBtn.onclick = () => {
-            sharePoint(point._id);
-        };
-    }
-
-    function setupEditMode(point) {
+        // Switch button to 'edit' mode
         addPointBtn.textContent = 'Save Changes';
         addPointBtn.dataset.mode = 'edit';
-        addPointBtn.dataset.pointId = point._id;
-        
-        resourceSelect.value = point.resourceType;
-        resourceSelect.dispatchEvent(new Event('change'));
-        
-        if (point.resourceType === 'custom') {
-            nameInput.value = point.name;
-        } else {
-            nameInput.value = MINECRAFT_RESOURCES[point.resourceType].name;
-        }
-        
-        descriptionInput.value = point.description || '';
-        xInput.value = point.x;
-        zInput.value = point.z;
-    }
+        addPointBtn.dataset.pointId = pointId;
 
-    async function deletePoint(id) {
-        try {
-            const response = await fetch(`/api/points/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-Session-Code': sessionCode
-                }
-            });
-            
-            if (response.ok) {
-                showSuccess('Point deleted successfully!');
-                fetchPoints();
-                pointDetailsModal.style.display = 'none';
-            } else {
-                const errorData = await response.json();
-                showError(errorData.message || 'Error deleting point.');
-            }
-        } catch (err) {
-            console.error('Error deleting point:', err);
-            showError('Server connection error.');
-        }
-    }
-    
-    async function sharePoint(id) {
-        try {
-            const response = await fetch(`/api/points/share/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Session-Code': sessionCode
-                }
-            });
-            
-            if (response.ok) {
-                showSuccess('Point submitted for admin approval!');
-                fetchPoints();
-                pointDetailsModal.style.display = 'none';
-            } else {
-                const errorData = await response.json();
-                showError(errorData.message || 'Error sharing point.');
-            }
-        } catch (err) {
-            console.error('Error sharing point:', err);
-            showError('Server connection error.');
-        }
-    }
-
-    // Modal logic
-    closeButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            button.closest('.modal').style.display = 'none';
+        // Scroll to form
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
         });
     });
-    window.addEventListener('click', (event) => {
-        if (event.target.classList.contains('modal')) {
-            event.target.style.display = 'none';
-        }
-    });
-    
-// === Admin Login Logic ===
-document.getElementById('admin-login-btn').addEventListener('click', async () => {
-    const sessionCodeToLogin = document.getElementById('admin-login-input').value.trim();
 
-    if (!sessionCodeToLogin) {
-        showError('Please enter a session code.');
-        return;
-    }
+    deletePointBtn.addEventListener('click', async () => {
+        const pointId = deletePointBtn.dataset.pointId;
+        if (confirm('Are you sure you want to delete this point?')) {
+            try {
+                const response = await fetch(`/api/points/${pointId}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Session-Code': sessionCode }
+                });
 
-    try {
-        const response = await fetch('/api/admin/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Session-Code': sessionCodeToLogin
+                if (response.ok) {
+                    showSuccess('Point deleted successfully.');
+                    hideModals();
+                    fetchPoints();
+                } else {
+                    const errorData = await response.json();
+                    showError(errorData.message || 'Error deleting point.');
+                }
+            } catch (err) {
+                console.error('Error deleting point:', err);
+                showError('Server connection error.');
             }
-        });
-
-        if (response.ok) {
-            showSuccess('Admin login successful!');
-            hideModals();
-            adminPanelModal.style.display = 'block';
-            fetchPendingPoints();
-        } else {
-            const errorData = await response.json();
-            showError(errorData.message || 'Login failed. Invalid session code.');
         }
-    } catch (err) {
-        console.error('Error during admin login:', err);
-        showError('Server connection error.');
-    } finally {
-        document.getElementById('admin-login-input').value = '';
-    }
-});
-
-// === Logic for showing/hiding modals ===
-document.getElementById('admin-login-button').addEventListener('click', () => {
-    hideModals();
-    adminLoginModal.style.display = 'block';
-});
-
-    
-    // Admin panel logic
-    refreshPendingBtn.addEventListener('click', () => {
-        if (!isUserAdmin) {
-            showError('You do not have admin permissions.');
-            return;
-        }
-        fetchPendingPoints();
     });
 
-    promoteUserBtn.addEventListener('click', async () => {
-        if (!isUserOwner) {
-            showError('You do not have owner permissions.');
-            return;
-        }
-        const sessionCodeToPromote = promoteSessionCodeInput.value.trim();
-        if (!sessionCodeToPromote) {
-            showError('Please enter a session code.');
-            return;
-        }
-        try {
-            const response = await fetch('/api/owner/promote', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Session-Code': sessionCode
-                },
-                body: JSON.stringify({ sessionCode: sessionCodeToPromote })
-            });
-            if (response.ok) {
-                showSuccess('User promoted to admin successfully.');
-                promoteSessionCodeInput.value = '';
-            } else {
-                const errorData = await response.json();
-                showError(errorData.message || 'Failed to promote user.');
+    sharePointBtn.addEventListener('click', async () => {
+        const pointId = sharePointBtn.dataset.pointId;
+        if (confirm('Are you sure you want to share this point for admin approval?')) {
+            try {
+                const response = await fetch(`/api/points/share/${pointId}`, {
+                    method: 'PUT',
+                    headers: { 'X-Session-Code': sessionCode }
+                });
+                if (response.ok) {
+                    showSuccess('Point submitted for admin approval!');
+                    hideModals();
+                    fetchPoints();
+                } else {
+                    const errorData = await response.json();
+                    showError(errorData.message || 'Failed to submit point for approval.');
+                }
+            } catch (err) {
+                console.error('Error sharing point:', err);
+                showError('Server connection error.');
             }
-        } catch (err) {
-            console.error('Error promoting user:', err);
-            showError('Server connection error.');
-        }
-    });
-
-    const ownerPanelBtn = document.getElementById('owner-panel-btn');
-    ownerPanelBtn.addEventListener('click', async () => {
-        if (isUserOwner) {
-            ownerPanelModal.style.display = 'flex';
-            await fetchAllowedSessions();
-        } else {
-            showError('You do not have owner permissions.');
         }
     });
     
+    // === Owner Panel Logic ===
     async function fetchAllowedSessions() {
+        const list = document.getElementById('allowed-sessions-list');
+        list.innerHTML = '';
         try {
             const response = await fetch('/api/owner/sessions', {
                 headers: { 'X-Session-Code': sessionCode }
             });
             if (response.ok) {
                 const sessions = await response.json();
-                const list = document.getElementById('allowed-sessions-list');
-                list.innerHTML = '';
                 sessions.forEach(s => {
                     const li = document.createElement('li');
                     li.classList.add('session-item');
                     li.innerHTML = `
                         <span class="session-code">${s.sessionCode}</span>
-                        <span class="session-date">${new Date(s.createdAt).toLocaleDateString()}</span>
-                        <button class="button delete-session" data-code="${s.sessionCode}">Delete</button>
+                        <button class="button delete-session-btn" data-code="${s.sessionCode}">Remove</button>
                     `;
                     list.appendChild(li);
                 });
@@ -857,7 +721,8 @@ document.getElementById('admin-login-button').addEventListener('click', () => {
             showError('Server connection error.');
         }
     }
-    // Dodanie logiki dla przycisku "Add Session"
+
+    // Event listeners for owner panel
     addSessionBtn.addEventListener('click', async () => {
         const code = newSessionCodeInput.value.trim();
         if (!code) {
@@ -880,7 +745,7 @@ document.getElementById('admin-login-button').addEventListener('click', () => {
             if (response.ok) {
                 showSuccess(data.message);
                 newSessionCodeInput.value = '';
-                fetchAllowedSessions(); // Odśwież listę po dodaniu sesji
+                fetchAllowedSessions();
             } else {
                 showError(data.message || 'Failed to add session.');
             }
@@ -889,15 +754,11 @@ document.getElementById('admin-login-button').addEventListener('click', () => {
             console.error('Error adding session:', err);
         }
     });
-
-    // Dodanie logiki dla przycisku "Refresh List"
-    refreshSessionsBtn.addEventListener('click', () => {
-        fetchAllowedSessions();
-    });
-
-    // Dodanie nasłuchiwania dla dynamicznych przycisków "Delete"
+    
+    refreshSessionsBtn.addEventListener('click', fetchAllowedSessions);
+    
     allowedSessionsList.addEventListener('click', (e) => {
-        if (e.target.classList.contains('delete-session')) {
+        if (e.target.classList.contains('delete-session-btn')) {
             const sessionCodeToDelete = e.target.dataset.code;
             if (confirm(`Are you sure you want to remove session ${sessionCodeToDelete}?`)) {
                 deleteAllowedSession(sessionCodeToDelete);
@@ -905,16 +766,98 @@ document.getElementById('admin-login-button').addEventListener('click', () => {
         }
     });
 
-    // Uruchomienie początkowego pobierania listy sesji
-    fetchAllowedSessions();
+    // === Admin Panel Logic ===
+    async function fetchPendingPoints() {
+        const list = document.getElementById('pending-points-list');
+        list.innerHTML = '';
+        try {
+            const response = await fetch('/api/admin/pending', {
+                headers: { 'X-Session-Code': sessionCode }
+            });
+            if (response.ok) {
+                const points = await response.json();
+                points.forEach(point => {
+                    const li = document.createElement('li');
+                    li.classList.add('pending-point-item');
+                    li.innerHTML = `
+                        <div class="point-info">
+                            <strong>${point.name}</strong>
+                            <p>by ${point.ownerSessionCode.substring(0, 8)}... - Coords: X:${point.x}, Z:${point.z}</p>
+                            <p class="description-small">${point.description || 'No description'}</p>
+                        </div>
+                        <div class="pending-point-actions">
+                            <button class="button approve-btn" data-point-id="${point._id}">Approve</button>
+                            <button class="button decline-btn" data-point-id="${point._id}">Decline</button>
+                        </div>
+                    `;
+                    list.appendChild(li);
+                });
+            } else {
+                const errorData = await response.json();
+                showError(errorData.message || 'Error fetching pending points.');
+                if (response.status === 403) { // No permissions, close modal
+                    hideModals();
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching pending points:', err);
+            showError('Server connection error.');
+        }
+    }
 
-    // Call checkUserPermissions on load
+    async function approvePoint(pointId) {
+        try {
+            const response = await fetch(`/api/admin/approve/${pointId}`, {
+                method: 'PUT',
+                headers: { 'X-Session-Code': sessionCode }
+            });
+            if (response.ok) {
+                showSuccess('Point approved!');
+                fetchPendingPoints();
+                fetchPoints(); // Refresh main map
+            } else {
+                const errorData = await response.json();
+                showError(errorData.message || 'Failed to approve point.');
+            }
+        } catch (err) {
+            console.error('Error approving point:', err);
+            showError('Server connection error.');
+        }
+    }
+
+    async function declinePoint(pointId) {
+        try {
+            const response = await fetch(`/api/admin/decline/${pointId}`, {
+                method: 'PUT',
+                headers: { 'X-Session-Code': sessionCode }
+            });
+            if (response.ok) {
+                showSuccess('Point declined.');
+                fetchPendingPoints();
+            } else {
+                const errorData = await response.json();
+                showError(errorData.message || 'Failed to decline point.');
+            }
+        } catch (err) {
+            console.error('Error declining point:', err);
+            showError('Server connection error.');
+        }
+    }
+    
+    // Event listeners for admin panel
+    refreshPendingBtn.addEventListener('click', fetchPendingPoints);
+    
+    pendingPointsList.addEventListener('click', (e) => {
+        const pointId = e.target.dataset.pointId;
+        if (e.target.classList.contains('approve-btn')) {
+            approvePoint(pointId);
+        } else if (e.target.classList.contains('decline-btn')) {
+            declinePoint(pointId);
+        }
+    });
+
+    // === Main application entry point ===
     checkUserPermissions();
-
-    // Initial setup
     fetchPoints();
     updateMapPosition();
 });
-
-
-
