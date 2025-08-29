@@ -135,6 +135,37 @@ const checkOwner = (req, res, next) => {
     next();
 };
 
+// Route for promoting an admin
+app.post('/api/owner/promote', isOwner, async (req, res) => {
+    const { sessionCodeToPromote } = req.body;
+    if (!sessionCodeToPromote) {
+        return res.status(400).json({ message: 'Session code to promote is required.' });
+    }
+    try {
+        const existingSession = await AllowedSession.findOne({ sessionCode: sessionCodeToPromote });
+        if (existingSession) {
+            return res.status(409).json({ message: 'This session code is already an admin.' });
+        }
+        const newAdminSession = new AllowedSession({ sessionCode: sessionCodeToPromote });
+        await newAdminSession.save();
+        res.status(201).json({ message: 'User successfully promoted to admin.' });
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+});
+
+// Middleware for owner authentication
+const isOwner = async (req, res, next) => {
+    const sessionCode = req.header('X-Session-Code');
+    if (!sessionCode) {
+        return res.status(400).json({ message: 'Session code is required in header.' });
+    }
+    const isOwner = await AllowedSession.findOne({ sessionCode });
+    if (!isOwner) {
+        return res.status(403).json({ message: 'Access denied. Only owners can perform this action.' });
+    }
+    next();
+};
 // === API ENDPOINTS ===
 
 // Health check
@@ -545,3 +576,4 @@ startServer().catch(err => {
     console.error('Server startup error:', err);
     process.exit(1);
 });
+
