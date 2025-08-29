@@ -36,10 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const sharedPointsList = document.getElementById('shared-points-list');
 
     // === Configuration and global variables ===
-    // NOWE WYMIARY MAPY
     const MAP_WIDTH_PX = 8004;
     const MAP_HEIGHT_PX = 4500;
-    // Dostosowanie offsetu do nowych wymiarów
     const ORIGIN_OFFSET_X = -4002;
     const ORIGIN_OFFSET_Z = -2250;
     const MIN_ZOOM = 0.1;
@@ -263,11 +261,11 @@ document.addEventListener('DOMContentLoaded', () => {
                               (listElement.id === 'shared-points-list' && isShowingPublic);
 
         if (!isListVisible) {
-            listElement.closest('.point-list-section').style.display = 'none';
+            listElement.closest('.panel-section').style.display = 'none';
             return;
         }
 
-        listElement.closest('.point-list-section').style.display = 'block';
+        listElement.closest('.panel-section').style.display = 'block';
 
         if (points.length === 0) {
             listElement.innerHTML = '<li class="no-points">Brak punktów.</li>';
@@ -365,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
         zInput.value = point.z;
         addPointBtn.textContent = 'Zapisz zmiany';
 
-        const addSection = document.querySelector('.add-point-section');
+        const addSection = document.getElementById('add-point-form');
         addSection.scrollIntoView({ behavior: 'smooth' });
     }
     
@@ -411,7 +409,6 @@ document.addEventListener('DOMContentLoaded', () => {
         isUserOwner = OWNER_SESSION_CODES.includes(sessionCode);
         if (isUserOwner) {
             ownerLoginBtn.style.display = 'block';
-            console.log('User is owner.');
         }
 
         try {
@@ -420,7 +417,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (adminRes.status === 200) {
                 isUserAdmin = true;
-                console.log('User is admin.');
                 adminLoginBtn.style.display = 'block';
             }
         } catch (err) {
@@ -451,8 +447,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <small>Opis: ${point.description || 'Brak'}</small>
                     </div>
                     <div>
-                        <button class="approve-btn" data-id="${point._id}">Zatwierdź</button>
-                        <button class="deny-btn" data-id="${point._id}">Odrzuć</button>
+                        <button class="approve-btn button button-primary" data-id="${point._id}">Zatwierdź</button>
+                        <button class="deny-btn button button-delete" data-id="${point._id}">Odrzuć</button>
                     </div>
                 `;
                 pendingPointsList.appendChild(li);
@@ -521,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const li = document.createElement('li');
                 li.innerHTML = `
                     <span>${s.sessionCode}</span>
-                    <button class="delete-session" data-code="${s.sessionCode}">Usuń</button>
+                    <button class="delete-session button button-delete" data-code="${s.sessionCode}">Usuń</button>
                 `;
                 li.querySelector('.delete-session').addEventListener('click', () => {
                     if (confirm(`Jesteś pewien, że chcesz usunąć sesję "${s.sessionCode}"?`)) {
@@ -607,7 +603,6 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchPoints(); 
     });
 
-    // Handle form submissions
     addPointForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -678,7 +673,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Modals event listeners
     document.querySelectorAll('.modal .close-button').forEach(btn => {
         btn.addEventListener('click', hideModals);
     });
@@ -707,7 +701,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Admin/Owner panel buttons
     adminLoginBtn.addEventListener('click', () => {
         hideModals();
         adminLoginModal.style.display = 'flex';
@@ -800,7 +793,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Event delegation for admin panel buttons
     adminPanelModal.addEventListener('click', (e) => {
         if (e.target.classList.contains('approve-btn')) {
             const id = e.target.dataset.id;
@@ -817,7 +809,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial setup
     localStorage.setItem('sessionCode', sessionCode);
-    sessionCodeDisplay.textContent = `Session Code: ${sessionCode}`;
+    sessionCodeDisplay.textContent = `Session: ${sessionCode}`;
     fetchPoints();
     checkUserPermissions();
 });
