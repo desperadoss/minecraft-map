@@ -33,23 +33,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const editPointBtn = document.getElementById('edit-point');
     const deletePointBtn = document.getElementById('delete-point');
     const adminLoginBtn = document.getElementById('admin-login-btn');
+    const ownerLoginBtn = document.getElementById('owner-login-btn');
     const adminLoginInput = document.getElementById('admin-login-input');
     const refreshPendingBtn = document.getElementById('refresh-pending');
-    const promoteUserBtn = document.getElementById('promote-user');
-    const promoteSessionCodeInput = document.getElementById('promote-session-code');
-    const pendingPointsList = document.getElementById('pending-points-list');
-    const ownerPanelButton = document.getElementById('owner-panel-button');
-    const adminPanelButton = document.getElementById('admin-panel-button');
     
     // Owner panel elements
+    const newOwnerCodeInput = document.getElementById('new-owner-code');
+    const addOwnerBtn = document.getElementById('add-owner-btn');
+    const promoteUserBtn = document.getElementById('promote-user');
+    const promoteSessionCodeInput = document.getElementById('promote-session-code');
     const newSessionCodeInput = document.getElementById('new-session-code');
     const addSessionBtn = document.getElementById('add-session-btn');
     const allowedSessionsList = document.getElementById('allowed-sessions-list');
     const refreshSessionsBtn = document.getElementById('refresh-sessions');
     
-    // NEW: Admin login password input
-    const adminPasswordInput = document.getElementById('admin-login-password-input');
-
+    const pendingPointsList = document.getElementById('pending-points-list');
+    
     // === MINECRAFT RESOURCE DEFINITIONS ===
     const MINECRAFT_RESOURCES = {
     // Ores
@@ -63,33 +62,25 @@ document.addEventListener('DOMContentLoaded', () => {
     'emerald_ore': { name: 'Emerald Ore', color: '#2ECC71', category: 'ore' },
     'netherite':   { name: 'Ancient Debris',  color: '#8B4513', category: 'ore' },
     
-    // Structures → podmienione na "civilization style"
+    // Structures
     'village':     { name: 'Village',      color: '#D2691E', category: 'structure' },
-    'city':        { name: 'City',         color: '#2E86C1', category: 'structure' },
-    'town':        { name: 'Town',         color: '#5DADE2', category: 'structure' },
-    'capital_city':{ name: 'Capital City', color: '#1F618D', category: 'structure' },
-    'fortress':    { name: 'Fortress',     color: '#7B241C', category: 'structure' },
-    'castle':      { name: 'Castle',       color: '#884EA0', category: 'structure' },
-    'harbor':      { name: 'Harbor',       color: '#1ABC9C', category: 'structure' },
-    'market':      { name: 'Marketplace',  color: '#F39C12', category: 'structure' },
-    'academy':     { name: 'Academy',      color: '#117A65', category: 'structure' },
-    'monument':    { name: 'Monument',     color: '#E67E22', category: 'structure' },
-
-    // Biomes (zostawione)
-'wastelands':         { name: 'Wastelands',          color: '#A67C52', category: 'biome' },
-'sandlands':          { name: 'Sandlands',           color: '#E0B95C', category: 'biome' },
-'savannah_plateau':   { name: 'Savannah Plateau',    color: '#D4C45C', category: 'biome' },
-'alpine':             { name: 'Alpine',              color: '#A9A9A9', category: 'biome' },
-'snowy_forest_tundra':{ name: 'Snowy Forest/Tundra', color: '#DCDCDC', category: 'biome' },
-'sea_ice':            { name: 'Sea Ice',             color: '#B0E0E6', category: 'biome' },
-'water':              { name: 'Water',               color: '#1F618D', category: 'biome' },
-'woodlands_plains':   { name: 'Woodlands/Plains',    color: '#58D68D', category: 'biome' },
-'jungle_tropical':    { name: 'Jungle/Tropical',     color: '#229954', category: 'biome' },
-'giant_forest':       { name: 'Giant Forest',        color: '#145A32', category: 'biome' },
-'taiga_highlands':    { name: 'Taiga Highlands',     color: '#1E8449', category: 'biome' },
-'cherry_forest_mtn':  { name: 'Cherry Forest Mountain', color: '#E6B0AA', category: 'biome' },
+    'stronghold':  { name: 'Stronghold',   color: '#A9A9A9', category: 'structure' },
+    'nether_fortress': { name: 'Nether Fortress', color: '#B22222', category: 'structure' },
+    'end_city':    { name: 'End City',     color: '#4B0082', category: 'structure' },
+    'ocean_monument': { name: 'Ocean Monument', color: '#00BFFF', category: 'structure' },
+    'woodland_mansion': { name: 'Woodland Mansion', color: '#663300', category: 'structure' },
+    'desert_temple': { name: 'Desert Temple', color: '#F4A460', category: 'structure' },
+    'jungle_temple': { name: 'Jungle Temple', color: '#228B22', category: 'structure' },
+    'igloo':       { name: 'Igloo',        color: '#F5F5F5', category: 'structure' },
+    'shipwreck':   { name: 'Shipwreck',    color: '#8B4513', category: 'structure' },
     
-    // Other (zostawione)
+    // Biomes
+    'mushroom_biome':{ name: 'Mushroom Island', color: '#FF69B4', category: 'biome' },
+    'mesa':        { name: 'Badlands',     color: '#CD6600', category: 'biome' },
+    'ice_spikes':  { name: 'Ice Spikes',   color: '#ADD8E6', category: 'biome' },
+    'flower_forest':{ name: 'Flower Forest', color: '#4CAF50', category: 'biome' },
+    
+    // Other
     'spawn':   { name: 'Spawn Point', color: '#32CD32', category: 'other' },
     'base':    { name: 'Base',        color: '#4169E1', category: 'other' },
     'farm':    { name: 'Farm',        color: '#9ACD32', category: 'other' },
@@ -143,40 +134,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === Check if user is owner and admin ===
     async function checkUserPermissions() {
-        // Check if owner
         try {
+            // Check if owner
             const ownerRes = await fetch('/api/owner/check', {
                 headers: { 'X-Session-Code': sessionCode }
             });
-            if (ownerRes.ok) {
-                const ownerData = await ownerRes.json();
-                if (ownerData.isOwner) {
-                    isUserOwner = true;
-                    isUserAdmin = true;
-                    console.log('User is owner');
-                    ownerPanelButton.style.display = 'block';
-                    adminPanelButton.style.display = 'block';
-                    adminLoginBtn.style.display = 'none';
-                    return;
-                }
+            const ownerData = await ownerRes.json();
+            if (ownerData.isOwner) {
+                isUserOwner = true;
+                isUserAdmin = true; // Owner always has admin permissions
+                console.log('User is owner');
+                ownerLoginBtn.style.display = 'block';
+                return;
             }
-        } catch (err) {
-            console.error('Error checking owner permissions:', err);
-        }
 
-        // If not owner, check if admin
-        try {
-            const adminRes = await fetch('/api/admin/pending', {
-                headers: { 'X-Session-Code': sessionCode }
-            });
-            if (adminRes.ok) {
-                isUserAdmin = true;
-                console.log('User is admin');
-                adminPanelButton.style.display = 'block';
-                adminLoginBtn.style.display = 'none';
+            // If not owner, check if admin
+            try {
+                const adminRes = await fetch('/api/admin/pending', {
+                    headers: { 'X-Session-Code': sessionCode }
+                });
+                if (adminRes.status === 200) {
+                    isUserAdmin = true;
+                    console.log('User is admin');
+                    adminLoginBtn.style.display = 'block';
+                }
+            } catch (err) {
+                // Not an admin
+                console.log('User has no admin permissions');
             }
         } catch (err) {
-            console.error('Error checking admin permissions:', err);
+            console.error('Error checking permissions:', err);
         }
     }
 
@@ -275,7 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function updatePointScaling() {
         const points = document.querySelectorAll('.point-wrapper');
         const pointScale = 1.0 / currentScale;
-        
         points.forEach(point => {
             point.style.transform = `translate3d(-50%, -50%, 0) scale(${pointScale.toFixed(3)})`;
         });
@@ -283,23 +269,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateMapPosition() {
         if (isThrottling) return;
-        
+
         const containerRect = mapContainer.parentElement.getBoundingClientRect();
+
         const scaledWidth = MAP_WIDTH_PX * currentScale;
         const scaledHeight = MAP_HEIGHT_PX * currentScale;
 
+        // Calculate max allowed offset to prevent showing empty space
         const maxOffsetX = (scaledWidth > containerRect.width) ? (scaledWidth - containerRect.width) / 2 : 0;
         const maxOffsetY = (scaledHeight > containerRect.height) ? (scaledHeight - containerRect.height) / 2 : 0;
-        
+
+        // Clamp the offsets to prevent panning beyond the map edges
         offsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, offsetX));
         offsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, offsetY));
 
         mapContainer.style.transform = `translate3d(-50%, -50%, 0) translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, 0) scale(${currentScale.toFixed(3)})`;
         zoomInfo.textContent = `Zoom: ${Math.round((currentScale - 0.18) * 100 / 0.82)}%`;
-        
         updatePointScaling();
         updateCoordinatesFromMouse(lastMouseX, lastMouseY);
-        
+
         isThrottling = true;
         requestAnimationFrame(() => {
             isThrottling = false;
@@ -308,17 +296,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateCoordinatesFromMouse(clientX, clientY) {
         const containerRect = mapContainer.parentElement.getBoundingClientRect();
-        
         const mouseX = clientX - containerRect.left;
         const mouseY = clientY - containerRect.top;
-        
+
         const centerX = containerRect.width / 2;
         const centerY = containerRect.height / 2;
-        
+
         const cursorX = (mouseX - centerX - offsetX) / currentScale;
         const cursorY = (mouseY - centerY - offsetY) / currentScale;
-        
+
         const mcCoords = pxToMc(cursorX + MAP_WIDTH_PX/2, cursorY + MAP_HEIGHT_PX/2);
+
         coordinatesInfo.textContent = `X: ${mcCoords.x}, Z: ${mcCoords.z}`;
     }
 
@@ -361,346 +349,157 @@ document.addEventListener('DOMContentLoaded', () => {
             addPointBtn.dataset.mode = 'add';
             addPointBtn.dataset.pointId = '';
         } catch (err) {
-            console.error('Error clearing inputs:', err);
+            console.error("Error clearing inputs:", err);
         }
     }
 
-    // === Map and point logic ===
-    async function fetchPoints() {
-        try {
-            const publicRes = await fetch('/api/points');
-            const publicPoints = await publicRes.json();
-            const privateRes = await fetch('/api/points/private', {
-                headers: { 'X-Session-Code': sessionCode }
-            });
-            const privatePoints = await privateRes.json();
-            renderPoints([...publicPoints, ...privatePoints]);
-        } catch (err) {
-            console.error('Error fetching points:', err);
-            showError('Error fetching points from server.');
-        }
-    }
-
-    function renderPoints(points) {
-        document.querySelectorAll('.point-wrapper').forEach(p => p.remove());
-        points.forEach(point => {
-            const { x, z } = mcToPx(point.x, point.z);
-            const pointWrapper = document.createElement('div');
-            pointWrapper.classList.add('point-wrapper');
-            pointWrapper.dataset.pointId = point._id;
-            pointWrapper.dataset.pointName = point.name;
-            pointWrapper.dataset.pointX = point.x;
-            pointWrapper.dataset.pointZ = point.z;
-            pointWrapper.dataset.ownerSessionCode = point.ownerSessionCode;
-            pointWrapper.dataset.status = point.status;
-            pointWrapper.dataset.resourceType = point.resourceType || 'custom';
-            pointWrapper.style.left = `${x}px`;
-            pointWrapper.style.top = `${z}px`;
-
-            const pointElement = document.createElement('div');
-            pointElement.classList.add('point');
-
-            // NEW: Apply resource-specific styling
-            if (point.resourceType && point.resourceType !== 'custom') {
-                const resource = MINECRAFT_RESOURCES[point.resourceType];
-                if (resource) {
-                    pointElement.style.setProperty('--resource-color', resource.color);
-                    pointElement.classList.add('resource-point');
-                    pointElement.classList.add(`resource-${point.resourceType}`);
-                }
-            } else {
-                // Keep original status-based coloring for custom points
-                pointElement.classList.add(point.status);
-            }
-
-            const pointNameElement = document.createElement('div');
-            pointNameElement.classList.add('point-name');
-            pointNameElement.textContent = point.name;
-
-            pointWrapper.appendChild(pointElement);
-            pointWrapper.appendChild(pointNameElement);
-
-            pointWrapper.addEventListener('click', (e) => {
-                e.stopPropagation();
-                displayPointDetails(point);
-            });
-
-            mapContainer.appendChild(pointWrapper);
+    function addPointToMap(point) {
+        const pxCoords = mcToPx(point.x, point.z);
+        
+        const pointWrapper = document.createElement('div');
+        pointWrapper.className = 'point-wrapper';
+        pointWrapper.style.left = `${(pxCoords.x / MAP_WIDTH_PX) * 100}%`;
+        pointWrapper.style.top = `${(pxCoords.z / MAP_HEIGHT_PX) * 100}%`;
+        pointWrapper.dataset.id = point._id;
+        pointWrapper.dataset.x = point.x;
+        pointWrapper.dataset.z = point.z;
+        pointWrapper.dataset.status = point.status;
+        pointWrapper.dataset.resourceType = point.resourceType;
+        
+        const pointElement = document.createElement('div');
+        pointElement.className = 'point';
+        pointElement.style.backgroundColor = MINECRAFT_RESOURCES[point.resourceType]?.color || '#888';
+        pointElement.style.boxShadow = `0 0 10px ${MINECRAFT_RESOURCES[point.resourceType]?.color || '#888'}`;
+        
+        const pointName = document.createElement('span');
+        pointName.className = 'point-name';
+        pointName.textContent = point.name;
+        
+        pointWrapper.appendChild(pointElement);
+        pointWrapper.appendChild(pointName);
+        
+        pointWrapper.addEventListener('click', (e) => {
+            e.stopPropagation();
+            displayPointDetails(point);
         });
-        filterPoints();
+
+        mapContainer.appendChild(pointWrapper);
         updatePointScaling();
     }
 
-    function filterPoints() {
-        const points = document.querySelectorAll('.point-wrapper');
+    function displayPointDetails(point) {
+        document.getElementById('point-details-title').textContent = point.name;
+        document.getElementById('point-coords').textContent = `X: ${point.x}, Z: ${point.z}`;
+        document.getElementById('point-description').textContent = point.description || 'N/A';
+        document.getElementById('point-type').textContent = MINECRAFT_RESOURCES[point.resourceType]?.name || point.resourceType;
+        
+        pointDetailsModal.style.display = 'block';
+
+        const isOwnerOfPoint = point.ownerSessionCode === sessionCode;
+        sharePointBtn.style.display = (isOwnerOfPoint && point.status === 'private') ? 'block' : 'none';
+        editPointBtn.style.display = isOwnerOfPoint ? 'block' : 'none';
+        deletePointBtn.style.display = isOwnerOfPoint ? 'block' : 'none';
+
+        sharePointBtn.onclick = () => sharePoint(point._id);
+        editPointBtn.onclick = () => editPoint(point);
+        deletePointBtn.onclick = () => deletePoint(point._id);
+    }
+    
+    // === API Calls ===
+    async function fetchPoints() {
+        try {
+            const publicPointsRes = await fetch('/api/points');
+            const privatePointsRes = await fetch('/api/points/private', {
+                headers: { 'X-Session-Code': sessionCode }
+            });
+
+            if (!publicPointsRes.ok || !privatePointsRes.ok) {
+                throw new Error('Failed to fetch points');
+            }
+
+            const publicPoints = await publicPointsRes.json();
+            const privatePoints = await privatePointsRes.json();
+            
+            renderPoints(publicPoints, privatePoints);
+            renderPointList('your-points-list', privatePoints, true);
+            renderPointList('shared-points-list', publicPoints, false);
+            
+        } catch (err) {
+            console.error('Error fetching points:', err);
+            showError('Could not load points from the server.');
+        }
+    }
+
+    function renderPoints(publicPoints, privatePoints) {
+        document.querySelectorAll('.point-wrapper').forEach(p => p.remove());
+
+        if (isShowingPublic) {
+            publicPoints.forEach(addPointToMap);
+        }
+        if (isShowingPrivate) {
+            privatePoints.forEach(addPointToMap);
+        }
+    }
+    
+    function renderPointList(listId, points, isEditable) {
+        const list = document.getElementById(listId);
+        list.innerHTML = '';
+        if (points.length === 0) {
+            list.innerHTML = `<p>${listId === 'your-points-list' ? 'You have no points yet.' : 'No public points available.'}</p>`;
+            return;
+        }
         points.forEach(point => {
-            const status = point.dataset.status;
-            let isVisible = false;
-            if (status === 'public' && isShowingPublic) {
-                isVisible = true;
-            } else if ((status === 'private' || status === 'pending') && isShowingPrivate) {
-                isVisible = true;
+            const li = document.createElement('li');
+            li.className = 'point-list-item';
+            li.dataset.id = point._id;
+            
+            const pointInfo = document.createElement('span');
+            pointInfo.textContent = `${point.name} (X: ${point.x}, Z: ${point.z})`;
+
+            const actions = document.createElement('div');
+            actions.className = 'point-actions';
+            
+            if (isEditable) {
+                const editBtn = document.createElement('button');
+                editBtn.className = 'button edit-list-button';
+                editBtn.textContent = 'Edit';
+                editBtn.addEventListener('click', () => {
+                    hideModals();
+                    editPoint(point);
+                });
+                actions.appendChild(editBtn);
+
+                const shareBtn = document.createElement('button');
+                shareBtn.className = 'button share-list-button';
+                shareBtn.textContent = 'Share';
+                shareBtn.addEventListener('click', () => sharePoint(point._id));
+                
+                if (point.status !== 'private') {
+                    shareBtn.disabled = true;
+                }
+                actions.appendChild(shareBtn);
             }
-            if (isVisible) {
-                point.classList.remove('hidden');
-            } else {
-                point.classList.add('hidden');
-            }
+
+            const viewBtn = document.createElement('button');
+            viewBtn.className = 'button view-list-button';
+            viewBtn.textContent = 'View';
+            viewBtn.addEventListener('click', () => {
+                hideModals();
+                displayPointDetails(point);
+            });
+            actions.appendChild(viewBtn);
+
+            li.appendChild(pointInfo);
+            li.appendChild(actions);
+            list.appendChild(li);
         });
     }
 
-    // === UI event handling ===
-    mapContainer.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.point-wrapper')) {
-            return;
-        }
-        isDragging = true;
-        mapContainer.style.cursor = 'grabbing';
-        startX = e.clientX - offsetX;
-        startY = e.clientY - offsetY;
-    });
-
-    mapContainer.addEventListener('mouseup', () => {
-        isDragging = false;
-        mapContainer.style.cursor = 'grab';
-    });
-
-    mapContainer.addEventListener('mouseleave', () => {
-        isDragging = false;
-        mapContainer.style.cursor = 'grab';
-    });
-
-    mapContainer.addEventListener('mousemove', (e) => {
-        lastMouseX = e.clientX;
-        lastMouseY = e.clientY;
-        if (isDragging) {
-            offsetX = e.clientX - startX;
-            offsetY = e.clientY - startY;
-            updateMapPosition();
-        } else {
-            if (!mouseMoveThrottle) {
-                mouseMoveThrottle = setTimeout(() => {
-                    updateCoordinatesFromMouse(e.clientX, e.clientY);
-                    mouseMoveThrottle = null;
-                }, 100);
-            }
-        }
-    });
-
-    mapContainer.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const zoomDelta = e.deltaY > 0 ? -0.1 : 0.1;
-        const newScale = Math.min(Math.max(0.1, currentScale + zoomDelta), 5.0);
-        
-        const rect = mapContainer.parentElement.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        const mcX = ((mouseX - (rect.width / 2) - offsetX) / currentScale + MAP_WIDTH_PX / 2);
-        const mcY = ((mouseY - (rect.height / 2) - offsetY) / currentScale + MAP_HEIGHT_PX / 2);
-
-        currentScale = newScale;
-
-        const newPxX = (mcX - MAP_WIDTH_PX / 2) * currentScale;
-        const newPxY = (mcY - MAP_HEIGHT_PX / 2) * currentScale;
-
-        const newOffsetX = mouseX - rect.width / 2 - newPxX;
-        const newOffsetY = mouseY - rect.height / 2 - newPxY;
-        
-        offsetX = newOffsetX;
-        offsetY = newOffsetY;
-
-        updateMapPosition();
-    });
-
-    zoomInBtn.addEventListener('click', () => {
-        const newScale = Math.min(5.0, currentScale + 0.2);
-        const zoomFactor = newScale / currentScale;
-        offsetX = offsetX * zoomFactor;
-        offsetY = offsetY * zoomFactor;
-        currentScale = newScale;
-        updateMapPosition();
-    });
-
-    zoomOutBtn.addEventListener('click', () => {
-        const newScale = Math.max(0.1, currentScale - 0.2);
-        const zoomFactor = newScale / currentScale;
-        offsetX = offsetX * zoomFactor;
-        offsetY = offsetY * zoomFactor;
-        currentScale = newScale;
-        updateMapPosition();
-    });
-
-    resetViewBtn.addEventListener('click', () => {
-        currentScale = 1;
-        offsetX = 0;
-        offsetY = 0;
-        updateMapPosition();
-    });
-
-    showYourPointsBtn.addEventListener('click', () => {
-        isShowingPrivate = !isShowingPrivate;
-        showYourPointsBtn.classList.toggle('active', isShowingPrivate);
-        filterPoints();
-    });
-
-    showSharedPointsBtn.addEventListener('click', () => {
-        isShowingPublic = !isShowingPublic;
-        showSharedPointsBtn.classList.toggle('active', isShowingPublic);
-        filterPoints();
-    });
-
-    // === Point details modal logic ===
-    function displayPointDetails(point) {
-        hideModals();
-        pointDetailsModal.style.display = 'block';
-        document.getElementById('details-name').textContent = point.name;
-        document.getElementById('details-coords').textContent = `X: ${point.x}, Z: ${point.z}`;
-        document.getElementById('details-desc').textContent = point.description || 'No description.';
-        
-        sharePointBtn.style.display = 'block';
-        if (point.ownerSessionCode !== sessionCode) {
-            editPointBtn.style.display = 'none';
-            deletePointBtn.style.display = 'none';
-        } else {
-            editPointBtn.style.display = 'block';
-            deletePointBtn.style.display = 'block';
-        }
-
-        editPointBtn.onclick = () => {
-            editPoint(point);
-            hideModals();
-        };
-
-        deletePointBtn.onclick = () => {
-            if (confirm('Are you sure you want to delete this point?')) {
-                deletePoint(point._id);
-                hideModals();
-            }
-        };
-
-        sharePointBtn.onclick = () => {
-            sharePoint(point);
-        };
-
-        // NEW: Share button logic
-        if (point.status === 'public') {
-            sharePointBtn.textContent = 'Unshare Point';
-            sharePointBtn.dataset.action = 'unshare';
-        } else {
-            sharePointBtn.textContent = 'Share Point';
-            sharePointBtn.dataset.action = 'share';
-        }
-
-        sharePointBtn.onclick = () => {
-            if (sharePointBtn.dataset.action === 'share') {
-                sharePoint(point._id);
-            } else {
-                unsharePoint(point._id);
-            }
-        };
-    }
-
-    async function sharePoint(pointId) {
-        try {
-            const response = await fetch(`/api/points/share/${pointId}`, {
-                method: 'PATCH',
-                headers: { 'X-Session-Code': sessionCode }
-            });
-            if (response.ok) {
-                showSuccess('Point shared successfully!');
-                fetchPoints();
-            } else {
-                const errorData = await response.json();
-                showError(errorData.message || 'Failed to share point.');
-            }
-        } catch (err) {
-            showError('Server connection error.');
-        } finally {
-            hideModals();
-        }
-    }
-
-    async function unsharePoint(pointId) {
-        try {
-            const response = await fetch(`/api/points/unshare/${pointId}`, {
-                method: 'PATCH',
-                headers: { 'X-Session-Code': sessionCode }
-            });
-            if (response.ok) {
-                showSuccess('Point unshared successfully!');
-                fetchPoints();
-            } else {
-                const errorData = await response.json();
-                showError(errorData.message || 'Failed to unshare point.');
-            }
-        } catch (err) {
-            showError('Server connection error.');
-        } finally {
-            hideModals();
-        }
-    }
-
-    function editPoint(point) {
-        addPointForm.style.display = 'block';
-        hideModals();
-        
-        resourceSelect.value = point.resourceType || 'custom';
-        resourceSelect.dispatchEvent(new Event('change'));
-
-        nameInput.value = point.name;
-        descriptionInput.value = point.description || '';
-        xInput.value = point.x;
-        zInput.value = point.z;
-
-        addPointBtn.textContent = 'Save Changes';
-        addPointBtn.dataset.mode = 'edit';
-        addPointBtn.dataset.pointId = point._id;
-
-        // NEW: make coord inputs read-only during edit
-        xInput.readOnly = true;
-        zInput.readOnly = true;
-    }
-
-    async function deletePoint(pointId) {
-        try {
-            const response = await fetch(`/api/points/${pointId}`, {
-                method: 'DELETE',
-                headers: { 'X-Session-Code': sessionCode }
-            });
-            if (response.ok) {
-                showSuccess('Point deleted!');
-                fetchPoints();
-            } else {
-                const errorData = await response.json();
-                showError(errorData.message || 'Failed to delete point.');
-            }
-        } catch (err) {
-            console.error('Error deleting point:', err);
-            showError('Server connection error.');
-        }
-    }
-
-    // === Form submission logic ===
-    addPointForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const mode = addPointBtn.dataset.mode || 'add';
-        const pointId = addPointBtn.dataset.pointId;
-
-        const pointData = {
-            name: nameInput.value,
-            description: descriptionInput.value,
-            x: parseFloat(xInput.value),
-            z: parseFloat(zInput.value),
-            resourceType: resourceSelect.value !== 'custom' ? resourceSelect.value : null
-        };
-        
+    async function addOrUpdatePoint(pointData, mode, pointId = null) {
         addPointBtn.disabled = true;
-
         try {
             let response;
-            if (mode === 'edit' && pointId) {
+            if (mode === 'edit') {
                 response = await fetch(`/api/points/${pointId}`, {
                     method: 'PUT',
                     headers: {
@@ -709,10 +508,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     body: JSON.stringify(pointData)
                 });
-
-                addPointBtn.textContent = 'Add Point';
-                addPointBtn.dataset.mode = 'add';
-                addPointBtn.dataset.pointId = '';
                 
             } else {
                 response = await fetch('/api/points', {
@@ -738,77 +533,201 @@ document.addEventListener('DOMContentLoaded', () => {
             showError('Server connection error.');
         } finally {
             addPointBtn.disabled = false;
-            if (mode === 'edit') {
-                addPointBtn.textContent = 'Save Changes';
+        }
+    }
+    
+    function editPoint(point) {
+        hideModals();
+        resourceSelect.value = point.resourceType;
+        resourceSelect.dispatchEvent(new Event('change'));
+        nameInput.value = point.name;
+        descriptionInput.value = point.description;
+        xInput.value = point.x;
+        zInput.value = point.z;
+
+        addPointBtn.textContent = 'Save Changes';
+        addPointBtn.dataset.mode = 'edit';
+        addPointBtn.dataset.pointId = point._id;
+
+        // Scroll to form and focus name input
+        addPointForm.scrollIntoView({ behavior: 'smooth' });
+        nameInput.focus();
+    }
+    
+    async function deletePoint(pointId) {
+        if (!confirm('Are you sure you want to delete this point?')) {
+            return;
+        }
+        try {
+            const response = await fetch(`/api/points/${pointId}`, {
+                method: 'DELETE',
+                headers: { 'X-Session-Code': sessionCode }
+            });
+            if (response.ok) {
+                hideModals();
+                fetchPoints();
+                showSuccess('Point deleted successfully.');
             } else {
-                addPointBtn.textContent = 'Add Point';
+                const errorData = await response.json();
+                showError(errorData.message || 'Error deleting point.');
             }
+        } catch (err) {
+            console.error('Error deleting point:', err);
+            showError('Server connection error.');
+        }
+    }
+    
+    async function sharePoint(pointId) {
+        try {
+            const response = await fetch(`/api/points/share/${pointId}`, {
+                method: 'PUT',
+                headers: { 'X-Session-Code': sessionCode }
+            });
+            if (response.ok) {
+                hideModals();
+                fetchPoints();
+                showSuccess('Point submitted for admin approval.');
+            } else {
+                const errorData = await response.json();
+                showError(errorData.message || 'Error sharing point.');
+            }
+        } catch (err) {
+            console.error('Error sharing point:', err);
+            showError('Server connection error.');
+        }
+    }
+
+    // === Event Listeners ===
+    mapContainer.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startX = e.clientX - offsetX;
+        startY = e.clientY - offsetY;
+        mapContainer.style.cursor = 'grabbing';
+    });
+
+    mapContainer.addEventListener('mouseleave', () => {
+        isDragging = false;
+        mapContainer.style.cursor = 'grab';
+    });
+
+    mapContainer.addEventListener('mouseup', () => {
+        isDragging = false;
+        mapContainer.style.cursor = 'grab';
+    });
+
+    mapContainer.addEventListener('mousemove', (e) => {
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+        if (!isDragging) {
+            updateCoordinatesFromMouse(e.clientX, e.clientY);
+            return;
+        }
+        offsetX = e.clientX - startX;
+        offsetY = e.clientY - startY;
+        updateMapPosition();
+    });
+
+    mapContainer.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const oldScale = currentScale;
+        const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
+        currentScale = Math.max(1, Math.min(3, currentScale * scaleFactor));
+
+        if (currentScale !== oldScale) {
+            const containerRect = mapContainer.parentElement.getBoundingClientRect();
+            const mouseX = e.clientX - containerRect.left;
+            const mouseY = e.clientY - containerRect.top;
+            
+            offsetX = (offsetX * currentScale / oldScale) - (mouseX - (mouseX * currentScale / oldScale));
+            offsetY = (offsetY * currentScale / oldScale) - (mouseY - (mouseY * currentScale / oldScale));
+            updateMapPosition();
         }
     });
 
-    // === Modal handling ===
-    document.getElementById('admin-login-btn').addEventListener('click', () => {
+    zoomInBtn.addEventListener('click', () => {
+        currentScale = Math.min(3, currentScale * 1.1);
+        updateMapPosition();
+    });
+
+    zoomOutBtn.addEventListener('click', () => {
+        currentScale = Math.max(1, currentScale * 0.9);
+        updateMapPosition();
+    });
+
+    resetViewBtn.addEventListener('click', () => {
+        currentScale = 1;
+        offsetX = 0;
+        offsetY = 0;
+        updateMapPosition();
+    });
+    
+    addPointBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const mode = addPointBtn.dataset.mode;
+        const pointId = addPointBtn.dataset.pointId;
+        const name = nameInput.value;
+        const description = descriptionInput.value;
+        const x = xInput.value;
+        const z = zInput.value;
+        const resourceType = resourceSelect.value;
+        
+        if (!name || name.trim() === '' || !x || !z) {
+            showError('Please fill in all required fields.');
+            return;
+        }
+
+        const pointData = { name, description, x, z, resourceType };
+        await addOrUpdatePoint(pointData, mode, pointId);
+    });
+
+    showYourPointsBtn.addEventListener('click', () => {
+        isShowingPrivate = !isShowingPrivate;
+        showYourPointsBtn.classList.toggle('active', isShowingPrivate);
+        document.querySelector('.your-points-section').style.display = isShowingPrivate ? 'block' : 'none';
+        fetchPoints(); // Re-render points
+    });
+
+    showSharedPointsBtn.addEventListener('click', () => {
+        isShowingPublic = !isShowingPublic;
+        showSharedPointsBtn.classList.toggle('active', isShowingPublic);
+        document.querySelector('.shared-points-section').style.display = isShowingPublic ? 'block' : 'none';
+        fetchPoints(); // Re-render points
+    });
+    
+    // Admin Panel Logic
+    adminLoginBtn.addEventListener('click', () => {
         hideModals();
         adminLoginModal.style.display = 'block';
     });
 
-    document.getElementById('admin-panel-button').addEventListener('click', () => {
-        hideModals();
-        adminPanelModal.style.display = 'block';
-        fetchPendingPoints();
-    });
-
-    document.getElementById('owner-panel-button').addEventListener('click', () => {
-        hideModals();
-        ownerPanelModal.style.display = 'block';
-        fetchAllowedSessions();
-    });
-
-    closeButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            hideModals();
-        });
-    });
-
-    // Close modal on outside click
-    window.addEventListener('click', (e) => {
-        if (e.target.classList.contains('modal')) {
-            hideModals();
-        }
-    });
-
-    // Close on ESC key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            hideModals();
-        }
-    });
-
-    // Admin login logic - MODIFIED to use a password
-    document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const enteredPassword = adminLoginInput.value;
+    document.getElementById('login-as-admin').addEventListener('click', async () => {
+        const code = adminLoginInput.value;
         try {
-            const response = await fetch('/api/admin/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: enteredPassword, sessionCode: sessionCode })
+            const response = await fetch('/api/admin/pending', {
+                method: 'GET',
+                headers: {
+                    'X-Session-Code': code
+                }
             });
-
-            const data = await response.json();
             if (response.ok) {
-                checkUserPermissions();
-                showSuccess(data.message);
+                localStorage.setItem('sessionCode', code);
+                sessionCode = code;
+                isUserAdmin = true;
                 hideModals();
+                adminPanelModal.style.display = 'block';
+                fetchPendingPoints();
+                showSuccess('Admin login successful!');
             } else {
-                showError(data.message || 'Login failed.');
+                const data = await response.json();
+                showError(data.message || 'Invalid admin code.');
             }
         } catch (err) {
             showError('Server connection error.');
         }
     });
 
-    // === Admin Panel Logic ===
+    refreshPendingBtn.addEventListener('click', fetchPendingPoints);
+
     async function fetchPendingPoints() {
         try {
             const response = await fetch('/api/admin/pending', {
@@ -822,160 +741,227 @@ document.addEventListener('DOMContentLoaded', () => {
                 showError(errorData.message || 'Error fetching pending points.');
             }
         } catch (err) {
-            showError('Server connection error.');
             console.error('Error fetching pending points:', err);
+            showError('Server connection error.');
         }
     }
-    
+
     function renderPendingPoints(points) {
         pendingPointsList.innerHTML = '';
         if (points.length === 0) {
-            pendingPointsList.innerHTML = '<p>No pending points.</p>';
+            pendingPointsList.innerHTML = '<li>No pending points.</li>';
             return;
         }
-
         points.forEach(point => {
             const li = document.createElement('li');
             li.innerHTML = `
-                <span><strong>${point.name}</strong> (${point.x}, ${point.z})</span>
-                <div class="pending-actions">
-                    <button class="approve-point button" data-id="${point._id}">Approve</button>
-                    <button class="reject-point button" data-id="${point._id}">Reject</button>
+                <span>${point.name} (X: ${point.x}, Z: ${point.z})</span>
+                <div class="modal-buttons">
+                    <button class="button approve-button" data-id="${point._id}">Approve</button>
+                    <button class="button reject-button" data-id="${point._id}">Reject</button>
                 </div>
             `;
+            li.querySelector('.approve-button').addEventListener('click', () => approvePoint(point._id));
+            li.querySelector('.reject-button').addEventListener('click', () => rejectPoint(point._id));
             pendingPointsList.appendChild(li);
         });
     }
 
-    pendingPointsList.addEventListener('click', async (e) => {
-        const pointId = e.target.dataset.id;
-        if (!pointId) return;
-
-        if (e.target.classList.contains('approve-point')) {
-            await updatePointStatus(pointId, 'public');
-        } else if (e.target.classList.contains('reject-point')) {
-            if (confirm('Are you sure you want to reject and delete this point?')) {
-                await updatePointStatus(pointId, 'rejected');
-            }
-        }
-    });
-
-    async function updatePointStatus(pointId, status) {
+    async function approvePoint(pointId) {
         try {
-            const response = await fetch(`/api/admin/points/${pointId}/status`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Session-Code': sessionCode
-                },
-                body: JSON.stringify({ status: status })
+            const response = await fetch(`/api/admin/approve/${pointId}`, {
+                method: 'POST',
+                headers: { 'X-Session-Code': sessionCode }
             });
-
-            const data = await response.json();
             if (response.ok) {
-                showSuccess(data.message);
+                showSuccess('Point approved.');
                 fetchPendingPoints();
+                fetchPoints();
             } else {
-                showError(data.message || `Failed to update point status to ${status}.`);
+                const errorData = await response.json();
+                showError(errorData.message || 'Error approving point.');
             }
         } catch (err) {
             showError('Server connection error.');
-            console.error('Error updating point status:', err);
         }
     }
-    
-    // Promote User Logic
-    promoteUserBtn.addEventListener('click', async () => {
-        const code = promoteSessionCodeInput.value;
-        if (!code) {
-            showError('Please enter a session code to promote.');
-            return;
-        }
 
+    async function rejectPoint(pointId) {
         try {
-            const response = await fetch('/api/admin/promote', {
+            const response = await fetch(`/api/admin/reject/${pointId}`, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-Session-Code': sessionCode 
-                },
-                body: JSON.stringify({ sessionCode: code })
+                headers: { 'X-Session-Code': sessionCode }
             });
-            const data = await response.json();
             if (response.ok) {
-                showSuccess(data.message);
-                promoteSessionCodeInput.value = '';
+                showSuccess('Point rejected and deleted.');
+                fetchPendingPoints();
             } else {
-                showError(data.message || 'Failed to promote user.');
+                const errorData = await response.json();
+                showError(errorData.message || 'Error rejecting point.');
             }
         } catch (err) {
             showError('Server connection error.');
-            console.error('Error promoting user:', err);
         }
+    }
+
+    // Owner Panel Logic
+    ownerLoginBtn.addEventListener('click', () => {
+        hideModals();
+        adminLoginModal.style.display = 'block';
     });
 
-    refreshPendingBtn.addEventListener('click', fetchPendingPoints);
-
-    // === Owner Panel Logic ===
-    addSessionBtn.addEventListener('click', async () => {
-        const code = newSessionCodeInput.value;
-        if (!code) {
-            showError('Please enter a session code to add.');
-            return;
-        }
-
+    document.getElementById('login-as-admin').addEventListener('click', async () => {
+        const code = adminLoginInput.value;
         try {
-            const response = await fetch('/api/owner/sessions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Session-Code': sessionCode
-                },
-                body: JSON.stringify({ sessionCode: code })
+            const response = await fetch('/api/owner/check', {
+                method: 'GET',
+                headers: { 'X-Session-Code': code }
             });
-
-            const data = await response.json();
-
             if (response.ok) {
-                showSuccess(data.message);
-                newSessionCodeInput.value = '';
-                fetchAllowedSessions(); // Refresh the list after adding a session
+                const data = await response.json();
+                if (data.isOwner) {
+                    localStorage.setItem('sessionCode', code);
+                    sessionCode = code;
+                    isUserOwner = true;
+                    isUserAdmin = true;
+                    hideModals();
+                    ownerPanelModal.style.display = 'block';
+                    fetchAllowedSessions();
+                    showSuccess('Owner login successful!');
+                } else {
+                    showError('Invalid owner code. Not an owner.');
+                }
             } else {
-                showError(data.message || 'Failed to add session.');
+                const data = await response.json();
+                showError(data.message || 'Failed to check owner status.');
             }
         } catch (err) {
             showError('Server connection error.');
-            console.error('Error adding session:', err);
         }
     });
+
+    if (promoteUserBtn) {
+        promoteUserBtn.addEventListener('click', async () => {
+            const code = promoteSessionCodeInput.value;
+            if (!code) {
+                showError('Please enter a session code to promote.');
+                return;
+            }
+            try {
+                const response = await fetch('/api/owner/promote', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Session-Code': sessionCode 
+                    },
+                    body: JSON.stringify({ sessionCode: code })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    showSuccess(data.message);
+                    promoteSessionCodeInput.value = '';
+                } else {
+                    showError(data.message || 'Failed to promote user.');
+                }
+            } catch (err) {
+                showError('Server connection error.');
+                console.error('Error promoting user:', err);
+            }
+        });
+    }
+
+    // NEW: Owner Panel Logic - Add New Owner
+    if (addOwnerBtn) {
+        addOwnerBtn.addEventListener('click', async () => {
+            const code = newOwnerCodeInput.value;
+            if (!code) {
+                showError('Please enter a session code to add as an owner.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/owner/owners', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Session-Code': sessionCode 
+                    },
+                    body: JSON.stringify({ sessionCode: code })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    showSuccess(data.message);
+                    newOwnerCodeInput.value = '';
+                } else {
+                    showError(data.message || 'Failed to add owner.');
+                }
+            } catch (err) {
+                showError('Server connection error.');
+                console.error('Error adding owner:', err);
+            }
+        });
+    }
+
+    if (addSessionBtn) {
+        addSessionBtn.addEventListener('click', async () => {
+            const code = newSessionCodeInput.value;
+            if (!code) {
+                showError('Please enter a session code.');
+                return;
+            }
+            try {
+                const response = await fetch('/api/owner/sessions', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Session-Code': sessionCode 
+                    },
+                    body: JSON.stringify({ sessionCode: code })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess(data.message);
+                    newSessionCodeInput.value = '';
+                    fetchAllowedSessions();
+                } else {
+                    showError(data.message || 'Failed to add session.');
+                }
+            } catch (err) {
+                showError('Server connection error.');
+                console.error('Error adding session:', err);
+            }
+        });
+    }
+
+    if (refreshSessionsBtn) {
+        refreshSessionsBtn.addEventListener('click', () => {
+            fetchAllowedSessions();
+        });
+    }
+
+    if (allowedSessionsList) {
+        allowedSessionsList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-session')) {
+                const sessionCodeToDelete = e.target.dataset.code;
+                if (confirm(`Are you sure you want to remove session ${sessionCodeToDelete}?`)) {
+                    deleteAllowedSession(sessionCodeToDelete);
+                }
+            }
+        });
+    }
 
     async function fetchAllowedSessions() {
         try {
-            const list = allowedSessionsList;
-            list.innerHTML = '<li>Loading...</li>';
             const response = await fetch('/api/owner/sessions', {
                 headers: { 'X-Session-Code': sessionCode }
             });
             if (response.ok) {
                 const sessions = await response.json();
-                list.innerHTML = '';
-                if (sessions.length === 0) {
-                    list.innerHTML = '<li>No allowed sessions found.</li>';
-                    return;
-                }
-                sessions.forEach(s => {
-                    const li = document.createElement('li');
-                    li.classList.add('session-item');
-                    li.innerHTML = `
-                        <span class="session-code">${s.sessionCode}</span>
-                        <span class="session-date">${new Date(s.createdAt).toLocaleString()}</span>
-                        <button class="delete-session button" data-code="${s.sessionCode}">Delete</button>
-                    `;
-                    li.querySelector('.delete-session').addEventListener('click', () => {
-                        deleteAllowedSession(s.sessionCode);
-                    });
-                    list.appendChild(li);
-                });
+                renderAllowedSessions(sessions);
             } else {
                 const errorData = await response.json();
                 showError(errorData.message || 'Error fetching allowed sessions.');
@@ -984,6 +970,30 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error fetching sessions:', err);
             showError('Server connection error.');
         }
+    }
+
+    function renderAllowedSessions(sessions) {
+        allowedSessionsList.innerHTML = '';
+        if (sessions.length === 0) {
+            allowedSessionsList.innerHTML = '<li>No allowed sessions.</li>';
+            return;
+        }
+        sessions.forEach(s => {
+            const li = document.createElement('li');
+            li.className = 'session-item';
+            const date = new Date(s.createdAt).toLocaleDateString();
+            li.innerHTML = `
+                <div class="session-info">
+                    <span class="session-code">${s.sessionCode}</span>
+                    <span class="session-date">(Added on: ${date})</span>
+                </div>
+                <button class="button delete-session" data-code="${s.sessionCode}">Delete</button>
+            `;
+            li.querySelector('.delete-session').addEventListener('click', () => {
+                deleteAllowedSession(s.sessionCode);
+            });
+            allowedSessionsList.appendChild(li);
+        });
     }
 
     async function deleteAllowedSession(code) {
@@ -1005,23 +1015,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Dodanie logiki dla przycisku "Refresh List"
-    refreshSessionsBtn.addEventListener('click', () => {
-        fetchAllowedSessions();
+    // Modal close buttons
+    closeButtons.forEach(button => {
+        button.addEventListener('click', hideModals);
     });
 
-    // Dodanie nasłuchiwania dla dynamicznych przycisków "Delete"
-    allowedSessionsList.addEventListener('click', (e) => {
-        if (e.target.classList.contains('delete-session')) {
-            const sessionCodeToDelete = e.target.dataset.code;
-            if (confirm(`Are you sure you want to remove session ${sessionCodeToDelete}?`)) {
-                deleteAllowedSession(sessionCodeToDelete);
-            }
+    window.addEventListener('click', (event) => {
+        if (event.target.classList.contains('modal')) {
+            hideModals();
         }
     });
-
-    // Uruchomienie początkowego pobierania listy sesji
-    fetchAllowedSessions();
 
     // Call checkUserPermissions on load
     checkUserPermissions();
