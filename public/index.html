@@ -30,120 +30,119 @@
                 <div class="coordinates-info"></div>
                 <div class="zoom-info"></div>
                 <div class="map-container">
-                    <img id="minecraft-map" src="Map.jpg" alt="Minecraft World Map">
+                    <img id="minecraft-map" src="map.jpg" alt="Minecraft server map">
                 </div>
             </div>
 
-            <div class="map-controls-bottom">
-                <div class="point-add-container">
-                    <h3>Add/Edit Point</h3>
-                    <form id="add-point-form" class="add-point-form-inline">
-                        <div class="form-group">
-                            <label for="resource-select">Resource Type:</label>
-                            <select id="resource-select" name="resourceType">
-                                <option value="custom">Custom Point</option>
-                                <optgroup label="Ores">
-                                    <option value="diamond_ore">Diamond Ore</option>
-                                    <option value="iron_ore">Iron Ore</option>
-                                    <option value="gold_ore">Gold Ore</option>
-                                    <option value="coal_ore">Coal Ore</option>
-                                    <option value="copper_ore">Copper Ore</option>
-                                    <option value="redstone_ore">Redstone Ore</option>
-                                    <option value="lapis_ore">Lapis Lazuli Ore</option>
-                                    <option value="emerald_ore">Emerald Ore</option>
-                                    <option value="netherite">Ancient Debris</option>
-                                </optgroup>
-                                <optgroup label="Civilization Style">
-                                    <option value="village">Village</option>
-                                    <option value="city">City</option>
-                                    <option value="town">Town</option>
-                                    <option value="capital_city">Capital City</option>
-                                    <option value="fortress">Fortress</option>
-                                    <option value="castle">Castle</option>
-                                    <option value="harbor">Harbor</option>
-                                    <option value="market">Marketplace</option>
-                                    <option value="academy">Academy</option>
-                                    <option value="monument">Monument</option>
-                                </optgroup>
-                                <optgroup label="Biomes">
-                                    <option value="wastelands">Wastelands</option>
-                                    <option value="sandlands">Sandlands</option>
-                                    <option value="savannah_plateau">Savannah Plateau</option>
-                                    <option value="alpine">Alpine</option>
-                                    <option value="snowy_forest_tundra">Snowy Forest/Tundra</option>
-                                    <option value="sea_ice">Sea Ice</option>
-                                    <option value="water">Water</option>
-                                    <option value="woodlands_plains">Woodlands/Plains</option>
-                                    <option value="jungle_tropical">Jungle/Tropical</option>
-                                    <option value="giant_forest">Giant Forest</option>
-                                    <option value="taiga_highlands">Taiga Highlands</option>
-                                    <option value="cherry_forest_mtn">Cherry Forest Mountain</option>
-                                </optgroup>
-                                <optgroup label="Other">
-                                    <option value="spawn">Spawn Point</option>
-                                    <option value="base">Base</option>
-                                    <option value="farm">Farm</option>
-                                    <option value="portal">Nether Portal</option>
-                                    <option value="treasure">Treasure</option>
-                                </optgroup>
-                            </select>
-                        </div>
-                        <div class="form-group" id="custom-name-group">
-                            <label for="name-input">Name:</label>
-                            <input type="text" id="name-input" placeholder="Point name">
-                        </div>
-                        <div class="form-group">
-                            <label for="description-input">Description:</label>
-                            <input type="text" id="description-input" placeholder="Optional description">
-                        </div>
-                        <div class="form-group">
-                            <label for="x-input">X:</label>
-                            <input type="number" id="x-input" placeholder="X coord" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="z-input">Z:</label>
-                            <input type="number" id="z-input" placeholder="Z coord" required>
-                        </div>
-                        <button class="button" type="submit" id="add-point-button">Add Point</button>
-                    </form>
-                </div>
-
-                <div class="session-info">
-                    <p id="session-code-text"></p>
-                    <div class="panel-buttons">
-                        <button class="button" id="admin-login-btn">Admin Login</button>
-                        <button class="button" id="admin-panel-button" style="display:none;">Admin Panel</button>
-                        <button class="button" id="owner-panel-button" style="display:none;">Owner Panel</button>
+            <div class="your-points-section">
+                <h2 class="section-title">Your Points</h2>
+                <div class="add-point-form-inline">
+                    <div class="form-group">
+                        <label for="resource-select">Resource Type</label>
+                        <select id="resource-select">
+                            <option value="custom">Custom Name</option>
+                            <optgroup label="Ores">
+                                <option value="diamond_ore">Diamond Ore</option>
+                                <option value="iron_ore">Iron Ore</option>
+                                <option value="gold_ore">Gold Ore</option>
+                                <option value="coal_ore">Coal Ore</option>
+                                <option value="copper_ore">Copper Ore</option>
+                                <option value="redstone_ore">Redstone Ore</option>
+                                <option value="lapis_ore">Lapis Lazuli Ore</option>
+                                <option value="emerald_ore">Emerald Ore</option>
+                                <option value="netherite">Ancient Debris</option>
+                            </optgroup>
+                            <optgroup label="Structures">
+                                <option value="village">Village</option>
+                                <option value="stronghold">Stronghold</option>
+                                <option value="nether_fortress">Nether Fortress</option>
+                                <option value="end_city">End City</option>
+                                <option value="ocean_monument">Ocean Monument</option>
+                                <option value="woodland_mansion">Woodland Mansion</option>
+                                <option value="desert_temple">Desert Temple</option>
+                                <option value="jungle_temple">Jungle Temple</option>
+                                <option value="igloo">Igloo</option>
+                                <option value="shipwreck">Shipwreck</option>
+                            </optgroup>
+                            <optgroup label="Biomes">
+                                <option value="mushroom_biome">Mushroom Island</option>
+                                <option value="mesa">Badlands</option>
+                                <option value="ice_spikes">Ice Spikes</option>
+                                <option value="flower_forest">Flower Forest</option>
+                            </optgroup>
+                            <optgroup label="Other">
+                                <option value="spawn">Spawn Point</option>
+                                <option value="base">Base</option>
+                                <option value="farm">Farm</option>
+                                <option value="portal">Nether Portal</option>
+                                <option value="treasure">Treasure</option>
+                            </optgroup>
+                        </select>
                     </div>
+                    <div class="form-group custom-name-group" id="custom-name-group">
+                        <label for="name-input">Point Name</label>
+                        <input type="text" id="name-input" placeholder="e.g., Diamond Vein">
+                    </div>
+                    <div class="form-group">
+                        <label for="description-input">Description (optional)</label>
+                        <input type="text" id="description-input" placeholder="e.g., Y: 12">
+                    </div>
+                    <div class="form-group">
+                        <label for="x-input">X Coords</label>
+                        <input type="number" id="x-input" placeholder="X" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="z-input">Z Coords</label>
+                        <input type="number" id="z-input" placeholder="Z" required>
+                    </div>
+                    <button class="button" id="add-point-button">Add Point</button>
                 </div>
+                <div class="points-list" id="your-points-list"></div>
+            </div>
+
+            <div class="shared-points-section">
+                <h2 class="section-title">Shared Points</h2>
+                <div class="points-list" id="shared-points-list"></div>
+            </div>
+            
+            <div class="admin-access-section">
+                <button class="button admin-btn" id="admin-login-btn">Admin Panel</button>
+                <button class="button owner-btn" id="owner-login-btn">Owner Panel</button>
             </div>
         </div>
+    </div>
+    
+    <div class="footer">
+        <p id="session-code-text"></p>
+        <p>&copy; 2024 Minecraft Map</p>
     </div>
 
     <div id="point-details-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
-            <h2 class="modal-title" id="details-name"></h2>
-            <p id="details-coords"></p>
-            <p id="details-desc"></p>
+            <h2 class="modal-title" id="point-details-title"></h2>
+            <div class="modal-body">
+                <p><strong>Coordinates:</strong> <span id="point-coords"></span></p>
+                <p><strong>Description:</strong> <span id="point-description"></span></p>
+                <p><strong>Type:</strong> <span id="point-type"></span></p>
+            </div>
             <div class="modal-buttons">
-                <button class="button" id="share-point">Share Point</button>
-                <button class="button" id="edit-point">Edit Point</button>
-                <button class="button" id="delete-point">Delete Point</button>
+                <button class="button" id="share-point">Share for Approval</button>
+                <button class="button edit-button" id="edit-point">Edit Point</button>
+                <button class="button delete-button" id="delete-point">Delete Point</button>
             </div>
         </div>
     </div>
 
     <div id="admin-login-modal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content admin-login-content">
             <span class="close-button">&times;</span>
             <h2 class="modal-title">Admin Login</h2>
-            <form id="admin-login-form">
-                <input type="password" id="admin-login-input" placeholder="Enter session code" required>
-                <div class="modal-buttons">
-                    <button class="button" type="submit">Login</button>
-                </div>
-            </form>
+            <p>Enter your admin session code:</p>
+            <input type="password" id="admin-login-input">
+            <div class="modal-buttons">
+                <button class="button" id="login-as-admin">Login</button>
+            </div>
         </div>
     </div>
 
@@ -151,37 +150,41 @@
         <div class="modal-content admin-panel">
             <span class="close-button">&times;</span>
             <h2 class="modal-title">Admin Panel</h2>
+            <p>Welcome, Admin!</p>
             <div class="modal-section">
-                <h3>Pending Points</h3>
-                <p>Approve or reject points submitted by users:</p>
-                <ul id="pending-points-list"></ul>
+                <h3>Pending Points for Approval</h3>
                 <button class="button" id="refresh-pending">Refresh List</button>
-            </div>
-            <div class="modal-section">
-                <h3>Promote User to Admin</h3>
-                <p>Grant admin permissions to a user by entering their session code:</p>
-                <input type="text" id="promote-session-code" placeholder="Enter session code">
-                <div class="modal-buttons">
-                    <button class="button" id="promote-user">Promote</button>
-                </div>
+                <ul id="pending-points-list"></ul>
             </div>
         </div>
     </div>
-
+    
     <div id="owner-panel-modal" class="modal">
         <div class="modal-content owner-panel">
             <span class="close-button">&times;</span>
             <h2 class="modal-title">Owner Panel</h2>
             
             <div class="modal-section">
+                <h3>Add a new Owner Session</h3>
+                <p>Enter a session code to grant it Owner permissions.</p>
+                <input type="text" id="new-owner-code" placeholder="Enter session code to add as owner">
+                <button class="button" id="add-owner-btn">Add Owner</button>
+            </div>
+
+            <div class="modal-section">
+                <h3>Promote a Session to Admin</h3>
+                <p>Enter a session code to grant it administrative permissions. Admins can approve and reject points.</p>
+                <input type="text" id="promote-session-code" placeholder="Enter session code to promote">
+                <button class="button" id="promote-user">Promote to Admin</button>
+            </div>
+
+            <div class="modal-section">
                 <h3>Allowed Sessions Management</h3>
                 <p>Only users with session codes from this list can login as admins:</p>
-                
                 <div class="add-session-form">
                     <input type="text" id="new-session-code" placeholder="Enter session code to add">
                     <button class="button" id="add-session-btn">Add Session</button>
                 </div>
-                
                 <div class="allowed-sessions-list">
                     <h4>Allowed Sessions:</h4>
                     <ul id="allowed-sessions-list"></ul>
@@ -195,4 +198,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
