@@ -7,183 +7,306 @@
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="main-container">
-        
-        <div class="map-area">
-            <div class="map-wrapper">
-                <div class="map-container">
-                    <img id="minecraft-map" src="https://minecraft-map-xu3e.onrender.com/map.jpg" alt="Mapa serwera Minecraft">
-                </div>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Connection Status -->
+            <div class="connection-status">
+                <div class="status-icon live"></div>
+                <span class="status-text">Live</span>
+                <span class="timestamp" id="current-time">UTC 12:45</span>
             </div>
 
-            <div class="map-overlay-controls">
-                <div class="map-info">
-                    <div class="coordinates-info"></div>
-                    <div class="zoom-info"></div>
+            <!-- Navigation Menu -->
+            <nav class="sidebar-nav">
+                <div class="nav-item" data-section="login">
+                    <div class="nav-icon">🔒</div>
+                    <span>Login Panels</span>
                 </div>
-                <div class="filter-buttons">
-                    <button class="button active" id="show-your-points">Twoje punkty</button>
-                    <button class="button active" id="show-shared-points">Udostępnione punkty</button>
+                <div class="nav-item active" data-section="map-view">
+                    <div class="nav-icon">🗺️</div>
+                    <span>Map View</span>
                 </div>
-                <div class="view-controls">
-                    <button class="button zoom-button" id="zoom-in">+</button>
-                    <button class="button zoom-button" id="zoom-out">-</button>
-                    <button class="button" id="reset-view">Resetuj widok</button>
+                <div class="nav-item" data-section="add-point">
+                    <div class="nav-icon">📍</div>
+                    <span>Add Point</span>
                 </div>
+                <div class="nav-item" data-section="point-filters">
+                    <div class="nav-icon">🔍</div>
+                    <span>Point Filters</span>
+                </div>
+                <div class="nav-item" data-section="your-points">
+                    <div class="nav-icon">⭐</div>
+                    <span>Your Points</span>
+                </div>
+                <div class="nav-item" data-section="shared-points">
+                    <div class="nav-icon">🌐</div>
+                    <span>Shared Points</span>
+                </div>
+                <div class="nav-item admin-panel" id="admin-nav" style="display: none;" data-section="admin">
+                    <div class="nav-icon">⚙️</div>
+                    <span>Admin Panel</span>
+                </div>
+                <div class="nav-item owner-panel" id="owner-nav" style="display: none;" data-section="owner">
+                    <div class="nav-icon">👑</div>
+                    <span>Owner Panel</span>
+                </div>
+            </nav>
+
+            <!-- Session Info -->
+            <div class="session-info">
+                <div class="session-code" id="session-code-display">Session: Loading...</div>
             </div>
         </div>
 
-        <div class="sidebar-panel">
-            <h1 class="panel-title">Interactive Map</h1>
-            <p class="panel-subtitle">Witaj!</p>
-            <p id="session-code-text" class="session-info">Session: Ładowanie...</p>
-            
-            <hr class="panel-divider">
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Login Panels Section -->
+            <div class="content-section" id="login-section" style="display: none;">
+                <div class="section-header">
+                    <h2>🔒 Login Panels</h2>
+                </div>
+                <div class="login-panels">
+                    <div class="login-card" id="admin-login-card" style="display: none;">
+                        <h3>Admin Login</h3>
+                        <p>Enter admin session code to access admin panel</p>
+                        <div class="login-form">
+                            <input type="text" id="admin-login-input" placeholder="Admin session code" class="form-input">
+                            <button class="btn btn-primary" id="login-as-admin">Login as Admin</button>
+                        </div>
+                    </div>
+                    <div class="login-card" id="owner-login-card" style="display: none;">
+                        <h3>Owner Panel</h3>
+                        <p>Access owner panel with your permissions</p>
+                        <button class="btn btn-secondary" id="owner-login-btn">Open Owner Panel</button>
+                    </div>
+                </div>
+            </div>
 
-            <div class="panel-section">
-                <h3 class="section-title">Dodaj punkt</h3>
-                <form id="add-point-form">
+            <!-- Map View Section -->
+            <div class="content-section active" id="map-section">
+                <!-- Filters Bar -->
+                <div class="filters-bar">
+                    <div class="filters-icon">🔻</div>
+                    <span class="filters-title">FILTERS</span>
+                    <div class="filter-controls">
+                        <div class="filter-toggle">
+                            <span class="filter-label">Your Points</span>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="show-your-points" checked>
+                                <label for="show-your-points" class="toggle-slider"></label>
+                            </div>
+                        </div>
+                        <div class="filter-toggle">
+                            <span class="filter-label">Shared Points</span>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="show-shared-points" checked>
+                                <label for="show-shared-points" class="toggle-slider"></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Map Container -->
+                <div class="map-wrapper">
+                    <div class="map-container" id="map-container">
+                        <div class="map-grid" id="map-grid"></div>
+                        <img id="minecraft-map" src="https://minecraft-map-xu3e.onrender.com/map.jpg" alt="Mapa serwera Minecraft">
+                        <div class="origin-marker"></div>
+                    </div>
+                    
+                    <!-- Map Controls -->
+                    <div class="map-controls">
+                        <button class="control-btn" id="zoom-in">+</button>
+                        <button class="control-btn" id="zoom-out">-</button>
+                        <button class="control-btn reset" id="reset-view">Reset</button>
+                    </div>
+
+                    <!-- Map Info -->
+                    <div class="map-info">
+                        <div class="coordinates-info" id="coordinates-info">X: 0, Z: 0</div>
+                        <div class="zoom-info" id="zoom-info">Zoom: 100%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Point Section -->
+            <div class="content-section" id="add-point-section" style="display: none;">
+                <div class="section-header">
+                    <h2>📍 Add Point</h2>
+                </div>
+                <form id="add-point-form" class="point-form">
                     <div class="form-group">
-                        <label for="resource-select">Typ punktu:</label>
-                        <select id="resource-select">
-                            <option value="diamond_ore">Ruda Diamentu</option>
-                            <option value="iron_ore">Ruda Żelaza</option>
-                            <option value="gold_ore">Ruda Złota</option>
-                            <option value="coal_ore">Ruda Węgla</option>
-                            <option value="copper_ore">Ruda Miedzi</option>
-                            <option value="redstone_ore">Ruda Redstone</option>
-                            <option value="lapis_ore">Ruda Lapis Lazuli</option>
-                            <option value="emerald_ore">Ruda Szmaragdu</option>
-                            <option value="netherite">Starożytny Gruz</option>
-                            <option value="village">Wioska</option>
-                            <option value="stronghold">Twierdza</option>
-                            <option value="nether_fortress">Twierdza Netheru</option>
-                            <option value="end_city">Miasto Kresu</option>
-                            <option value="ocean_monument">Monument Oceaniczny</option>
-                            <option value="woodland_mansion">Leśna Rezydencja</option>
-                            <option value="desert_temple">Pustynna Świątynia</option>
-                            <option value="jungle_temple">Dżunglowa Świątynia</option>
+                        <label for="resource-select">Point Type:</label>
+                        <select id="resource-select" class="form-input">
+                            <option value="diamond_ore">Diamond Ore</option>
+                            <option value="iron_ore">Iron Ore</option>
+                            <option value="gold_ore">Gold Ore</option>
+                            <option value="coal_ore">Coal Ore</option>
+                            <option value="copper_ore">Copper Ore</option>
+                            <option value="redstone_ore">Redstone Ore</option>
+                            <option value="lapis_ore">Lapis Lazuli Ore</option>
+                            <option value="emerald_ore">Emerald Ore</option>
+                            <option value="netherite">Ancient Debris</option>
+                            <option value="village">Village</option>
+                            <option value="stronghold">Stronghold</option>
+                            <option value="nether_fortress">Nether Fortress</option>
+                            <option value="end_city">End City</option>
+                            <option value="ocean_monument">Ocean Monument</option>
+                            <option value="woodland_mansion">Woodland Mansion</option>
+                            <option value="desert_temple">Desert Temple</option>
+                            <option value="jungle_temple">Jungle Temple</option>
                             <option value="igloo">Igloo</option>
-                            <option value="shipwreck">Wrak Statku</option>
-                            <option value="mushroom_biome">Grzybowa Wyspa</option>
-                            <option value="mesa">Góry Skalne (Badlands)</option>
-                            <option value="ice_spikes">Lodowe Kolce</option>
-                            <option value="flower_forest">Kwiatowy Las</option>
-                            <option value="spawn">Punkt Spawnu</option>
-                            <option value="base">Baza</option>
-                            <option value="farm">Farma</option>
-                            <option value="portal">Portal Netheru</option>
-                            <option value="treasure">Skarb</option>
-                            <option value="custom">Własne...</option>
+                            <option value="shipwreck">Shipwreck</option>
+                            <option value="mushroom_biome">Mushroom Island</option>
+                            <option value="mesa">Mesa/Badlands</option>
+                            <option value="ice_spikes">Ice Spikes</option>
+                            <option value="flower_forest">Flower Forest</option>
+                            <option value="spawn">Spawn Point</option>
+                            <option value="base">Base</option>
+                            <option value="farm">Farm</option>
+                            <option value="portal">Nether Portal</option>
+                            <option value="treasure">Treasure</option>
+                            <option value="custom">Custom...</option>
                         </select>
                     </div>
                     <div class="form-group" id="custom-name-group" style="display: none;">
-                        <label for="name-input">Nazwa punktu:</label>
-                        <input type="text" id="name-input" placeholder="Własna nazwa..." required>
+                        <label for="name-input">Custom Name:</label>
+                        <input type="text" id="name-input" placeholder="Enter custom name..." class="form-input">
                     </div>
                     <div class="form-group">
-                        <label for="description-input">Opis (opcjonalnie):</label>
-                        <textarea id="description-input" placeholder="Dodatkowy opis..."></textarea>
+                        <label for="description-input">Description (Optional):</label>
+                        <textarea id="description-input" placeholder="Additional description..." class="form-input"></textarea>
                     </div>
-                    <div class="form-group coords-group">
-                        <label for="x-input">Współrzędne:</label>
-                        <input type="number" id="x-input" placeholder="X" required>
-                        <input type="number" id="z-input" placeholder="Z" required>
+                    <div class="coords-group">
+                        <div class="form-group">
+                            <label for="x-input">X Coordinate:</label>
+                            <input type="number" id="x-input" placeholder="X" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="z-input">Z Coordinate:</label>
+                            <input type="number" id="z-input" placeholder="Z" class="form-input" required>
+                        </div>
                     </div>
-                    <button type="submit" class="button button-primary" id="add-point-button">Dodaj punkt</button>
+                    <button type="submit" class="btn btn-primary" id="add-point-button">Add Point</button>
                 </form>
             </div>
-            
-            <hr class="panel-divider">
 
-            <div class="panel-section">
-                <h3 class="section-title">Twoje punkty</h3>
-                <ul id="your-points-list" class="point-list"></ul>
+            <!-- Point Filters Section -->
+            <div class="content-section" id="filters-section" style="display: none;">
+                <div class="section-header">
+                    <h2>🔍 Point Filters</h2>
+                </div>
+                <div class="filter-options">
+                    <div class="filter-category">
+                        <h3>Point Types</h3>
+                        <div class="filter-checkboxes" id="point-type-filters">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="filter-category">
+                        <h3>Visibility</h3>
+                        <div class="filter-checkboxes">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="filter-private" checked>
+                                <span class="checkmark"></span>
+                                Your Points
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="filter-public" checked>
+                                <span class="checkmark"></span>
+                                Shared Points
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <hr class="panel-divider">
 
-            <div class="panel-section">
-                <h3 class="section-title">Udostępnione punkty</h3>
-                <ul id="shared-points-list" class="point-list"></ul>
+            <!-- Your Points Section -->
+            <div class="content-section" id="your-points-section" style="display: none;">
+                <div class="section-header">
+                    <h2>⭐ Your Points</h2>
+                </div>
+                <div class="points-list" id="your-points-list">
+                    <!-- Will be populated by JavaScript -->
+                </div>
             </div>
 
-            <div class="admin-login-buttons">
-                <button class="button button-admin" id="admin-login-btn" style="display: none;">Panel Admina</button>
-                <button class="button button-owner" id="owner-login-btn" style="display: none;">Panel Właściciela</button>
+            <!-- Shared Points Section -->
+            <div class="content-section" id="shared-points-section" style="display: none;">
+                <div class="section-header">
+                    <h2>🌐 Shared Points</h2>
+                </div>
+                <div class="points-list" id="shared-points-list">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Admin Panel Section -->
+            <div class="content-section" id="admin-section" style="display: none;">
+                <div class="section-header">
+                    <h2>⚙️ Admin Panel</h2>
+                </div>
+                <div class="admin-content">
+                    <h3>Pending Points</h3>
+                    <div class="points-list" id="pending-points-list">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                    <button class="btn btn-secondary" id="refresh-pending">Refresh List</button>
+                </div>
+            </div>
+
+            <!-- Owner Panel Section -->
+            <div class="content-section" id="owner-section" style="display: none;">
+                <div class="section-header">
+                    <h2>👑 Owner Panel</h2>
+                </div>
+                <div class="owner-content">
+                    <div class="owner-group">
+                        <h3>Session Management</h3>
+                        <div class="add-session-form">
+                            <input type="text" id="new-session-code" placeholder="Enter session code" class="form-input">
+                            <button class="btn btn-primary" id="add-session-btn">Add Session</button>
+                        </div>
+                        <div class="points-list" id="allowed-sessions-list">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="owner-group">
+                        <h3>Promote User to Admin</h3>
+                        <div class="promote-form">
+                            <input type="text" id="promote-session-code" placeholder="Session code to promote" class="form-input">
+                            <button class="btn btn-primary" id="promote-user">Promote User</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
+
+    <!-- Point Details Modal -->
     <div id="point-details-modal" class="modal">
         <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2 id="point-details-title" class="modal-title"></h2>
+            <div class="modal-header">
+                <h3 id="point-details-title">Point Details</h3>
+                <button class="modal-close">&times;</button>
+            </div>
             <div class="modal-body">
-                <p><strong>Koordynaty:</strong> <span id="point-coords"></span></p>
-                <p><strong>Typ:</strong> <span id="point-type"></span></p>
-                <p><strong>Opis:</strong> <span id="point-description"></span></p>
+                <p><strong>Coordinates:</strong> <span id="point-coords"></span></p>
+                <p><strong>Type:</strong> <span id="point-type"></span></p>
+                <p><strong>Description:</strong> <span id="point-description"></span></p>
             </div>
-            <div class="modal-buttons">
-                <button class="button" id="share-point" style="display:none;">Udostępnij Punkt</button>
-                <button class="button" id="edit-point" style="display:none;">Edytuj</button>
-                <button class="button button-delete" id="delete-point" style="display:none;">Usuń</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="admin-login-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2 class="modal-title">Logowanie Admina</h2>
-            <p>Wprowadź kod sesji admina, aby uzyskać dostęp:</p>
-            <input type="text" id="admin-login-input" placeholder="Kod sesji admina">
-            <div class="modal-buttons">
-                <button class="button" id="login-as-admin">Zaloguj</button>
-            </div>
-        </div>
-    </div>
-    
-    <div id="admin-panel-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2 class="modal-title">Panel Admina</h2>
-            <div class="modal-section">
-                <h3>Oczekujące punkty</h3>
-                <ul id="pending-points-list" class="point-list"></ul>
-            </div>
-            <div class="modal-buttons">
-                <button class="button" id="refresh-pending">Odśwież listę</button>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="share-point" style="display:none;">Share Point</button>
+                <button class="btn btn-secondary" id="edit-point" style="display:none;">Edit</button>
+                <button class="btn btn-danger" id="delete-point" style="display:none;">Delete</button>
             </div>
         </div>
     </div>
 
-    <div id="owner-panel-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2 class="modal-title">Panel Właściciela</h2>
-            <div class="modal-section">
-                <h3>Zarządzanie sesjami</h3>
-                <p>Dodaj lub usuń kody sesji, które mają uprawnienia admina.</p>
-                <div class="add-session-form">
-                    <input type="text" id="new-session-code" placeholder="Wprowadź kod sesji do dodania">
-                    <button class="button" id="add-session-btn">Dodaj sesję</button>
-                </div>
-                <ul id="allowed-sessions-list" class="point-list"></ul>
-            </div>
-            <div class="modal-section">
-                <h3>Nadaj uprawnienia admina</h3>
-                <input type="text" id="promote-session-code" placeholder="Wprowadź kod sesji do awansowania">
-                <div class="modal-buttons">
-                    <button class="button" id="promote-user">Nadaj uprawnienia</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
     <script src="script.js"></script>
 </body>
