@@ -3,112 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft World Map</title>
+    <title>Interaktywna Mapa Minecraft</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
     <div class="main-container">
-        <div class="map-wrapper">
-            <div class="map-container">
-                <img id="minecraft-map" src="map.jpg" alt="Minecraft World Map">
-            </div>
-            <div class="coordinates-info">X: 0, Z: 0</div>
-            <div class="zoom-info">Zoom: 100%</div>
-        </div>
-
-        <div class="controls-panel">
-            <div class="panel-section">
-                <h3>Mapa</h3>
-                <div class="control-group">
-                    <button id="zoom-in">Zoom In</button>
-                    <button id="zoom-out">Zoom Out</button>
-                    <button id="reset-view">Reset View</button>
+        
+        <div class="map-area">
+            <div class="map-wrapper">
+                <div class="map-container">
+                    <img id="minecraft-map" src="https://minecraft-map-xu3e.onrender.com/map.jpg" alt="Mapa serwera Minecraft">
                 </div>
             </div>
 
-            <div class="panel-section point-visibility-toggles">
-                <button id="show-your-points" class="active">Twoje Punkty</button>
-                <button id="show-shared-points" class="active">Udostępnione Punkty</button>
+            <div class="map-overlay-controls">
+                <div class="map-info">
+                    <div class="coordinates-info"></div>
+                    <div class="zoom-info"></div>
+                </div>
+                <div class="filter-buttons">
+                    <button class="button active" id="show-your-points">Twoje punkty</button>
+                    <button class="button active" id="show-shared-points">Udostępnione punkty</button>
+                </div>
+                <div class="view-controls">
+                    <button class="button zoom-button" id="zoom-in">+</button>
+                    <button class="button zoom-button" id="zoom-out">-</button>
+                    <button class="button" id="reset-view">Resetuj widok</button>
+                </div>
             </div>
+        </div>
 
-            <div class="panel-section add-point-section">
-                <h3>Dodaj Punkt</h3>
+        <div class="sidebar-panel">
+            <h1 class="panel-title">Interactive Map</h1>
+            <p class="panel-subtitle">Witaj!</p>
+            <p id="session-code-text" class="session-info">Session: Ładowanie...</p>
+            
+            <hr class="panel-divider">
+
+            <div class="panel-section">
+                <h3 class="section-title">Dodaj punkt</h3>
                 <form id="add-point-form">
                     <div class="form-group">
-                        <label for="resource-select">Typ:</label>
-                        <select id="resource-select" name="resource-type">
-                            <optgroup label="Rudy">
-                                <option value="diamond_ore">Ruda Diamentu</option>
-                                <option value="iron_ore">Ruda Żelaza</option>
-                                <option value="gold_ore">Ruda Złota</option>
-                                <option value="coal_ore">Ruda Węgla</option>
-                                <option value="copper_ore">Ruda Miedzi</option>
-                                <option value="redstone_ore">Ruda Redstone</option>
-                                <option value="lapis_ore">Ruda Lapis Lazuli</option>
-                                <option value="emerald_ore">Ruda Szmaragdu</option>
-                                <option value="netherite">Starożytny Gruz</option>
-                            </optgroup>
-                            <optgroup label="Struktury">
-                                <option value="village">Wioska</option>
-                                <option value="stronghold">Twierdza</option>
-                                <option value="nether_fortress">Twierdza Netheru</option>
-                                <option value="end_city">Miasto Kresu</option>
-                                <option value="ocean_monument">Monument Oceaniczny</option>
-                                <option value="woodland_mansion">Leśna Rezydencja</option>
-                                <option value="desert_temple">Pustynna Świątynia</option>
-                                <option value="jungle_temple">Dżunglowa Świątynia</option>
-                                <option value="igloo">Igloo</option>
-                                <option value="shipwreck">Wrak Statku</option>
-                            </optgroup>
-                            <optgroup label="Biomy">
-                                <option value="mushroom_biome">Grzybowa Wyspa</option>
-                                <option value="mesa">Góry Skalne (Badlands)</option>
-                                <option value="ice_spikes">Lodowe Kolce</option>
-                                <option value="flower_forest">Kwiatowy Las</option>
-                            </optgroup>
-                            <optgroup label="Inne">
-                                <option value="spawn">Punkt Spawnu</option>
-                                <option value="base">Baza</option>
-                                <option value="farm">Farma</option>
-                                <option value="portal">Portal Netheru</option>
-                                <option value="treasure">Skarb</option>
-                            </optgroup>
-                            <option value="custom">Własne</option>
+                        <label for="resource-select">Typ punktu:</label>
+                        <select id="resource-select">
+                            <option value="diamond_ore">Ruda Diamentu</option>
+                            <option value="iron_ore">Ruda Żelaza</option>
+                            <option value="gold_ore">Ruda Złota</option>
+                            <option value="coal_ore">Ruda Węgla</option>
+                            <option value="copper_ore">Ruda Miedzi</option>
+                            <option value="redstone_ore">Ruda Redstone</option>
+                            <option value="lapis_ore">Ruda Lapis Lazuli</option>
+                            <option value="emerald_ore">Ruda Szmaragdu</option>
+                            <option value="netherite">Starożytny Gruz</option>
+                            <option value="village">Wioska</option>
+                            <option value="stronghold">Twierdza</option>
+                            <option value="nether_fortress">Twierdza Netheru</option>
+                            <option value="end_city">Miasto Kresu</option>
+                            <option value="ocean_monument">Monument Oceaniczny</option>
+                            <option value="woodland_mansion">Leśna Rezydencja</option>
+                            <option value="desert_temple">Pustynna Świątynia</option>
+                            <option value="jungle_temple">Dżunglowa Świątynia</option>
+                            <option value="igloo">Igloo</option>
+                            <option value="shipwreck">Wrak Statku</option>
+                            <option value="mushroom_biome">Grzybowa Wyspa</option>
+                            <option value="mesa">Góry Skalne (Badlands)</option>
+                            <option value="ice_spikes">Lodowe Kolce</option>
+                            <option value="flower_forest">Kwiatowy Las</option>
+                            <option value="spawn">Punkt Spawnu</option>
+                            <option value="base">Baza</option>
+                            <option value="farm">Farma</option>
+                            <option value="portal">Portal Netheru</option>
+                            <option value="treasure">Skarb</option>
+                            <option value="custom">Własne...</option>
                         </select>
                     </div>
-                    <div id="custom-name-group" class="form-group" style="display:none;">
-                        <label for="name-input">Nazwa:</label>
-                        <input type="text" id="name-input" name="name" required>
+                    <div class="form-group" id="custom-name-group" style="display: none;">
+                        <label for="name-input">Nazwa punktu:</label>
+                        <input type="text" id="name-input" placeholder="Własna nazwa..." required>
                     </div>
                     <div class="form-group">
                         <label for="description-input">Opis (opcjonalnie):</label>
-                        <input type="text" id="description-input" name="description">
+                        <textarea id="description-input" placeholder="Dodatkowy opis..."></textarea>
                     </div>
                     <div class="form-group coords-group">
-                        <label for="x-input">X:</label>
-                        <input type="number" id="x-input" name="x" required>
-                        <label for="z-input">Z:</label>
-                        <input type="number" id="z-input" name="z" required>
+                        <label for="x-input">Współrzędne:</label>
+                        <input type="number" id="x-input" placeholder="X" required>
+                        <input type="number" id="z-input" placeholder="Z" required>
                     </div>
-                    <button type="submit" id="add-point-button">Dodaj Punkt</button>
+                    <button type="submit" class="button button-primary" id="add-point-button">Dodaj punkt</button>
                 </form>
             </div>
+            
+            <hr class="panel-divider">
 
-            <div class="panel-section point-list-section your-points-list-container">
-                <h3>Twoje Punkty</h3>
-                <ul id="your-points-list"></ul>
+            <div class="panel-section">
+                <h3 class="section-title">Twoje punkty</h3>
+                <ul id="your-points-list" class="point-list"></ul>
             </div>
             
-            <div class="panel-section point-list-section shared-points-list-container">
-                <h3>Udostępnione Punkty</h3>
-                <ul id="shared-points-list"></ul>
+            <hr class="panel-divider">
+
+            <div class="panel-section">
+                <h3 class="section-title">Udostępnione punkty</h3>
+                <ul id="shared-points-list" class="point-list"></ul>
             </div>
-            
-            <div class="panel-section admin-owner-section">
-                <button id="admin-login-btn">Panel Admina</button>
-                <button id="owner-login-btn" style="display:none;">Panel Właściciela</button>
-                <p id="session-code-text">Session Code: ...</p>
+
+            <div class="admin-login-buttons">
+                <button class="button button-admin" id="admin-login-btn" style="display: none;">Panel Admina</button>
+                <button class="button button-owner" id="owner-login-btn" style="display: none;">Panel Właściciela</button>
             </div>
         </div>
     </div>
@@ -116,68 +121,69 @@
     <div id="point-details-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
-            <h2 id="point-details-title">Szczegóły Punktu</h2>
-            <p><strong>Współrzędne:</strong> <span id="point-coords"></span></p>
-            <p><strong>Opis:</strong> <span id="point-description"></span></p>
-            <p><strong>Typ:</strong> <span id="point-type"></span></p>
+            <h2 id="point-details-title" class="modal-title"></h2>
+            <div class="modal-body">
+                <p><strong>Koordynaty:</strong> <span id="point-coords"></span></p>
+                <p><strong>Typ:</strong> <span id="point-type"></span></p>
+                <p><strong>Opis:</strong> <span id="point-description"></span></p>
+            </div>
             <div class="modal-buttons">
-                <button id="share-point">Udostępnij Punkt</button>
-                <button id="edit-point">Edytuj Punkt</button>
-                <button id="delete-point">Usuń Punkt</button>
+                <button class="button" id="share-point" style="display:none;">Udostępnij Punkt</button>
+                <button class="button" id="edit-point" style="display:none;">Edytuj</button>
+                <button class="button button-delete" id="delete-point" style="display:none;">Usuń</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="modal-title">Logowanie Admina</h2>
+            <p>Wprowadź kod sesji admina, aby uzyskać dostęp:</p>
+            <input type="text" id="admin-login-input" placeholder="Kod sesji admina">
+            <div class="modal-buttons">
+                <button class="button" id="login-as-admin">Zaloguj</button>
             </div>
         </div>
     </div>
     
-    <div id="admin-login-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Logowanie Admina</h2>
-            <div class="form-group">
-                <label for="admin-login-input">Kod Sesji:</label>
-                <input type="password" id="admin-login-input" placeholder="Wpisz kod sesji">
-            </div>
-            <button id="login-as-admin">Zaloguj</button>
-        </div>
-    </div>
-
     <div id="admin-panel-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
-            <h2>Panel Admina</h2>
-            <h3>Oczekujące Punkty</h3>
-            <button id="refresh-pending">Odśwież Listę</button>
-            <ul id="pending-points-list"></ul>
+            <h2 class="modal-title">Panel Admina</h2>
+            <div class="modal-section">
+                <h3>Oczekujące punkty</h3>
+                <ul id="pending-points-list" class="point-list"></ul>
+            </div>
+            <div class="modal-buttons">
+                <button class="button" id="refresh-pending">Odśwież listę</button>
+            </div>
         </div>
     </div>
 
     <div id="owner-panel-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
-            <h2>Panel Właściciela</h2>
-            <div class="owner-section">
-                <h3>Promuj Użytkownika na Admina</h3>
-                <div class="form-group">
-                    <label for="promote-session-code">Kod Sesji:</label>
-                    <input type="text" id="promote-session-code" placeholder="Wpisz kod sesji">
+            <h2 class="modal-title">Panel Właściciela</h2>
+            <div class="modal-section">
+                <h3>Zarządzanie sesjami</h3>
+                <p>Dodaj lub usuń kody sesji, które mają uprawnienia admina.</p>
+                <div class="add-session-form">
+                    <input type="text" id="new-session-code" placeholder="Wprowadź kod sesji do dodania">
+                    <button class="button" id="add-session-btn">Dodaj sesję</button>
                 </div>
-                <button id="promote-user">Promuj</button>
+                <ul id="allowed-sessions-list" class="point-list"></ul>
             </div>
-            <div class="owner-section">
-                <h3>Dodaj Nową Dozwoloną Sesję</h3>
-                <div class="form-group">
-                    <label for="new-session-code">Kod Sesji:</label>
-                    <input type="text" id="new-session-code" placeholder="Wpisz nowy kod sesji">
+            <div class="modal-section">
+                <h3>Nadaj uprawnienia admina</h3>
+                <input type="text" id="promote-session-code" placeholder="Wprowadź kod sesji do awansowania">
+                <div class="modal-buttons">
+                    <button class="button" id="promote-user">Nadaj uprawnienia</button>
                 </div>
-                <button id="add-session-btn">Dodaj Sesję</button>
-            </div>
-            <div class="owner-section">
-                <h3>Dozwolone Sesje</h3>
-                <button id="refresh-sessions">Odśwież Listę</button>
-                <ul id="allowed-sessions-list"></ul>
             </div>
         </div>
     </div>
-
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
     <script src="script.js"></script>
 </body>
