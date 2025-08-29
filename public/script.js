@@ -1,16 +1,103 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // === HTML Selectors ===
-    const mapContainer = document.getElementById('map-container');
+    // === Configuration ===
+    const MAP_CONFIG = {
+        width: 8004,
+        height: 4500,
+        minX: -4002,
+        maxX: 4002,
+        minZ: -2250,
+        maxZ: 2250,
+        gridSize: 50,
+        minZoom: 0.1,
+        maxZoom: 3.0,
+        zoomStep: 0.1
+    };
+
+    // Resource types with colors
+    const RESOURCE_TYPES = {
+        diamond_ore: { name: 'Ruda Diamentu', color: '#00FFFF' },
+        iron_ore: { name: 'Ruda Żelaza', color: '#C0C0C0' },
+        gold_ore: { name: 'Ruda Złota', color: '#FFD700' },
+        coal_ore: { name: 'Ruda Węgla', color: '#2C2C2C' },
+        copper_ore: { name: 'Ruda Miedzi', color: '#B87333' },
+        redstone_ore: { name: 'Ruda Redstone', color: '#FF0000' },
+        lapis_ore: { name: 'Ruda Lapis Lazuli', color: '#007FFF' },
+        emerald_ore: { name: 'Ruda Szmaragdu', color: '#00C957' },
+        netherite: { name: 'Starożytny Gruz', color: '#554441' },
+        village: { name: 'Wioska', color: '#FFDAB9' },
+        stronghold: { name: 'Twierdza', color: '#8A2BE2' },
+        nether_fortress: { name: 'Twierdza Netheru', color: '#8B0000' },
+        end_city: { name: 'Miasto Kresu', color: '#9932CC' },
+        ocean_monument: { name: 'Monument Oceaniczny', color: '#4169E1' },
+        woodland_mansion: { name: 'Leśna Rezydencja', color: '#556B2F' },
+        desert_temple: { name: 'Pustynna Świątynia', color: '#F0E68C' },
+        jungle_temple: { name: 'Dżunglowa Świątynia', color: '#228B22' },
+        igloo: { name: 'Igloo', color: '#FFFFFF' },
+        shipwreck: { name: 'Wrak Statku', color: '#CD853F' },
+        mushroom_biome: { name: 'Grzybowa Wyspa', color: '#9400D3' },
+        mesa: { name: 'Góry Skalne (Badlands)', color: '#CD5C5C' },
+        ice_spikes: { name: 'Lodowe Kolce', color: '#ADD8E6' },
+        flower_forest: { name: 'Kwiatowy Las', color: '#FFB6C1' },
+        spawn: { name: 'Punkt Spawnu', color: '#FFA500' },
+        base: { name: 'Baza', color: '#008080' },
+        farm: { name: 'Farma', color: '#7FFF00' },
+        portal: { name: 'Portal Netheru', color: '#9370DB' },
+        treasure: { name: 'Skarb', color: '#FFD700' },
+        custom: { name: 'Własne', color: '#888888' }
+    };
+
+    // Owner session codes
+    const OWNER_SESSION_CODES = [
+        '270ea844-8ab8-4ea1-a34c-18ea2e6a920a',
+        '301263ee-49a9-4575-8c3d-f784bae7b27d'
+    ];
+
+    // === Global State ===
+    let sessionCode = localStorage.getItem('sessionCode') || crypto.randomUUID();
+    let currentZoom = 1.0;
+    let currentPanX = 0;
+    let currentPanY = 0;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let isUserAdmin = false;
+    let isUserOwner = false;
+    let showPrivatePoints = true;
+    let showPublicPoints = true;
+    let allPoints = [];
+
+    // === DOM Elements ===
+    const mapViewport = document.getElementById('map-viewport');
+    const mapCanvas = document.getElementById('map-canvas');
     const mapImage = document.getElementById('minecraft-map');
-    const coordinatesInfo = document.getElementById('coordinates-info');
-    const zoomInfo = document.getElementById('zoom-info');
-    const sessionCodeDisplay = document.getElementById('session-code-display');
+    const mapGrid = document.getElementById('map-grid');
+    const sessionDisplay = document.getElementById('session-display');
+    const coordinatesDisplay = document.getElementById('coordinates-display');
+    const zoomDisplay = document.getElementById('zoom-display');
+    
+    // Buttons and controls
+    const zoomInBtn = document.getElementById('zoom-in');
+    const zoomOutBtn = document.getElementById('zoom-out');
+    const zoomResetBtn = document.getElementById('zoom-reset');
+    const filterPrivateBtn = document.getElementById('filter-private');
+    const filterPublicBtn = document.getElementById('filter-public');
+    const addPointBtn = document.getElementById('add-point-btn');
+    const loginBtn = document.getElementById('login-btn');
     
     // Navigation
     const navItems = document.querySelectorAll('.nav-item');
-    const contentSections = document.querySelectorAll('.content-section');
-    
-    // Form elements
+    const adminNav = document.getElementById('admin-nav');
+    const ownerNav = document.getElementById('owner-nav');
+
+    // Modals
+    const addPointModal = document.getElementById('add-point-modal');
+    const pointDetailsModal = document.getElementById('point-details-modal');
+    const loginModal = document.getElementById('login-modal');
+    const pointsListModal = document.getElementById('points-list-modal');
+    const adminPanelModal = document.getElementById('admin-panel-modal');
+    const ownerPanelModal = document.getElementById('owner-panel-modal');
+
+    // Forms
     const addPointForm = document.getElementById('add-point-form');
     const resourceSelect = document.getElementById('resource-select');
     const customNameGroup = document.getElementById('custom-name-group');
@@ -18,227 +105,155 @@ document.addEventListener('DOMContentLoaded', () => {
     const descriptionInput = document.getElementById('description-input');
     const xInput = document.getElementById('x-input');
     const zInput = document.getElementById('z-input');
-    const addPointBtn = document.getElementById('add-point-button');
-
-    // Lists
-    const yourPointsList = document.getElementById('your-points-list');
-    const sharedPointsList = document.getElementById('shared-points-list');
-    const pendingPointsList = document.getElementById('pending-points-list');
-    const allowedSessionsList = document.getElementById('allowed-sessions-list');
-
-    // Controls
-    const zoomInBtn = document.getElementById('zoom-in');
-    const zoomOutBtn = document.getElementById('zoom-out');
-    const resetViewBtn = document.getElementById('reset-view');
-    const showYourPointsToggle = document.getElementById('show-your-points');
-    const showSharedPointsToggle = document.getElementById('show-shared-points');
-
-    // Modal
-    const pointDetailsModal = document.getElementById('point-details-modal');
-
-    // Admin/Owner elements
-    const adminNav = document.getElementById('admin-nav');
-    const ownerNav = document.getElementById('owner-nav');
-    const adminLoginCard = document.getElementById('admin-login-card');
-    const ownerLoginCard = document.getElementById('owner-login-card');
-
-    // === Map Configuration ===
-    const MAP_WIDTH_PX = 8004;
-    const MAP_HEIGHT_PX = 4500;
-    const WORLD_SIZE_X = 8000;  // -4000 to +4000
-    const WORLD_SIZE_Z = 4500;  // -2250 to +2250
-    const MIN_ZOOM = 0.1;
-    const MAX_ZOOM = 3.0;
-    const ZOOM_STEP = 0.1;
-
-    // === Global Variables ===
-    let scale = 1.0;
-    let isDragging = false;
-    let dragStartX = 0;
-    let dragStartY = 0;
-    let currentMapX = 0;
-    let currentMapY = 0;
-    let isUserAdmin = false;
-    let isUserOwner = false;
-    let sessionCode = localStorage.getItem('sessionCode') || crypto.randomUUID();
-    
-    let isShowingPrivate = true; 
-    let isShowingPublic = true;
-
-    // Resource colors
-    const MINECRAFT_RESOURCES = {
-        diamond_ore: { name: 'Diamond Ore', color: '#00FFFF' },
-        iron_ore: { name: 'Iron Ore', color: '#C0C0C0' },
-        gold_ore: { name: 'Gold Ore', color: '#FFD700' },
-        coal_ore: { name: 'Coal Ore', color: '#2C2C2C' },
-        copper_ore: { name: 'Copper Ore', color: '#B87333' },
-        redstone_ore: { name: 'Redstone Ore', color: '#FF0000' },
-        lapis_ore: { name: 'Lapis Lazuli Ore', color: '#007FFF' },
-        emerald_ore: { name: 'Emerald Ore', color: '#00C957' },
-        netherite: { name: 'Ancient Debris', color: '#554441' },
-        village: { name: 'Village', color: '#FFDAB9' },
-        stronghold: { name: 'Stronghold', color: '#8A2BE2' },
-        nether_fortress: { name: 'Nether Fortress', color: '#8B0000' },
-        end_city: { name: 'End City', color: '#9932CC' },
-        ocean_monument: { name: 'Ocean Monument', color: '#4169E1' },
-        woodland_mansion: { name: 'Woodland Mansion', color: '#556B2F' },
-        desert_temple: { name: 'Desert Temple', color: '#F0E68C' },
-        jungle_temple: { name: 'Jungle Temple', color: '#228B22' },
-        igloo: { name: 'Igloo', color: '#FFFFFF' },
-        shipwreck: { name: 'Shipwreck', color: '#CD853F' },
-        mushroom_biome: { name: 'Mushroom Island', color: '#9400D3' },
-        mesa: { name: 'Mesa/Badlands', color: '#CD5C5C' },
-        ice_spikes: { name: 'Ice Spikes', color: '#ADD8E6' },
-        flower_forest: { name: 'Flower Forest', color: '#FFB6C1' },
-        spawn: { name: 'Spawn Point', color: '#FFA500' },
-        base: { name: 'Base', color: '#008080' },
-        farm: { name: 'Farm', color: '#7FFF00' },
-        portal: { name: 'Nether Portal', color: '#9370DB' },
-        treasure: { name: 'Treasure', color: '#FFD700' },
-        custom: { name: 'Custom', color: '#888888' }
-    };
 
     // === Helper Functions ===
-    function showSuccess(message) {
-        alert('Success: ' + message);
+    function showNotification(message, type = 'success') {
+        // Simple notification system
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#4CAF50' : '#f44336'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            z-index: 10000;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+        
+        // Add CSS animations if not already present
+        if (!document.getElementById('notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'notification-styles';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
     }
 
-    function showError(message) {
-        alert('Error: ' + message);
+    function mcToPixel(x, z) {
+        // Convert Minecraft coordinates to pixel coordinates
+        const pixelX = x - MAP_CONFIG.minX;
+        const pixelZ = z - MAP_CONFIG.minZ;
+        return { x: pixelX, z: pixelZ };
     }
 
-    // Convert Minecraft coordinates to pixel coordinates
-    function mcToPx(x, z) {
-        // Convert minecraft coords to map pixel coords
-        const pxX = ((x + 4000) / WORLD_SIZE_X) * MAP_WIDTH_PX;
-        const pxZ = ((z + 2250) / WORLD_SIZE_Z) * MAP_HEIGHT_PX;
-        return { x: pxX, z: pxZ };
-    }
-
-    // Convert pixel coordinates to Minecraft coordinates
-    function pxToMc(pxX, pxZ) {
-        const x = Math.round((pxX / MAP_WIDTH_PX) * WORLD_SIZE_X - 4000);
-        const z = Math.round((pxZ / MAP_HEIGHT_PX) * WORLD_SIZE_Z - 2250);
+    function pixelToMc(pixelX, pixelZ) {
+        // Convert pixel coordinates to Minecraft coordinates
+        const x = pixelX + MAP_CONFIG.minX;
+        const z = pixelZ + MAP_CONFIG.minZ;
         return { x, z };
     }
 
     function updateMapTransform() {
-        const mapWrapper = document.querySelector('.map-wrapper');
-        const containerRect = mapWrapper.getBoundingClientRect();
-
-        // Calculate maximum translation limits
-        const maxTranslateX = Math.max(0, (MAP_WIDTH_PX * scale - containerRect.width) / 2);
-        const maxTranslateY = Math.max(0, (MAP_HEIGHT_PX * scale - containerRect.height) / 2);
+        const maxPanX = (MAP_CONFIG.width * currentZoom - mapViewport.clientWidth) / 2;
+        const maxPanY = (MAP_CONFIG.height * currentZoom - mapViewport.clientHeight) / 2;
         
-        // Clamp translation values
-        currentMapX = Math.max(-maxTranslateX, Math.min(maxTranslateX, currentMapX));
-        currentMapY = Math.max(-maxTranslateY, Math.min(maxTranslateY, currentMapY));
-
-        mapContainer.style.transform = `translate(${currentMapX}px, ${currentMapY}px) scale(${scale})`;
-        updatePointScaling();
+        currentPanX = Math.max(-maxPanX, Math.min(maxPanX, currentPanX));
+        currentPanY = Math.max(-maxPanY, Math.min(maxPanY, currentPanY));
+        
+        mapCanvas.style.transform = `translate(${currentPanX}px, ${currentPanY}px) scale(${currentZoom})`;
+        updateZoomDisplay();
+        updatePointSizes();
     }
-    
-    function updatePointScaling() {
-        const points = document.querySelectorAll('.point');
+
+    function updateZoomDisplay() {
+        zoomDisplay.textContent = `${Math.round(currentZoom * 100)}%`;
+    }
+
+    function updatePointSizes() {
+        const points = document.querySelectorAll('.point-marker');
         points.forEach(point => {
-            const size = Math.max(6, 10 / scale);
+            const size = 12 / currentZoom;
             point.style.width = `${size}px`;
             point.style.height = `${size}px`;
         });
     }
 
-    function updateCoordinatesInfo(event) {
-        const mapWrapper = document.querySelector('.map-wrapper');
-        const rect = mapWrapper.getBoundingClientRect();
-        
+    function updateCoordinates(event) {
+        const rect = mapViewport.getBoundingClientRect();
         const mouseX = event.clientX - rect.left;
         const mouseY = event.clientY - rect.top;
-
-        // Calculate position relative to map center
+        
+        // Calculate mouse position relative to map center
         const mapCenterX = rect.width / 2;
         const mapCenterY = rect.height / 2;
         
-        // Get pixel position on the map
-        const mapPixelX = (mouseX - mapCenterX - currentMapX) / scale + MAP_WIDTH_PX / 2;
-        const mapPixelZ = (mouseY - mapCenterY - currentMapY) / scale + MAP_HEIGHT_PX / 2;
-
-        const mcCoords = pxToMc(mapPixelX, mapPixelZ);
-        coordinatesInfo.textContent = `X: ${mcCoords.x}, Z: ${mcCoords.z}`;
-    }
-
-    function updateZoomInfo() {
-        zoomInfo.textContent = `Zoom: ${Math.round(scale * 100)}%`;
-    }
-
-    function updateTime() {
-        const now = new Date();
-        const utcTime = now.toISOString().substring(11, 16);
-        document.querySelector('.timestamp').textContent = `UTC ${utcTime}`;
-    }
-
-    function zoom(direction, centerX = null, centerY = null) {
-        const newScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, scale + direction * ZOOM_STEP));
+        // Convert to map pixel coordinates
+        const mapPixelX = (mouseX - mapCenterX - currentPanX) / currentZoom + MAP_CONFIG.width / 2;
+        const mapPixelZ = (mouseY - mapCenterY - currentPanY) / currentZoom + MAP_CONFIG.height / 2;
         
-        if (newScale !== scale) {
-            const mapWrapper = document.querySelector('.map-wrapper');
-            const rect = mapWrapper.getBoundingClientRect();
-            
-            // Use center of viewport if no specific center provided
-            const zoomCenterX = centerX !== null ? centerX : rect.width / 2;
-            const zoomCenterY = centerY !== null ? centerY : rect.height / 2;
-            
-            // Calculate zoom adjustment
-            const scaleFactor = newScale / scale;
-            
-            // Adjust translation to zoom toward the center point
-            currentMapX = (currentMapX - zoomCenterX) * scaleFactor + zoomCenterX;
-            currentMapY = (currentMapY - zoomCenterY) * scaleFactor + zoomCenterY;
-            
-            scale = newScale;
-            updateMapTransform();
-            updateZoomInfo();
+        // Convert to Minecraft coordinates
+        const mcCoords = pixelToMc(mapPixelX, mapPixelZ);
+        coordinatesDisplay.textContent = `X: ${Math.round(mcCoords.x)}, Z: ${Math.round(mcCoords.z)}`;
+    }
+
+    function createGrid() {
+        mapGrid.innerHTML = '';
+        const gridSpacing = MAP_CONFIG.gridSize; // 50 blocks = 50 pixels on map
+        
+        // Create vertical lines
+        for (let x = 0; x <= MAP_CONFIG.width; x += gridSpacing) {
+            const line = document.createElement('div');
+            line.className = 'grid-line vertical';
+            line.style.left = `${x}px`;
+            mapGrid.appendChild(line);
         }
+        
+        // Create horizontal lines
+        for (let z = 0; z <= MAP_CONFIG.height; z += gridSpacing) {
+            const line = document.createElement('div');
+            line.className = 'grid-line horizontal';
+            line.style.top = `${z}px`;
+            mapGrid.appendChild(line);
+        }
+    }
+
+    function centerMapAt(x, z) {
+        const pixelCoords = mcToPixel(x, z);
+        
+        // Calculate pan to center the point
+        currentPanX = mapViewport.clientWidth / 2 - pixelCoords.x * currentZoom;
+        currentPanY = mapViewport.clientHeight / 2 - pixelCoords.z * currentZoom;
+        
+        updateMapTransform();
     }
 
     function resetView() {
-        scale = 1.0;
-        currentMapX = 0;
-        currentMapY = 0;
+        currentZoom = 1.0;
+        currentPanX = 0;
+        currentPanY = 0;
         updateMapTransform();
-        updateZoomInfo();
     }
 
-    function zoomToPoint(x, z) {
-        const pxCoords = mcToPx(x, z);
-        const mapWrapper = document.querySelector('.map-wrapper');
-        const rect = mapWrapper.getBoundingClientRect();
-        
-        // Set optimal zoom
-        scale = 1.5;
-        
-        // Center the point
-        currentMapX = rect.width / 2 - (pxCoords.x * scale - MAP_WIDTH_PX * scale / 2);
-        currentMapY = rect.height / 2 - (pxCoords.z * scale - MAP_HEIGHT_PX * scale / 2);
-        
-        updateMapTransform();
-        updateZoomInfo();
-    }
-
-    // === Navigation ===
-    function switchSection(targetSection) {
-        navItems.forEach(item => item.classList.remove('active'));
-        contentSections.forEach(section => section.classList.remove('active'));
-        
-        const targetNav = document.querySelector(`[data-section="${targetSection}"]`);
-        const targetContent = document.getElementById(`${targetSection}-section`);
-        
-        if (targetNav && targetContent) {
-            targetNav.classList.add('active');
-            targetContent.classList.add('active');
+    function zoom(direction) {
+        const newZoom = currentZoom + direction * MAP_CONFIG.zoomStep;
+        if (newZoom >= MAP_CONFIG.minZoom && newZoom <= MAP_CONFIG.maxZoom) {
+            currentZoom = newZoom;
+            updateMapTransform();
         }
     }
 
-    // === Data Fetching & Rendering ===
+    // === Point Management ===
     async function fetchPoints() {
         try {
             const response = await fetch('/api/points', {
@@ -247,351 +262,682 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 const { privatePoints, publicPoints } = await response.json();
-                renderPoints(publicPoints, privatePoints);
-                renderPointList(privatePoints, yourPointsList, true);
-                renderPointList(publicPoints, sharedPointsList, false);
+                allPoints = [...privatePoints, ...publicPoints];
+                renderPoints();
             } else {
-                throw new Error('Failed to fetch points from server.');
+                showNotification('Błąd przy pobieraniu punktów', 'error');
             }
-        } catch (err) {
-            console.error('Error fetching points:', err);
-            showError('Could not load points from the server.');
+        } catch (error) {
+            console.error('Error fetching points:', error);
+            showNotification('Błąd połączenia z serwerem', 'error');
         }
     }
 
-    function renderPoints(publicPoints, privatePoints) {
-        // Remove existing points
-        document.querySelectorAll('.point-wrapper').forEach(p => p.remove());
-
-        const points = [];
+    function renderPoints() {
+        // Clear existing points
+        document.querySelectorAll('.point-marker').forEach(point => point.remove());
         
-        if (isShowingPrivate) {
-            points.push(...privatePoints.map(p => ({...p, isPrivate: true})));
-        }
-        
-        if (isShowingPublic) {
-            points.push(...publicPoints.map(p => ({...p, isPrivate: false})));
-        }
-        
-        points.forEach(point => {
-            const pxCoords = mcToPx(point.x, point.z);
+        allPoints.forEach(point => {
+            // Filter points based on visibility settings
+            const isPrivate = point.ownerSessionCode === sessionCode;
+            const isPublic = point.status === 'public';
             
-            const pointWrapper = document.createElement('div');
-            pointWrapper.className = 'point-wrapper';
-            pointWrapper.style.left = `${pxCoords.x}px`;
-            pointWrapper.style.top = `${pxCoords.z}px`;
-            pointWrapper.dataset.id = point._id;
-            pointWrapper.dataset.x = point.x;
-            pointWrapper.dataset.z = point.z;
-            pointWrapper.dataset.status = point.status;
-            pointWrapper.dataset.resourceType = point.resourceType;
-
+            if ((!showPrivatePoints && isPrivate) || (!showPublicPoints && isPublic)) {
+                return;
+            }
+            
+            const pixelCoords = mcToPixel(point.x, point.z);
             const pointElement = document.createElement('div');
-            pointElement.className = 'point';
-            pointElement.style.backgroundColor = MINECRAFT_RESOURCES[point.resourceType]?.color || '#888';
-            pointElement.style.boxShadow = `0 0 6px ${MINECRAFT_RESOURCES[point.resourceType]?.color || '#888'}`;
+            pointElement.className = 'point-marker';
+            pointElement.style.left = `${pixelCoords.x}px`;
+            pointElement.style.top = `${pixelCoords.z}px`;
+            pointElement.style.backgroundColor = RESOURCE_TYPES[point.resourceType]?.color || '#888888';
             
-            const pointName = document.createElement('span');
-            pointName.className = 'point-name';
-            pointName.textContent = point.name;
+            const label = document.createElement('div');
+            label.className = 'point-label';
+            label.textContent = point.name;
+            pointElement.appendChild(label);
             
-            pointWrapper.appendChild(pointElement);
-            pointWrapper.appendChild(pointName);
-            
-            pointWrapper.addEventListener('click', (e) => {
+            pointElement.addEventListener('click', (e) => {
                 e.stopPropagation();
-                displayPointDetails(point);
+                showPointDetails(point);
+            });
+            
+            mapCanvas.appendChild(pointElement);
+        });
+        
+        updatePointSizes();
+    }
+
+    function showPointDetails(point) {
+        document.getElementById('point-details-title').textContent = point.name;
+        document.getElementById('point-coords-display').textContent = `X: ${point.x}, Z: ${point.z}`;
+        document.getElementById('point-type-display').textContent = RESOURCE_TYPES[point.resourceType]?.name || 'Niestandardowy';
+        document.getElementById('point-description-display').textContent = point.description || 'Brak opisu';
+        
+        // Show/hide action buttons based on ownership
+        const shareBtn = document.getElementById('share-point');
+        const editBtn = document.getElementById('edit-point');
+        const deleteBtn = document.getElementById('delete-point');
+        
+        const isOwner = point.ownerSessionCode === sessionCode;
+        const canEdit = isOwner || isUserAdmin;
+        
+        shareBtn.style.display = (isOwner && point.status === 'private') ? 'block' : 'none';
+        editBtn.style.display = canEdit ? 'block' : 'none';
+        deleteBtn.style.display = canEdit ? 'block' : 'none';
+        
+        // Store current point for actions
+        pointDetailsModal.currentPoint = point;
+        showModal(pointDetailsModal);
+    }
+
+    async function addOrUpdatePoint(pointData, isUpdate = false, pointId = null) {
+        try {
+            const url = isUpdate ? `/api/points/${pointId}` : '/api/points';
+            const method = isUpdate ? 'PUT' : 'POST';
+            
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Session-Code': sessionCode
+                },
+                body: JSON.stringify(pointData)
             });
 
-            mapContainer.appendChild(pointWrapper);
-        });
-
-        updatePointScaling();
+            if (response.ok) {
+                showNotification(isUpdate ? 'Punkt zaktualizowany' : 'Punkt dodany');
+                hideAllModals();
+                clearForm();
+                fetchPoints();
+            } else {
+                const error = await response.json();
+                showNotification(error.message || 'Błąd przy zapisywaniu punktu', 'error');
+            }
+        } catch (error) {
+            console.error('Error saving point:', error);
+            showNotification('Błąd połączenia z serwerem', 'error');
+        }
     }
 
-    function renderPointList(points, listElement, isPrivate) {
-        listElement.innerHTML = '';
+    async function deletePoint(pointId) {
+        if (!confirm('Czy na pewno chcesz usunąć ten punkt?')) return;
+        
+        try {
+            const response = await fetch(`/api/points/${pointId}`, {
+                method: 'DELETE',
+                headers: { 'X-Session-Code': sessionCode }
+            });
+
+            if (response.ok) {
+                showNotification('Punkt usunięty');
+                hideAllModals();
+                fetchPoints();
+            } else {
+                const error = await response.json();
+                showNotification(error.message || 'Błąd przy usuwaniu punktu', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting point:', error);
+            showNotification('Błąd połączenia z serwerem', 'error');
+        }
+    }
+
+    // === Modal Management ===
+    function showModal(modal) {
+        hideAllModals();
+        modal.style.display = 'flex';
+    }
+
+    function hideAllModals() {
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.style.display = 'none';
+        });
+    }
+
+    function clearForm() {
+        resourceSelect.value = 'diamond_ore';
+        nameInput.value = '';
+        descriptionInput.value = '';
+        xInput.value = '';
+        zInput.value = '';
+        customNameGroup.style.display = 'none';
+        addPointForm.dataset.mode = 'add';
+        addPointForm.dataset.pointId = '';
+    }
+
+    // === User Authentication ===
+    async function checkUserPermissions() {
+        // Check if user is owner
+        isUserOwner = OWNER_SESSION_CODES.includes(sessionCode);
+        if (isUserOwner) {
+            ownerNav.style.display = 'block';
+        }
+
+        // Check if user is admin
+        try {
+            const response = await fetch('/api/admin/pending', {
+                headers: { 'X-Session-Code': sessionCode }
+            });
+            
+            if (response.ok) {
+                isUserAdmin = true;
+                adminNav.style.display = 'block';
+            }
+        } catch (error) {
+            console.log('User is not admin');
+        }
+    }
+
+    // === Event Listeners ===
+    
+    // Map interaction
+    mapViewport.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        mapViewport.style.cursor = 'grabbing';
+    });
+
+    mapViewport.addEventListener('mousemove', (e) => {
+        updateCoordinates(e);
+        
+        if (!isDragging) return;
+        
+        const deltaX = e.clientX - dragStartX;
+        const deltaY = e.clientY - dragStartY;
+        
+        currentPanX += deltaX;
+        currentPanY += deltaY;
+        
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        
+        updateMapTransform();
+    });
+
+    mapViewport.addEventListener('mouseup', () => {
+        isDragging = false;
+        mapViewport.style.cursor = 'grab';
+    });
+
+    mapViewport.addEventListener('mouseleave', () => {
+        isDragging = false;
+        mapViewport.style.cursor = 'grab';
+    });
+
+    mapViewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const direction = e.deltaY > 0 ? -1 : 1;
+        zoom(direction);
+    });
+
+    // Zoom controls
+    zoomInBtn.addEventListener('click', () => zoom(1));
+    zoomOutBtn.addEventListener('click', () => zoom(-1));
+    zoomResetBtn.addEventListener('click', resetView);
+
+    // Filter controls
+    filterPrivateBtn.addEventListener('click', () => {
+        showPrivatePoints = !showPrivatePoints;
+        filterPrivateBtn.classList.toggle('active', showPrivatePoints);
+        renderPoints();
+    });
+
+    filterPublicBtn.addEventListener('click', () => {
+        showPublicPoints = !showPublicPoints;
+        filterPublicBtn.classList.toggle('active', showPublicPoints);
+        renderPoints();
+    });
+
+    // Navigation
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const view = item.dataset.view;
+            
+            // Remove active class from all items
+            navItems.forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+            
+            // Handle navigation
+            switch (view) {
+                case 'map':
+                    // Already on map view
+                    break;
+                case 'points':
+                    showPointsList('private');
+                    break;
+                case 'shared':
+                    showPointsList('public');
+                    break;
+                case 'admin':
+                    if (isUserAdmin) showAdminPanel();
+                    break;
+                case 'owner':
+                    if (isUserOwner) showOwnerPanel();
+                    break;
+            }
+        });
+    });
+
+    function showPointsList(type) {
+        const title = type === 'private' ? 'Twoje punkty' : 'Udostępnione punkty';
+        const points = allPoints.filter(point => {
+            if (type === 'private') return point.ownerSessionCode === sessionCode;
+            return point.status === 'public';
+        });
+        
+        document.getElementById('points-list-title').textContent = title;
+        const listContainer = document.getElementById('points-list-content');
+        
+        listContainer.innerHTML = '';
         
         if (points.length === 0) {
-            listElement.innerHTML = '<div class="no-points">No points to display</div>';
-            return;
-        }
-
-        points.forEach(point => {
-            const pointItem = document.createElement('div');
-            pointItem.className = 'point-item';
-            pointItem.dataset.id = point._id;
-
-            const pointInfo = document.createElement('div');
-            pointInfo.className = 'point-info';
-            pointInfo.innerHTML = `
-                <h4>${point.name}</h4>
-                <small>X: ${point.x}, Z: ${point.z}</small>
-            `;
-
-            const pointActions = document.createElement('div');
-            pointActions.className = 'point-actions';
-            
-            const viewBtn = document.createElement('button');
-            viewBtn.textContent = 'View';
-            viewBtn.className = 'btn btn-secondary';
-            viewBtn.addEventListener('click', () => {
-                switchSection('map-view');
-                setTimeout(() => zoomToPoint(point.x, point.z), 100);
-            });
-            pointActions.appendChild(viewBtn);
-
-            if (point.ownerSessionCode === sessionCode || isUserAdmin) {
-                const editBtn = document.createElement('button');
-                editBtn.textContent = 'Edit';
-                editBtn.className = 'btn btn-secondary';
-                editBtn.addEventListener('click', () => editPoint(point));
-                pointActions.appendChild(editBtn);
-
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = 'Delete';
-                deleteBtn.className = 'btn btn-danger';
-                deleteBtn.addEventListener('click', () => {
-                    if (confirm('Are you sure you want to delete this point?')) {
-                        deletePoint(point._id);
-                    }
+            listContainer.innerHTML = '<div class="no-points">Brak punktów do wyświetlenia</div>';
+        } else {
+            points.forEach(point => {
+                const item = document.createElement('div');
+                item.className = 'point-item';
+                item.innerHTML = `
+                    <div class="point-info">
+                        <div class="point-name">${point.name}</div>
+                        <div class="point-coords">X: ${point.x}, Z: ${point.z}</div>
+                    </div>
+                    <div class="point-actions">
+                        <button class="btn btn-small btn-secondary view-point-btn">Zobacz</button>
+                    </div>
+                `;
+                
+                item.querySelector('.view-point-btn').addEventListener('click', () => {
+                    hideAllModals();
+                    centerMapAt(point.x, point.z);
                 });
-                pointActions.appendChild(deleteBtn);
-            }
-
-            pointItem.appendChild(pointInfo);
-            pointItem.appendChild(pointActions);
-            listElement.appendChild(pointItem);
-        });
-    }
-
-    function displayPointDetails(point) {
-        const title = point.name || (MINECRAFT_RESOURCES[point.resourceType]?.name || 'Point');
-        document.getElementById('point-details-title').textContent = title;
-        document.getElementById('point-coords').textContent = `X: ${point.x}, Z: ${point.z}`;
-        document.getElementById('point-description').textContent = point.description || 'No description.';
-        document.getElementById('point-type').textContent = MINECRAFT_RESOURCES[point.resourceType]?.name || 'Custom';
-
-        // Hide all action buttons first
-        document.getElementById('share-point').style.display = 'none';
-        document.getElementById('edit-point').style.display = 'none';
-        document.getElementById('delete-point').style.display = 'none';
-
-        if (point.ownerSessionCode === sessionCode) {
-            document.getElementById('edit-point').style.display = 'inline-flex';
-            document.getElementById('delete-point').style.display = 'inline-flex';
-
-            if (point.status === 'private') {
-                document.getElementById('share-point').style.display = 'inline-flex';
-            }
+                
+                listContainer.appendChild(item);
+            });
         }
         
-        pointDetailsModal.style.display = 'flex';
-
-        // Add event listeners
-        document.getElementById('edit-point').onclick = () => {
-            pointDetailsModal.style.display = 'none';
-            editPoint(point);
-        };
-
-        document.getElementById('delete-point').onclick = () => {
-            if (confirm('Are you sure you want to delete this point?')) {
-                pointDetailsModal.style.display = 'none';
-                deletePoint(point._id);
-            }
-        };
+        showModal(pointsListModal);
     }
 
-    function editPoint(point) {
-        switchSection('add-point');
-        
-        addPointForm.dataset.mode = 'edit';
-        addPointForm.dataset.pointId = point._id;
-        
-        resourceSelect.value = point.resourceType;
-        
-        if (point.resourceType === 'custom') {
+    // Add point modal
+    addPointBtn.addEventListener('click', () => {
+        clearForm();
+        showModal(addPointModal);
+    });
+
+    // Login modal
+    loginBtn.addEventListener('click', () => {
+        showModal(loginModal);
+    });
+
+    // Resource select change
+    resourceSelect.addEventListener('change', () => {
+        if (resourceSelect.value === 'custom') {
             customNameGroup.style.display = 'block';
             nameInput.required = true;
         } else {
             customNameGroup.style.display = 'none';
             nameInput.required = false;
         }
-        
-        nameInput.value = point.name || '';
-        descriptionInput.value = point.description || '';
-        xInput.value = point.x;
-        zInput.value = point.z;
-        addPointBtn.textContent = 'Save Changes';
-    }
-    
-    async function deletePoint(id) {
-        try {
-            const response = await fetch(`/api/points/${id}`, {
-                method: 'DELETE',
-                headers: { 'X-Session-Code': sessionCode }
-            });
-
-            if (response.ok) {
-                showSuccess('Point deleted successfully.');
-                fetchPoints();
-            } else {
-                const errorData = await response.json();
-                showError(errorData.message || 'Failed to delete point.');
-            }
-        } catch (err) {
-            console.error('Error deleting point:', err);
-            showError('Server connection error.');
-        }
-    }
-
-    function clearForm() {
-        resourceSelect.value = 'diamond_ore';
-        customNameGroup.style.display = 'none';
-        nameInput.value = '';
-        nameInput.required = false;
-        descriptionInput.value = '';
-        xInput.value = '';
-        zInput.value = '';
-        addPointBtn.textContent = 'Add Point';
-        addPointForm.dataset.mode = 'add';
-        delete addPointForm.dataset.pointId;
-    }
-
-    // === Owner/Admin Functions ===
-    const OWNER_SESSION_CODES = [
-        '270ea844-8ab8-4ea1-a34c-18ea2e6a920a',
-        '301263ee-49a9-4575-8c3d-f784bae7b27d'
-    ];
-
-    async function checkUserPermissions() {
-        isUserOwner = OWNER_SESSION_CODES.includes(sessionCode);
-        if (isUserOwner) {
-            ownerNav.style.display = 'block';
-            ownerLoginCard.style.display = 'block';
-        }
-
-        try {
-            const adminRes = await fetch('/api/admin/pending', {
-                headers: { 'X-Session-Code': sessionCode }
-            });
-            if (adminRes.status === 200) {
-                isUserAdmin = true;
-                adminNav.style.display = 'block';
-                adminLoginCard.style.display = 'block';
-            }
-        } catch (err) {
-            console.log('User has no admin permissions.');
-        }
-    }
-
-    async function fetchPendingPoints() {
-        try {
-            const response = await fetch('/api/admin/pending', {
-                headers: { 'X-Session-Code': sessionCode }
-            });
-            const points = await response.json();
-
-            pendingPointsList.innerHTML = '';
-            if (points.length === 0) {
-                pendingPointsList.innerHTML = '<div class="no-points">No pending points.</div>';
-                return;
-            }
-
-            points.forEach(point => {
-                const pointItem = document.createElement('div');
-                pointItem.className = 'point-item';
-                pointItem.innerHTML = `
-                    <div class="point-info">
-                        <h4>${point.name}</h4>
-                        <small>X: ${point.x}, Z: ${point.z}<br>Description: ${point.description || 'None'}</small>
-                    </div>
-                    <div class="point-actions">
-                        <button class="btn btn-primary approve-btn" data-id="${point._id}">Approve</button>
-                        <button class="btn btn-danger deny-btn" data-id="${point._id}">Deny</button>
-                    </div>
-                `;
-                pendingPointsList.appendChild(pointItem);
-            });
-        } catch (err) {
-            showError('Failed to load pending points.');
-        }
-    }
-
-    // === Event Listeners ===
-    
-    // Navigation
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            const section = item.dataset.section;
-            switchSection(section);
-        });
-    });
-
-    // Map dragging
-    mapContainer.addEventListener('mousedown', (e) => {
-        if (e.target === mapImage) {
-            isDragging = true;
-            dragStartX = e.clientX;
-            dragStartY = e.clientY;
-            mapContainer.style.cursor = 'grabbing';
-        }
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (isDragging) {
-            const deltaX = e.clientX - dragStartX;
-            const deltaY = e.clientY - dragStartY;
-            currentMapX += deltaX;
-            currentMapY += deltaY;
-            dragStartX = e.clientX;
-            dragStartY = e.clientY;
-            updateMapTransform();
-        }
-        
-        // Update coordinates if mouse is over map
-        const mapWrapper = document.querySelector('.map-wrapper');
-        const rect = mapWrapper.getBoundingClientRect();
-        if (e.clientX >= rect.left && e.clientX <= rect.right && 
-            e.clientY >= rect.top && e.clientY <= rect.bottom) {
-            updateCoordinatesInfo(e);
-        }
-    });
-    
-    document.addEventListener('mouseup', () => {
-        isDragging = false;
-        mapContainer.style.cursor = 'grab';
-    });
-
-    // Map zoom
-    document.querySelector('.map-wrapper').addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const direction = e.deltaY > 0 ? -1 : 1;
-        zoom(direction, e.offsetX, e.offsetY);
-    });
-
-    // Controls
-    zoomInBtn.addEventListener('click', () => zoom(1));
-    zoomOutBtn.addEventListener('click', () => zoom(-1));
-    resetViewBtn.addEventListener('click', resetView);
-
-    // Filters
-    showYourPointsToggle.addEventListener('change', () => {
-        isShowingPrivate = showYourPointsToggle.checked;
-        fetchPoints();
-    });
-
-    showSharedPointsToggle.addEventListener('change', () => {
-        isShowingPublic = showSharedPointsToggle.checked;
-        fetchPoints();
     });
 
     // Form submission
-    addPointForm.addEventListener('submit', async (e) => {
+    addPointForm.addEventListener('submit', (e) => {
         e.preventDefault();
         
         const mode = addPointForm.dataset.mode || 'add';
         const pointId = addPointForm.dataset.pointId;
-
+        
         const pointData = {
-            name: resourceSelect.value ===
+            name: resourceSelect.value === 'custom' ? nameInput.value : RESOURCE_TYPES[resourceSelect.value]?.name,
+            description: descriptionInput.value,
+            x: parseInt(xInput.value),
+            z: parseInt(zInput.value),
+            resourceType: resourceSelect.value,
+            status: 'private'
+        };
+        
+        addOrUpdatePoint(pointData, mode === 'edit', pointId);
+    });
+
+    // Modal close handlers
+    document.querySelectorAll('.modal-close, #cancel-add, #cancel-login').forEach(btn => {
+        btn.addEventListener('click', hideAllModals);
+    });
+
+    // Click outside modal to close
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) hideAllModals();
+        });
+    });
+
+    // Point details actions
+    document.getElementById('delete-point').addEventListener('click', () => {
+        if (pointDetailsModal.currentPoint) {
+            deletePoint(pointDetailsModal.currentPoint._id);
+        }
+    });
+
+    document.getElementById('edit-point').addEventListener('click', () => {
+        if (pointDetailsModal.currentPoint) {
+            const point = pointDetailsModal.currentPoint;
+            
+            // Fill form with point data
+            resourceSelect.value = point.resourceType;
+            if (point.resourceType === 'custom') {
+                customNameGroup.style.display = 'block';
+                nameInput.value = point.name;
+            }
+            descriptionInput.value = point.description || '';
+            xInput.value = point.x;
+            zInput.value = point.z;
+            
+            addPointForm.dataset.mode = 'edit';
+            addPointForm.dataset.pointId = point._id;
+            
+            hideAllModals();
+            showModal(addPointModal);
+        }
+    });
+
+    // Login submission
+    document.getElementById('submit-login').addEventListener('click', async () => {
+        const code = document.getElementById('login-code').value;
+        if (!code) return;
+        
+        try {
+            // Try admin login first
+            const adminResponse = await fetch('/api/admin/pending', {
+                headers: { 'X-Session-Code': code }
+            });
+            
+            if (adminResponse.ok) {
+                sessionCode = code;
+                localStorage.setItem('sessionCode', sessionCode);
+                sessionDisplay.textContent = sessionCode;
+                isUserAdmin = true;
+                adminNav.style.display = 'block';
+                showNotification('Zalogowano jako admin');
+                hideAllModals();
+                return;
+            }
+            
+            // Check if it's an owner code
+            if (OWNER_SESSION_CODES.includes(code)) {
+                sessionCode = code;
+                localStorage.setItem('sessionCode', sessionCode);
+                sessionDisplay.textContent = sessionCode;
+                isUserOwner = true;
+                ownerNav.style.display = 'block';
+                showNotification('Zalogowano jako właściciel');
+                hideAllModals();
+                return;
+            }
+            
+            showNotification('Nieprawidłowy kod dostępu', 'error');
+        } catch (error) {
+            showNotification('Błąd przy logowaniu', 'error');
+        }
+    });
+
+    // Admin and Owner panel functions would go here...
+    // (Similar to your original implementation but adapted to new UI)
+
+    // === Initialization ===
+    function init() {
+        // Set session code
+        localStorage.setItem('sessionCode', sessionCode);
+        sessionDisplay.textContent = sessionCode;
+        
+        // Create grid
+        createGrid();
+        
+        // Center map at spawn (0,0)
+        centerMapAt(0, 0);
+        
+        // Check user permissions
+        checkUserPermissions();
+        
+        // Fetch initial points
+        fetchPoints();
+    }
+
+    async function showAdminPanel() {
+        try {
+            const response = await fetch('/api/admin/pending', {
+                headers: { 'X-Session-Code': sessionCode }
+            });
+            
+            if (response.ok) {
+                const pendingPoints = await response.json();
+                const listContainer = document.getElementById('pending-points-list');
+                
+                listContainer.innerHTML = '';
+                
+                if (pendingPoints.length === 0) {
+                    listContainer.innerHTML = '<div class="no-points">Brak oczekujących punktów</div>';
+                } else {
+                    pendingPoints.forEach(point => {
+                        const item = document.createElement('div');
+                        item.className = 'point-item';
+                        item.innerHTML = `
+                            <div class="point-info">
+                                <div class="point-name">${point.name}</div>
+                                <div class="point-coords">X: ${point.x}, Z: ${point.z}</div>
+                                <div style="font-size: 12px; color: #9ca3af; margin-top: 4px;">
+                                    ${point.description || 'Brak opisu'}
+                                </div>
+                            </div>
+                            <div class="point-actions">
+                                <button class="btn btn-small btn-primary approve-btn" data-id="${point._id}">Zatwierdź</button>
+                                <button class="btn btn-small btn-secondary deny-btn" data-id="${point._id}">Odrzuć</button>
+                            </div>
+                        `;
+                        listContainer.appendChild(item);
+                    });
+                }
+                
+                showModal(adminPanelModal);
+            }
+        } catch (error) {
+            showNotification('Błąd przy pobieraniu oczekujących punktów', 'error');
+        }
+    }
+
+    async function showOwnerPanel() {
+        try {
+            const response = await fetch('/api/owner/sessions', {
+                headers: { 'X-Session-Code': sessionCode }
+            });
+            
+            if (response.ok) {
+                const sessions = await response.json();
+                const listContainer = document.getElementById('allowed-sessions-list');
+                
+                listContainer.innerHTML = '';
+                
+                if (sessions.length === 0) {
+                    listContainer.innerHTML = '<div class="no-points">Brak dozwolonych sesji</div>';
+                } else {
+                    sessions.forEach(session => {
+                        const item = document.createElement('div');
+                        item.className = 'point-item';
+                        item.innerHTML = `
+                            <div class="point-info">
+                                <div class="point-name" style="font-family: monospace;">${session.sessionCode}</div>
+                            </div>
+                            <div class="point-actions">
+                                <button class="btn btn-small btn-secondary delete-session-btn" data-code="${session.sessionCode}">Usuń</button>
+                            </div>
+                        `;
+                        listContainer.appendChild(item);
+                    });
+                }
+                
+                showModal(ownerPanelModal);
+            }
+        } catch (error) {
+            showNotification('Błąd przy pobieraniu sesji', 'error');
+        }
+    }
+
+    // Admin panel event handlers
+    document.getElementById('pending-points-list').addEventListener('click', async (e) => {
+        if (e.target.classList.contains('approve-btn')) {
+            const pointId = e.target.dataset.id;
+            try {
+                const response = await fetch(`/api/admin/approve/${pointId}`, {
+                    method: 'PUT',
+                    headers: { 'X-Session-Code': sessionCode }
+                });
+                
+                if (response.ok) {
+                    showNotification('Punkt zatwierdzony');
+                    showAdminPanel(); // Refresh the list
+                    fetchPoints(); // Refresh map points
+                } else {
+                    showNotification('Błąd przy zatwierdzaniu punktu', 'error');
+                }
+            } catch (error) {
+                showNotification('Błąd połączenia z serwerem', 'error');
+            }
+        } else if (e.target.classList.contains('deny-btn')) {
+            const pointId = e.target.dataset.id;
+            if (confirm('Czy na pewno chcesz odrzucić ten punkt?')) {
+                try {
+                    const response = await fetch(`/api/admin/deny/${pointId}`, {
+                        method: 'DELETE',
+                        headers: { 'X-Session-Code': sessionCode }
+                    });
+                    
+                    if (response.ok) {
+                        showNotification('Punkt odrzucony');
+                        showAdminPanel(); // Refresh the list
+                    } else {
+                        showNotification('Błąd przy odrzucaniu punktu', 'error');
+                    }
+                } catch (error) {
+                    showNotification('Błąd połączenia z serwerem', 'error');
+                }
+            }
+        }
+    });
+
+    document.getElementById('refresh-pending').addEventListener('click', showAdminPanel);
+
+    // Owner panel event handlers
+    document.getElementById('add-session-btn').addEventListener('click', async () => {
+        const sessionCode = document.getElementById('new-session-code').value.trim();
+        if (!sessionCode) {
+            showNotification('Wprowadź kod sesji', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/owner/sessions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Session-Code': sessionCode
+                },
+                body: JSON.stringify({ sessionCode })
+            });
+            
+            if (response.ok) {
+                showNotification('Sesja dodana');
+                document.getElementById('new-session-code').value = '';
+                showOwnerPanel(); // Refresh the list
+            } else {
+                const error = await response.json();
+                showNotification(error.message || 'Błąd przy dodawaniu sesji', 'error');
+            }
+        } catch (error) {
+            showNotification('Błąd połączenia z serwerem', 'error');
+        }
+    });
+
+    document.getElementById('promote-user').addEventListener('click', async () => {
+        const sessionCode = document.getElementById('promote-session-code').value.trim();
+        if (!sessionCode) {
+            showNotification('Wprowadź kod sesji', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/owner/promote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Session-Code': sessionCode
+                },
+                body: JSON.stringify({ sessionCode })
+            });
+            
+            if (response.ok) {
+                showNotification('Użytkownik awansowany na admina');
+                document.getElementById('promote-session-code').value = '';
+            } else {
+                const error = await response.json();
+                showNotification(error.message || 'Błąd przy awansowaniu użytkownika', 'error');
+            }
+        } catch (error) {
+            showNotification('Błąd połączenia z serwerem', 'error');
+        }
+    });
+
+    document.getElementById('allowed-sessions-list').addEventListener('click', async (e) => {
+        if (e.target.classList.contains('delete-session-btn')) {
+            const sessionCode = e.target.dataset.code;
+            if (confirm(`Czy na pewno chcesz usunąć sesję "${sessionCode}"?`)) {
+                try {
+                    const response = await fetch(`/api/owner/sessions/${sessionCode}`, {
+                        method: 'DELETE',
+                        headers: { 'X-Session-Code': sessionCode }
+                    });
+                    
+                    if (response.ok) {
+                        showNotification('Sesja usunięta');
+                        showOwnerPanel(); // Refresh the list
+                    } else {
+                        showNotification('Błąd przy usuwaniu sesji', 'error');
+                    }
+                } catch (error) {
+                    showNotification('Błąd połączenia z serwerem', 'error');
+                }
+            }
+        }
+    });
+
+    // Share point functionality
+    document.getElementById('share-point').addEventListener('click', async () => {
+        if (pointDetailsModal.currentPoint) {
+            const point = pointDetailsModal.currentPoint;
+            try {
+                const response = await fetch(`/api/points/${point._id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Session-Code': sessionCode
+                    },
+                    body: JSON.stringify({ ...point, status: 'public' })
+                });
+                
+                if (response.ok) {
+                    showNotification('Punkt udostępniony publicznie');
+                    hideAllModals();
+                    fetchPoints();
+                } else {
+                    showNotification('Błąd przy udostępnianiu punktu', 'error');
+                }
+            } catch (error) {
+                showNotification('Błąd połączenia z serwerem', 'error');
+            }
+        }
+    });
+
+    // Initialize the application
+    init();
+});
