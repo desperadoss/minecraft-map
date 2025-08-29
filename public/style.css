@@ -1,420 +1,302 @@
-body, html {
+body {
     margin: 0;
-    padding: 0;
     font-family: Arial, sans-serif;
-    background-color: #212224;
-    color: #c9c9c9;
+    background-color: #2c2c2c;
+    color: #f0f0f0;
+    overflow: hidden; /* Prevent body scroll */
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+.main-layout {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.map-area {
+    flex-grow: 1; /* Map takes most space */
+    position: relative;
+    overflow: hidden; /* Crucial for map dragging/zooming within its bounds */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #333; /* Darker background for map area */
+}
+
+.map-wrapper {
+    position: absolute;
+    width: 100%;
     height: 100%;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: grab;
+    user-select: none;
+    overflow: hidden; /* To contain the map image itself */
 }
 
-.header {
-    background-color: #2e3034;
-    padding: 20px 0;
-    text-align: center;
-    border-bottom: 2px solid #5a5c60;
-}
-
-.main-title {
-    color: #90ee90;
-    font-size: 2em;
-    margin: 0;
-}
-
-.subtitle {
-    font-size: 1em;
-    color: #9b9b9b;
-    margin: 5px 0 0;
-}
-
-.main-content-wrapper {
-    flex-grow: 1;
+.map-container {
+    position: relative; /* Points will be absolutely positioned relative to this */
+    width: 8000px; /* Actual width of your map image */
+    height: 5500px; /* Actual height of your map image */
+    transform-origin: center center;
+    background-color: #000; /* Fallback in case map.jpg doesn't load */
     display: flex;
     justify-content: center;
-    overflow: auto;
+    align-items: center;
+    top: 50%;
+    left: 50%;
+    transform: translate3d(-50%, -50%, 0); /* Center the map initially */
 }
 
-.main-content {
-    width: 1670px;
-    max-width: 95%;
+#minecraft-map {
+    width: 100%;
+    height: 100%;
+    display: block;
+    image-rendering: pixelated; /* For crisp Minecraft look */
+}
+
+.point-wrapper {
+    position: absolute;
+    transform: translate3d(-50%, -50%, 0); /* Center the point on its coordinates */
+    /* Scaling handled by JS */
+    cursor: pointer;
     display: flex;
     flex-direction: column;
-    padding: 20px;
+    align-items: center;
+    gap: 3px;
+    z-index: 10;
+}
+
+.point {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.7);
     box-sizing: border-box;
 }
 
-.map-controls-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #2e3034;
-    padding: 10px;
-    border: 1px solid #5a5c60;
-    border-bottom: none;
-    border-radius: 5px 5px 0 0;
-}
-
-.filter-buttons, .view-controls {
-    display: flex;
-    gap: 5px;
-}
-
-.button {
-    background-color: #444548;
-    color: #c9c9c9;
-    border: 1px solid #5a5c60;
-    padding: 8px 15px;
-    cursor: pointer;
+.point-name {
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 2px 6px;
     border-radius: 3px;
-    transition: background-color 0.2s, border-color 0.2s;
-}
-
-.button:hover {
-    background-color: #55575a;
-    border-color: #7a7d81;
-}
-
-.button.active {
-    background-color: #90ee90;
-    color: #212224;
-    border-color: #90ee90;
-}
-
-.zoom-button {
-    width: 30px;
-    height: 30px;
-    background-color: #444548;
-    color: #c9c9c9;
-    border: 1px solid #5a5c60;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 1.2em;
-    line-height: 1;
-}
-
-.map-view-container {
-    position: relative;
-    flex-grow: 1;
-    background-color: #0b1a29;
-    border: 1px solid #5a5c60;
-    border-top: none;
-    overflow: hidden;
-    cursor: grab;
+    font-size: 0.8em; /* Adjusted for better visibility */
+    white-space: nowrap; /* Prevent name from wrapping */
 }
 
 .coordinates-info, .zoom-info {
     position: absolute;
-    top: 10px;
+    bottom: 10px;
+    left: 10px;
+    background-color: rgba(0, 0, 0, 0.6);
     padding: 5px 10px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 3px;
+    border-radius: 5px;
     font-size: 0.9em;
-    color: #9b9b9b;
     z-index: 20;
 }
 
-.coordinates-info {
-    left: 10px;
-}
-
 .zoom-info {
-    right: 10px;
+    left: 150px; /* Adjust position relative to coordinates-info */
 }
 
-.map-container {
+.controls {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    will-change: transform;
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-    transform-style: preserve-3d;
-    backface-visibility: hidden;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    gap: 8px;
+    z-index: 20;
 }
 
-#minecraft-map {
-    display: block;
-    width: 10000px;
-    height: 5500px;
-    user-select: none;
-    -webkit-user-drag: none;
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-}
-
-/* === MODERN MARKERS === */
-.point-wrapper {
-    position: absolute;
-    cursor: pointer;
-    z-index: 10;
-    transition: opacity 0.2s;
-    transform: translate(-50%, -50%);
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-    transform-style: preserve-3d;
-    backface-visibility: hidden;
-    -webkit-transform: translate3d(-50%, -50%, 0);
-    transform: translate3d(-50%, -50%, 0);
-}
-
-.point {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), 
-                box-shadow 0.25s ease, 
-                filter 0.25s ease;
-    position: relative;
-    margin: 0 auto 8px auto;
-    background: linear-gradient(135deg, #666 0%, #333 50%, #222 100%);
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-    transform-style: preserve-3d;
-    backface-visibility: hidden;
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
-}
-
-/* Modern glow effect on hover */
-.point:hover {
-    transform: translate3d(0, 0, 0) scale(1.3);
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.7), 
-                0 0 25px var(--resource-color, #90ee90),
-                inset 0 1px 0 rgba(255, 255, 255, 0.4);
-    filter: brightness(1.2) saturate(1.1);
-}
-
-/* Inner dot for better visibility */
-.point::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 8px;
-    height: 8px;
-    background-color: rgba(255, 255, 255, 0.95);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-}
-
-/* === RESOURCE-BASED COLORS === */
-.point.resource-point {
-    background: linear-gradient(135deg, var(--resource-color), 
-                color-mix(in srgb, var(--resource-color) 70%, black));
-    border-color: color-mix(in srgb, var(--resource-color) 80%, white);
-}
-
-.point.resource-point:hover {
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.7), 
-                0 0 25px var(--resource-color),
-                inset 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-
-/* === FALLBACK STATUS COLORS FOR CUSTOM POINTS === */
-.point.private {
-    background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
-    border-color: rgba(241, 196, 15, 0.5);
-    --resource-color: #f1c40f;
-}
-
-.point.public {
-    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-    border-color: rgba(46, 204, 113, 0.5);
-    --resource-color: #2ecc71;
-}
-
-.point.pending {
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-    border-color: rgba(231, 76, 60, 0.5);
-    --resource-color: #e74c3c;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
-    50% { 
-        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5), 
-                    0 0 20px rgba(231, 76, 60, 0.6),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.3); 
-    }
-    100% { box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
-}
-
-.point-wrapper.hidden {
-    display: none;
-}
-
-/* Modern point name styling */
-.point-name {
-    position: absolute;
-    top: 32px;
-    left: 50%;
-    transform: translateX(-50%);
-    white-space: nowrap;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.85) 100%);
-    color: #fff;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 600;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-    pointer-events: none;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-}
-
-.your-points-section {
-    margin-top: 20px;
-    background-color: #2e3034;
-    border: 1px solid #5a5c60;
+.controls button, .side-panel button, .modal button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 8px 15px;
+    border: none;
     border-radius: 5px;
-    padding: 15px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease;
 }
 
-.section-title {
-    color: #90ee90;
-    border-bottom: 1px solid #5a5c60;
+.controls button:hover, .side-panel button:hover, .modal button:hover {
+    background-color: #45a049;
+}
+
+.controls button:active, .side-panel button:active, .modal button:active {
+    background-color: #3e8e41;
+}
+
+/* Side Panel */
+.side-panel {
+    width: 300px; /* Fixed width for the side panel */
+    background-color: #3a3a3a;
+    padding: 20px;
+    box-shadow: -3px 0 10px rgba(0,0,0,0.2);
+    overflow-y: auto; /* Enable scrolling for panel content */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-sizing: border-box; /* Include padding in width */
+}
+
+.side-panel h3 {
+    margin-top: 0;
+    color: #e0e0e0;
+    border-bottom: 1px solid #555;
     padding-bottom: 5px;
     margin-bottom: 15px;
 }
 
-.add-point-form-inline {
+.panel-section {
+    background-color: #444;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
     display: flex;
-    align-items: flex-end;
-    gap: 15px;
+    flex-direction: column;
+    gap: 10px;
 }
 
+.session-info {
+    font-size: 0.9em;
+    padding: 10px 0;
+    border-bottom: 1px dashed #555;
+    margin-bottom: 15px;
+}
+.session-info p {
+    margin: 0;
+    color: #bbb;
+}
+
+.point-visibility-toggles {
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.point-visibility-toggles button {
+    flex: 1;
+    margin: 0 5px;
+    background-color: #555;
+}
+
+.point-visibility-toggles button.active {
+    background-color: #28a745;
+}
+
+.panel-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.panel-section li {
+    background-color: #555;
+    margin-bottom: 8px;
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9em;
+}
+
+.point-list-item .point-actions button {
+    padding: 5px 8px;
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+
+/* Form Styling */
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    flex-grow: 1;
+    margin-bottom: 10px;
 }
 
-/* NEW: Hide custom name group by default */
-#custom-name-group {
-    display: none;
-}
-
-.add-button {
-    background-color: #90ee90;
-    color: #212224;
-    border: none;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-radius: 3px;
-    font-weight: bold;
-    transition: background-color 0.2s;
-}
-
-.add-button:hover {
-    background-color: #83d47d;
-}
-
-/* Form inputs and select styling */
-input[type="text"], input[type="number"], select {
-    background-color: #3b3d40;
-    border: 1px solid #5a5c60;
-    color: #c9c9c9;
-    padding: 8px;
-    border-radius: 3px;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-input[type="text"]:focus, input[type="number"]:focus, select:focus {
-    border-color: #90ee90;
-    background-color: #444548;
-}
-
-input[type="text"]:disabled, input[type="number"]:disabled, select:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* Select styling */
-select {
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    background-size: 16px;
-    padding-right: 32px;
-}
-
-select option {
-    background-color: #3b3d40;
-    color: #c9c9c9;
-}
-
-select optgroup {
-    background-color: #2e3034;
-    color: #90ee90;
-    font-weight: bold;
-}
-
-.session-code-display {
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    padding: 8px 12px;
+.form-group label {
+    margin-bottom: 5px;
+    color: #e0e0e0;
     font-size: 0.9em;
-    color: #9b9b9b;
-    cursor: pointer;
 }
 
-/* Modals */
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="password"],
+.form-group select {
+    padding: 8px;
+    border: 1px solid #666;
+    border-radius: 4px;
+    background-color: #555;
+    color: #f0f0f0;
+    font-size: 1em;
+}
+
+.form-group input::placeholder {
+    color: #bbb;
+}
+
+.coords-group {
+    flex-direction: row;
+    gap: 10px;
+}
+
+.coords-group label {
+    align-self: center;
+    margin-bottom: 0;
+}
+
+.coords-group input {
+    flex: 1;
+}
+
+/* Modal Styles */
 .modal {
-    display: none;
-    position: fixed;
-    z-index: 2000;
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 100; /* Sit on top */
     left: 0;
     top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.6);
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+    justify-content: center;
+    align-items: center;
 }
 
 .modal-content {
-    background-color: #2e3034;
-    border: 1px solid #5a5c60;
-    padding: 20px;
-    border-radius: 8px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 300px;
-    max-width: 90%;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    color: #c9c9c9;
+    background-color: #3a3a3a;
+    margin: auto;
+    padding: 25px;
+    border: 1px solid #888;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    color: #f0f0f0;
 }
 
-/* Owner panel styling */
-.modal-content.owner-panel {
-    width: 500px;
-    max-width: 95%;
-    max-height: 80vh;
-    overflow-y: auto;
+.modal-content h2 {
+    margin-top: 0;
+    color: #e0e0e0;
+    border-bottom: 1px solid #555;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.modal-content p {
+    margin-bottom: 10px;
+    font-size: 0.95em;
+}
+
+.modal-content strong {
+    color: #bbb;
 }
 
 .close-button {
@@ -422,6 +304,9 @@ select optgroup {
     float: right;
     font-size: 28px;
     font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 15px;
     cursor: pointer;
 }
 
@@ -429,137 +314,7 @@ select optgroup {
 .close-button:focus {
     color: #fff;
     text-decoration: none;
-}
-
-.modal-title {
-    color: #90ee90;
-    margin-top: 0;
-}
-
-/* NEW: Point type and status info styling */
-.point-type-info, .point-status-info {
-    margin: 10px 0;
-    font-size: 0.9em;
-}
-
-.point-status-info {
-    padding: 5px 8px;
-    border-radius: 4px;
-    font-weight: 500;
-    text-align: center;
-}
-
-.point-status-info.status-private {
-    background-color: rgba(241, 196, 15, 0.2);
-    border: 1px solid rgba(241, 196, 15, 0.5);
-    color: #f1c40f;
-}
-
-.point-status-info.status-pending {
-    background-color: rgba(231, 76, 60, 0.2);
-    border: 1px solid rgba(231, 76, 60, 0.5);
-    color: #e74c3c;
-}
-
-.point-status-info.status-public {
-    background-color: rgba(46, 204, 113, 0.2);
-    border: 1px solid rgba(46, 204, 113, 0.5);
-    color: #2ecc71;
-}
-
-.modal-section {
-    margin-bottom: 25px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #5a5c60;
-}
-
-.modal-section:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-}
-
-.modal-section h3 {
-    color: #90ee90;
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 1.1em;
-}
-
-.modal-section h4 {
-    color: #c9c9c9;
-    margin-top: 15px;
-    margin-bottom: 10px;
-    font-size: 1em;
-}
-
-.add-session-form {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.add-session-form input {
-    flex-grow: 1;
-}
-
-.allowed-sessions-list {
-    background-color: #212224;
-    border: 1px solid #5a5c60;
-    border-radius: 5px;
-    padding: 10px;
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-#allowed-sessions-list {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-}
-
-#allowed-sessions-list li {
-    margin-bottom: 10px;
-}
-
-.session-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #2e3034;
-    padding: 8px 12px;
-    border-radius: 3px;
-    border: 1px solid #444548;
-}
-
-.session-code {
-    font-family: monospace;
-    color: #90ee90;
-    font-weight: bold;
-    flex-grow: 1;
-    margin-right: 10px;
-    word-break: break-all;
-}
-
-.session-date {
-    color: #9b9b9b;
-    font-size: 0.8em;
-    margin-right: 10px;
-    white-space: nowrap;
-}
-
-.remove-session-btn {
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 3px;
     cursor: pointer;
-    font-size: 0.8em;
-    transition: background-color 0.2s;
-}
-
-.remove-session-btn:hover {
-    background-color: #c0392b;
 }
 
 .modal-buttons {
@@ -569,202 +324,70 @@ select optgroup {
     margin-top: 20px;
 }
 
-ul#pending-points-list {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #5a5c60;
-    padding: 5px;
+.modal-buttons button {
+    padding: 10px 20px;
+    font-size: 1em;
 }
 
-#pending-points-list li {
-    background-color: #212224;
-    padding: 8px;
-    margin-bottom: 5px;
-    border-radius: 3px;
+/* Admin/Owner Panel specific styles */
+.modal .owner-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #4a4a4a;
+    border-radius: 8px;
+}
+
+.modal .owner-section h3 {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+    color: #e0e0e0;
+    border-bottom: none;
+}
+
+.modal .session-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background-color: #666;
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    border-radius: 5px;
 }
 
-#pending-points-list button {
-    background-color: #55575a;
-    border: none;
-    padding: 5px 10px;
-    color: white;
-    cursor: pointer;
-    border-radius: 3px;
+.modal .session-info {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9em;
+    border-bottom: none;
+    padding: 0;
+    margin: 0;
 }
 
-#admin-login-modal input, #owner-login-modal input {
-    width: 100%;
-    box-sizing: border-box;
+.modal .session-code {
+    font-weight: bold;
+    color: #aaffaa; /* Light green for session codes */
 }
 
-/* === MODERN ENHANCEMENTS === */
-
-/* Improved scrollbars for webkit browsers */
-.allowed-sessions-list::-webkit-scrollbar,
-#pending-points-list::-webkit-scrollbar {
-    width: 8px;
+.modal .session-date {
+    font-size: 0.8em;
+    color: #bbb;
 }
 
-.allowed-sessions-list::-webkit-scrollbar-track,
-#pending-points-list::-webkit-scrollbar-track {
-    background: #212224;
-    border-radius: 4px;
+.modal .delete-session {
+    background-color: #dc3545; /* Red for delete button */
+    padding: 6px 10px;
+    font-size: 0.8em;
 }
 
-.allowed-sessions-list::-webkit-scrollbar-thumb,
-#pending-points-list::-webkit-scrollbar-thumb {
-    background: #5a5c60;
-    border-radius: 4px;
+.modal .delete-session:hover {
+    background-color: #c82333;
 }
 
-.allowed-sessions-list::-webkit-scrollbar-thumb:hover,
-#pending-points-list::-webkit-scrollbar-thumb:hover {
-    background: #7a7d81;
-}
-
-/* Enhanced form focus states */
-input[type="text"]:focus, input[type="number"]:focus, select:focus {
-    border-color: #90ee90;
-    background-color: #444548;
-    box-shadow: 0 0 0 2px rgba(144, 238, 144, 0.2);
-}
-
-/* Button hover enhancements */
-.button:hover:not(.active) {
-    background-color: #55575a;
-    border-color: #7a7d81;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.add-button:hover {
-    background-color: #83d47d;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(144, 238, 144, 0.3);
-}
-
-/* Improved modal animations */
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -60%);
-    }
-    to {
-        opacity: 1;
-        transform: translate(-50%, -50%);
-    }
-}
-
-.modal.show .modal-content {
-    animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-/* Enhanced point wrapper animations */
-.point-wrapper {
-    animation: pointFadeIn 0.5s ease-out;
-}
-
-@keyframes pointFadeIn {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.5);
-    }
-    to {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
-}
-
-/* Loading states */
-.button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none !important;
-}
-
-.button:disabled:hover {
-    background-color: #444548 !important;
-    border-color: #5a5c60 !important;
-    box-shadow: none !important;
-}
-
-/* RESPONSIVENESS */
-@media (max-width: 768px) {
-    .modal-content.owner-panel {
-        width: 95%;
-        padding: 15px;
-    }
-    
-    .add-session-form {
-        flex-direction: column;
-    }
-    
-    .session-item {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-    }
-    
-    .session-date {
-        white-space: normal;
-        margin-right: 0;
-    }
-    
-    .add-point-form-inline {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .main-content {
-        padding: 10px;
-    }
-    
-    /* Responsive point scaling */
-    .point {
-        width: 20px;
-        height: 20px;
-    }
-    
-    .point::before {
-        width: 6px;
-        height: 6px;
-    }
-    
-    .point-name {
-        font-size: 10px;
-        padding: 3px 6px;
-        top: 28px;
-    }
-}
-
-/* Dark mode compatibility */
-@media (prefers-color-scheme: dark) {
-    body, html {
-        background-color: #1a1a1a;
-    }
-    
-    .main-content {
-        background-color: #1a1a1a;
-    }
-}
-
-/* Reduced motion for accessibility */
-@media (prefers-reduced-motion: reduce) {
-    .point,
-    .button,
-    .add-button,
-    .point-wrapper {
-        transition: none;
-        animation: none;
-    }
-    
-    .point:hover {
-        transform: translate3d(0, 0, 0) scale(1.1);
-    }
+/* Notification System */
+#notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 350px;
 }
