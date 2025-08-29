@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,151 +8,109 @@
 </head>
 <body>
 
-    <div class="app-layout">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h2>Minecraft Map</h2>
+    <div class="main-container">
+        <div class="map-wrapper">
+            <div class="map-container">
+                <img id="minecraft-map" src="map.jpg" alt="Minecraft World Map">
             </div>
-            <nav class="sidebar-nav">
-                <ul>
-                    <li><a href="#" class="nav-item active">Live Dashboard</a></li>
-                </ul>
-            </nav>
-            <div class="session-info-sidebar">
+            <div class="coordinates-info">X: 0, Z: 0</div>
+            <div class="zoom-info">Zoom: 100%</div>
+        </div>
+
+        <div class="controls-panel">
+            <div class="panel-section">
+                <h3>Mapa</h3>
+                <div class="control-group">
+                    <button id="zoom-in">Zoom In</button>
+                    <button id="zoom-out">Zoom Out</button>
+                    <button id="reset-view">Reset View</button>
+                </div>
+            </div>
+
+            <div class="panel-section point-visibility-toggles">
+                <button id="show-your-points" class="active">Twoje Punkty</button>
+                <button id="show-shared-points" class="active">Udostępnione Punkty</button>
+            </div>
+
+            <div class="panel-section add-point-section">
+                <h3>Dodaj Punkt</h3>
+                <form id="add-point-form">
+                    <div class="form-group">
+                        <label for="resource-select">Typ:</label>
+                        <select id="resource-select" name="resource-type">
+                            <optgroup label="Rudy">
+                                <option value="diamond_ore">Ruda Diamentu</option>
+                                <option value="iron_ore">Ruda Żelaza</option>
+                                <option value="gold_ore">Ruda Złota</option>
+                                <option value="coal_ore">Ruda Węgla</option>
+                                <option value="copper_ore">Ruda Miedzi</option>
+                                <option value="redstone_ore">Ruda Redstone</option>
+                                <option value="lapis_ore">Ruda Lapis Lazuli</option>
+                                <option value="emerald_ore">Ruda Szmaragdu</option>
+                                <option value="netherite">Starożytny Gruz</option>
+                            </optgroup>
+                            <optgroup label="Struktury">
+                                <option value="village">Wioska</option>
+                                <option value="stronghold">Twierdza</option>
+                                <option value="nether_fortress">Twierdza Netheru</option>
+                                <option value="end_city">Miasto Kresu</option>
+                                <option value="ocean_monument">Monument Oceaniczny</option>
+                                <option value="woodland_mansion">Leśna Rezydencja</option>
+                                <option value="desert_temple">Pustynna Świątynia</option>
+                                <option value="jungle_temple">Dżunglowa Świątynia</option>
+                                <option value="igloo">Igloo</option>
+                                <option value="shipwreck">Wrak Statku</option>
+                            </optgroup>
+                            <optgroup label="Biomy">
+                                <option value="mushroom_biome">Grzybowa Wyspa</option>
+                                <option value="mesa">Góry Skalne (Badlands)</option>
+                                <option value="ice_spikes">Lodowe Kolce</option>
+                                <option value="flower_forest">Kwiatowy Las</option>
+                            </optgroup>
+                            <optgroup label="Inne">
+                                <option value="spawn">Punkt Spawnu</option>
+                                <option value="base">Baza</option>
+                                <option value="farm">Farma</option>
+                                <option value="portal">Portal Netheru</option>
+                                <option value="treasure">Skarb</option>
+                            </optgroup>
+                            <option value="custom">Własne</option>
+                        </select>
+                    </div>
+                    <div id="custom-name-group" class="form-group" style="display:none;">
+                        <label for="name-input">Nazwa:</label>
+                        <input type="text" id="name-input" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description-input">Opis (opcjonalnie):</label>
+                        <input type="text" id="description-input" name="description">
+                    </div>
+                    <div class="form-group coords-group">
+                        <label for="x-input">X:</label>
+                        <input type="number" id="x-input" name="x" required>
+                        <label for="z-input">Z:</label>
+                        <input type="number" id="z-input" name="z" required>
+                    </div>
+                    <button type="submit" id="add-point-button">Dodaj Punkt</button>
+                </form>
+            </div>
+
+            <div class="panel-section point-list-section your-points-list-container">
+                <h3>Twoje Punkty</h3>
+                <ul id="your-points-list"></ul>
+            </div>
+            
+            <div class="panel-section point-list-section shared-points-list-container">
+                <h3>Udostępnione Punkty</h3>
+                <ul id="shared-points-list"></ul>
+            </div>
+            
+            <div class="panel-section admin-owner-section">
+                <button id="admin-login-btn">Panel Admina</button>
+                <button id="owner-login-btn" style="display:none;">Panel Właściciela</button>
                 <p id="session-code-text">Session Code: ...</p>
             </div>
-        </aside>
-
-        <main class="content-area">
-            <header class="top-bar">
-                <div class="top-bar-left">
-                    <span class="live-status">LIVE</span>
-                    <span class="utc-time">UTC: 12:45</span>
-                </div>
-                <div class="top-bar-right">
-                    <button class="icon-button"><img src="settings-icon.png" alt="Settings"></button> <button class="icon-button"><img src="notification-icon.png" alt="Notifications"></button>
-                    <button class="icon-button"><img src="user-icon.png" alt="User Profile"></button>
-                </div>
-            </header>
-
-            <div class="dashboard-content">
-                <div class="map-view-wrapper">
-                    <div class="map-container">
-                        <img id="minecraft-map" src="map.jpg" alt="Minecraft World Map">
-                    </div>
-                    <div class="coordinates-info">X: 0, Z: 0</div>
-                    <div class="zoom-info">Zoom: 100%</div>
-                </div>
-
-                <div class="right-panel">
-                    <div class="filters-section">
-                        <div class="filter-header">
-                            <span class="filter-icon">▼</span>
-                            <h3>FILTERS</h3>
-                        </div>
-                        <div class="filter-option">
-                            <label for="show-your-points">Twoje Punkty</label>
-                            <label class="switch">
-                                <input type="checkbox" id="show-your-points" checked>
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-                        <div class="filter-option">
-                            <label for="show-shared-points">Udostępnione Punkty</label>
-                            <label class="switch">
-                                <input type="checkbox" id="show-shared-points" checked>
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-                        <div class="filter-option">
-                            <label>Typ Zasobu</label>
-                            <select id="resource-select-filter">
-                                <option value="all">Wszystkie</option>
-                                <optgroup label="Rudy">
-                                    <option value="diamond_ore">Ruda Diamentu</option>
-                                    <option value="iron_ore">Ruda Żelaza</option>
-                                    </optgroup>
-                                </select>
-                        </div>
-                    </div>
-
-                    <div class="add-point-section">
-                        <h3>Dodaj Punkt</h3>
-                        <form id="add-point-form">
-                            <div class="form-group">
-                                <label for="resource-select">Typ Zasobu:</label>
-                                <select id="resource-select" name="resource-type">
-                                    <optgroup label="Rudy">
-                                        <option value="diamond_ore">Ruda Diamentu</option>
-                                        <option value="iron_ore">Ruda Żelaza</option>
-                                        <option value="gold_ore">Ruda Złota</option>
-                                        <option value="coal_ore">Ruda Węgla</option>
-                                        <option value="copper_ore">Ruda Miedzi</option>
-                                        <option value="redstone_ore">Ruda Redstone</option>
-                                        <option value="lapis_ore">Ruda Lapis Lazuli</option>
-                                        <option value="emerald_ore">Ruda Szmaragdu</option>
-                                        <option value="netherite">Starożytny Gruz</option>
-                                    </optgroup>
-                                    <optgroup label="Struktury">
-                                        <option value="village">Wioska</option>
-                                        <option value="stronghold">Twierdza</option>
-                                        <option value="nether_fortress">Twierdza Netheru</option>
-                                        <option value="end_city">Miasto Kresu</option>
-                                        <option value="ocean_monument">Monument Oceaniczny</option>
-                                        <option value="woodland_mansion">Leśna Rezydencja</option>
-                                        <option value="desert_temple">Pustynna Świątynia</option>
-                                        <option value="jungle_temple">Dżunglowa Świątynia</option>
-                                        <option value="igloo">Igloo</option>
-                                        <option value="shipwreck">Wrak Statku</option>
-                                    </optgroup>
-                                    <optgroup label="Biomy">
-                                        <option value="mushroom_biome">Grzybowa Wyspa</option>
-                                        <option value="mesa">Góry Skalne (Badlands)</option>
-                                        <option value="ice_spikes">Lodowe Kolce</option>
-                                        <option value="flower_forest">Kwiatowy Las</option>
-                                    </optgroup>
-                                    <optgroup label="Inne">
-                                        <option value="spawn">Punkt Spawnu</option>
-                                        <option value="base">Baza</option>
-                                        <option value="farm">Farma</option>
-                                        <option value="portal">Portal Netheru</option>
-                                        <option value="treasure">Skarb</option>
-                                    </optgroup>
-                                    <option value="custom">Własne</option>
-                                </select>
-                            </div>
-                            <div id="custom-name-group" class="form-group" style="display:none;">
-                                <label for="name-input">Nazwa Punktu:</label>
-                                <input type="text" id="name-input" name="name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="description-input">Opis (opcjonalnie):</label>
-                                <input type="text" id="description-input" name="description">
-                            </div>
-                            <div class="form-group coords-group">
-                                <label for="x-input">X:</label>
-                                <input type="number" id="x-input" name="x" required>
-                                <label for="z-input">Z:</label>
-                                <input type="number" id="z-input" name="z" required>
-                            </div>
-                            <button type="submit" id="add-point-button">Dodaj Punkt</button>
-                        </form>
-                    </div>
-
-                    <div class="admin-owner-buttons">
-                        <button id="admin-login-btn">Panel Admina</button>
-                        <button id="owner-login-btn" style="display:none;">Panel Właściciela</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="map-controls-overlay">
-                <button id="zoom-in" class="map-control-button">+</button>
-                <button id="zoom-out" class="map-control-button">-</button>
-                <button id="reset-view" class="map-control-button">⟲</button>
-            </div>
-
-        </main>
+        </div>
     </div>
     
     <div id="point-details-modal" class="modal">
