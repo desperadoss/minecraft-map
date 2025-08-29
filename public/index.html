@@ -8,44 +8,28 @@
 </head>
 <body>
 
-    <div class="main-layout">
-        <div class="map-area">
-            <div class="map-wrapper">
-                <div class="map-container">
-                    <img id="minecraft-map" src="map.jpg" alt="Minecraft World Map">
-                </div>
-                <div class="coordinates-info">X: 0, Z: 0</div>
-                <div class="zoom-info">Zoom: 100%</div>
+    <div class="main-container">
+        <div class="map-wrapper">
+            <div class="map-container">
+                <img id="minecraft-map" src="map.jpg" alt="Minecraft World Map">
             </div>
+            <div class="coordinates-info">X: 0, Z: 0</div>
+            <div class="zoom-info">Zoom: 100%</div>
+        </div>
 
-            <div class="controls">
+        <div class="controls-panel">
+            <div class="control-group">
                 <button id="zoom-in">Zoom In</button>
                 <button id="zoom-out">Zoom Out</button>
                 <button id="reset-view">Reset View</button>
             </div>
-        </div>
-
-        <div class="side-panel">
-            <div class="session-info">
-                <p id="session-code-text">Session Code: ...</p>
-            </div>
-
-            <div class="panel-section point-visibility-toggles">
+            
+            <div class="control-group">
                 <button id="show-your-points" class="active">Twoje Punkty</button>
                 <button id="show-shared-points" class="active">Udostępnione Punkty</button>
             </div>
-
-            <div class="panel-section your-points-section">
-                <h3>Twoje Punkty</h3>
-                <ul id="your-points-list"></ul>
-            </div>
-
-            <div class="panel-section shared-points-section">
-                <h3>Udostępnione Punkty</h3>
-                <ul id="shared-points-list"></ul>
-            </div>
             
-            <form id="add-point-form" class="panel-section add-point-form-section">
+            <form id="add-point-form" class="add-point-form-section">
                 <h3>Dodaj Punkt</h3>
                 <div class="form-group">
                     <label for="resource-select">Typ Zasobu:</label>
@@ -105,14 +89,25 @@
                 </div>
                 <button type="submit" id="add-point-button">Dodaj Punkt</button>
             </form>
-
-            <div class="panel-section admin-section">
+            
+            <div class="panel-section point-list-section">
+                <h3>Twoje Punkty</h3>
+                <ul id="your-points-list"></ul>
+            </div>
+            
+            <div class="panel-section point-list-section">
+                <h3>Udostępnione Punkty</h3>
+                <ul id="shared-points-list"></ul>
+            </div>
+            
+            <div class="panel-section admin-owner-section">
                 <button id="admin-login-btn">Panel Admina</button>
-                <button id="owner-login-btn">Panel Właściciela</button>
+                <button id="owner-login-btn" style="display:none;">Panel Właściciela</button>
+                <p id="session-code-text">Session Code: ...</p>
             </div>
         </div>
     </div>
-
+    
     <div id="point-details-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
@@ -127,11 +122,11 @@
             </div>
         </div>
     </div>
-
+    
     <div id="admin-login-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
-            <h2>Logowanie Admina/Właściciela</h2>
+            <h2>Logowanie Admina</h2>
             <div class="form-group">
                 <label for="admin-login-input">Kod Sesji:</label>
                 <input type="password" id="admin-login-input" placeholder="Wpisz kod sesji">
@@ -161,14 +156,6 @@
                     <input type="text" id="promote-session-code" placeholder="Wpisz kod sesji">
                 </div>
                 <button id="promote-user">Promuj</button>
-            </div>
-             <div class="owner-section">
-                <h3>Dodaj Nowego Właściciela</h3>
-                <div class="form-group">
-                    <label for="new-owner-code">Kod Sesji Właściciela:</label>
-                    <input type="text" id="new-owner-code" placeholder="Wpisz kod sesji nowego właściciela">
-                </div>
-                <button id="add-owner-btn">Dodaj Właściciela</button>
             </div>
             <div class="owner-section">
                 <h3>Dodaj Nową Dozwoloną Sesję</h3>
