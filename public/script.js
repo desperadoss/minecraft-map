@@ -510,59 +510,70 @@ function renderPoints(publicPoints, privatePoints) {
     updatePointScaling();
 }
     
-    function renderPointList(listId, points, isEditable) {
-        const list = document.getElementById(listId);
-        list.innerHTML = '';
-        if (points.length === 0) {
-            list.innerHTML = `<p>${listId === 'your-points-list' ? 'You have no points yet.' : 'No public points available.'}</p>`;
-            return;
-        }
-        points.forEach(point => {
-            const li = document.createElement('li');
-            li.className = 'point-list-item';
-            li.dataset.id = point._id;
-            
-            const pointInfo = document.createElement('span');
-            pointInfo.textContent = `${point.name} (X: ${point.x}, Z: ${point.z})`;
+function renderPointList(points, listElement) {
+    listElement.innerHTML = '';
+    
+    // Check if the list should be visible
+    const isListVisible = (listElement.id === 'your-points-list' && isShowingPrivate) || 
+                          (listElement.id === 'shared-points-list' && isShowingPublic);
 
-            const actions = document.createElement('div');
-            actions.className = 'point-actions';
-            
-            if (isEditable) {
-                const editBtn = document.createElement('button');
-                editBtn.className = 'button edit-list-button';
-                editBtn.textContent = 'Edit';
-                editBtn.addEventListener('click', () => {
-                    hideModals();
-                    editPoint(point);
-                });
-                actions.appendChild(editBtn);
-
-                const shareBtn = document.createElement('button');
-                shareBtn.className = 'button share-list-button';
-                shareBtn.textContent = 'Share';
-                shareBtn.addEventListener('click', () => sharePoint(point._id));
-                
-                if (point.status !== 'private') {
-                    shareBtn.disabled = true;
-                }
-                actions.appendChild(shareBtn);
-            }
-
-            const viewBtn = document.createElement('button');
-            viewBtn.className = 'button view-list-button';
-            viewBtn.textContent = 'View';
-            viewBtn.addEventListener('click', () => {
-                hideModals();
-                displayPointDetails(point);
-            });
-            actions.appendChild(viewBtn);
-
-            li.appendChild(pointInfo);
-            li.appendChild(actions);
-            list.appendChild(li);
-        });
+    if (points.length === 0) {
+        listElement.innerHTML = '<li class="no-points">Brak punktów.</li>';
+        return;
     }
+
+    points.forEach(point => {
+        const listItem = document.createElement('li');
+        listItem.classList.add('point-list-item');
+        listItem.dataset.id = point._id;
+
+        const iconColor = MINECRAFT_RESOURCES[point.resourceType]?.color || '#888';
+
+        listItem.innerHTML = `
+            <div class="point-list-item-info">
+                <strong>${point.name}</strong>
+                <small>X: ${point.x}, Z: ${point.z}</small>
+            </div>
+            <div class="point-list-item-actions">
+                <button class="view-on-map-btn" data-x="${point.x}" data-z="${point.z}">Pokaż na mapie</button>
+            </div>
+        `;
+        
+        const viewBtn = listItem.querySelector('.view-on-map-btn');
+        viewBtn.addEventListener('click', () => {
+            hideModals();
+            zoomToPoint(point.x, point.z);
+        });
+
+        if (point.ownerSessionCode === sessionCode || isUserAdmin) {
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Edytuj';
+            editBtn.addEventListener('click', () => {
+                editPoint(point);
+            });
+            listItem.querySelector('.point-list-item-actions').appendChild(editBtn);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Usuń';
+            deleteBtn.addEventListener('click', () => {
+                if (confirm('Jesteś pewien, że chcesz usunąć ten punkt?')) {
+                    deletePoint(point._id);
+                }
+            });
+            listItem.querySelector('.point-list-item-actions').appendChild(deleteBtn);
+        }
+
+        listElement.appendChild(listItem);
+    });
+
+    // Toggle list container visibility
+    const listContainer = listElement.closest('.point-list-section');
+    if (isListVisible) {
+        listContainer.style.display = 'block';
+    } else {
+        listContainer.style.display = 'none';
+    }
+}
 
     async function addOrUpdatePoint(pointData, mode, pointId = null) {
         addPointBtn.disabled = true;
@@ -1133,6 +1144,7 @@ async function checkUserPermissions() {
     fetchPoints();
     updateMapPosition();
 });
+
 
 
 
