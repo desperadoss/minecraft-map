@@ -36,10 +36,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const sharedPointsList = document.getElementById('shared-points-list');
 
     // === Configuration and global variables ===
-    const MAP_WIDTH_PX = 8000;
-    const MAP_HEIGHT_PX = 5500;
-    const ORIGIN_OFFSET_X = -4000;
-    const ORIGIN_OFFSET_Z = -2750;
+    // NOWE WYMIARY MAPY
+    const MAP_WIDTH_PX = 8004;
+    const MAP_HEIGHT_PX = 4500;
+    // Dostosowanie offsetu do nowych wymiarów
+    const ORIGIN_OFFSET_X = -4002;
+    const ORIGIN_OFFSET_Z = -2250;
     const MIN_ZOOM = 0.1;
     const MAX_ZOOM = 3.0;
     const ZOOM_STEP = 0.1;
@@ -54,9 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let isUserOwner = false;
     let sessionCode = localStorage.getItem('sessionCode') || crypto.randomUUID();
     
-    // Zmienne do kontrolowania widoczności list
-    let isShowingPrivate = true; // Domyślnie pokazane
-    let isShowingPublic = true;  // Domyślnie pokazane
+    let isShowingPrivate = true; 
+    let isShowingPublic = true;  
 
     // Resource colors (can be extended)
     const MINECRAFT_RESOURCES = {
@@ -102,14 +103,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function mcToPx(x, z) {
-        const px = (x - ORIGIN_OFFSET_X) * (MAP_WIDTH_PX / 8192); // Assuming 8192 is the full map width in MC coords
-        const pz = (z - ORIGIN_OFFSET_Z) * (MAP_HEIGHT_PX / 5500); // Assuming 5500 is the full map height in MC coords
+        const px = (x - ORIGIN_OFFSET_X);
+        const pz = (z - ORIGIN_OFFSET_Z);
         return { x: px, z: pz };
     }
 
     function pxToMc(px, pz) {
-        const x = (px / (MAP_WIDTH_PX / 8192)) + ORIGIN_OFFSET_X;
-        const z = (pz / (MAP_HEIGHT_PX / 5500)) + ORIGIN_OFFSET_Z;
+        const x = px + ORIGIN_OFFSET_X;
+        const z = pz + ORIGIN_OFFSET_Z;
         return { x, z };
     }
 
@@ -120,7 +121,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const maxTranslateX = (MAP_WIDTH_PX * scale - containerRect.width) / 2;
         const maxTranslateY = (MAP_HEIGHT_PX * scale - containerRect.height) / 2;
         
-        // Clamp the map position to prevent it from going outside the container
         const clampedX = Math.max(-maxTranslateX, Math.min(maxTranslateX, currentMapX));
         const clampedY = Math.max(-maxTranslateY, Math.min(maxTranslateY, currentMapY));
         
@@ -185,7 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const mapCenterPointX = containerRect.width / 2;
         const mapCenterPointY = containerRect.height / 2;
 
-        // Reset zoom to 1.0 before calculating new position
         scale = 1.0;
         updateZoomInfo();
         
@@ -219,7 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderPoints(publicPoints, privatePoints) {
         document.querySelectorAll('.point-wrapper').forEach(p => p.remove());
 
-        // Always show all points on the map
         const allPoints = [...publicPoints, ...privatePoints];
         
         allPoints.forEach(point => {
@@ -367,7 +365,6 @@ document.addEventListener('DOMContentLoaded', () => {
         zInput.value = point.z;
         addPointBtn.textContent = 'Zapisz zmiany';
 
-        // Scroll to the add form section
         const addSection = document.querySelector('.add-point-section');
         addSection.scrollIntoView({ behavior: 'smooth' });
     }
@@ -601,13 +598,13 @@ document.addEventListener('DOMContentLoaded', () => {
     showYourPointsBtn.addEventListener('click', () => {
         isShowingPrivate = !isShowingPrivate;
         showYourPointsBtn.classList.toggle('active', isShowingPrivate);
-        fetchPoints(); // Refresh list visibility
+        fetchPoints(); 
     });
 
     showSharedPointsBtn.addEventListener('click', () => {
         isShowingPublic = !isShowingPublic;
         showSharedPointsBtn.classList.toggle('active', isShowingPublic);
-        fetchPoints(); // Refresh list visibility
+        fetchPoints(); 
     });
 
     // Handle form submissions
