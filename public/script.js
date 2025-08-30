@@ -3,9 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
 const MAP_CONFIG = {
     width: 8004,
     height: 4500,
-    minX: -4002, // Ustawiamy na ujemną wartość X ze zrzutu ekranu
-    maxX: 4002, // Pozostałe wartości można na razie zostawić
-    minZ: -2250, // Ustawiamy na ujemną wartość Z ze zrzutu ekranu
+    minX: -4002,
+    maxX: 4002,
+    minZ: -2250,
     maxZ: 2250,
     gridSize: 50,
     minZoom: 0.1,
@@ -152,15 +152,16 @@ const RESOURCE_TYPES = {
 
 function mcToPixel(x, z) {
     // Convert Minecraft coordinates to pixel coordinates
-    const pixelX = x - MAP_CONFIG.minX;
-    const pixelZ = z - MAP_CONFIG.minZ;
+    // Mapujemy zakres Minecraft (-4002 do 4002, -2250 do 2250) na piksele (0 do width, 0 do height)
+    const pixelX = ((x - MAP_CONFIG.minX) / (MAP_CONFIG.maxX - MAP_CONFIG.minX)) * MAP_CONFIG.width;
+    const pixelZ = ((z - MAP_CONFIG.minZ) / (MAP_CONFIG.maxZ - MAP_CONFIG.minZ)) * MAP_CONFIG.height;
     return { x: pixelX, z: pixelZ };
 }
 
     function pixelToMc(pixelX, pixelZ) {
         // Convert pixel coordinates to Minecraft coordinates
-        const x = pixelX + MAP_CONFIG.minX;
-        const z = pixelZ + MAP_CONFIG.minZ;
+        const x = MAP_CONFIG.minX + (pixelX / MAP_CONFIG.width) * (MAP_CONFIG.maxX - MAP_CONFIG.minX);
+        const z = MAP_CONFIG.minZ + (pixelZ / MAP_CONFIG.height) * (MAP_CONFIG.maxZ - MAP_CONFIG.minZ);
         return { x, z };
     }
 
@@ -225,18 +226,22 @@ function updateMapTransform() {
     function centerMapAt(x, z) {
         const pixelCoords = mcToPixel(x, z);
         
-        // Calculate pan to center the point
-        currentPanX = mapViewport.clientWidth / 2 - pixelCoords.x * currentZoom;
-        currentPanY = mapViewport.clientHeight / 2 - pixelCoords.z * currentZoom;
+        // Calculate pan to center the point with 50px offset upward
+        const viewportCenterX = mapViewport.clientWidth / 2;
+        const viewportCenterY = mapViewport.clientHeight / 2;
+        
+        currentPanX = viewportCenterX - pixelCoords.x * currentZoom;
+        currentPanY = viewportCenterY - pixelCoords.z * currentZoom - 50; // 50px offset w górę
         
         updateMapTransform();
     }
 
     function resetView() {
         currentZoom = 1.0;
-        currentPanX = 0;
-        currentPanY = 0;
-        updateMapTransform();
+        // Reset do pozycji 0,0 z offsetem
+        setTimeout(() => {
+            centerMapAt(0, 0);
+        }, 10);
     }
 
 function centerMapOnViewport() {
@@ -704,9 +709,9 @@ function init() {
     createGrid();
 
     
-    // Wait for the viewport to be ready, then reset the map view
- setTimeout(() => {
-        centerMapAt(0, 0); // Wstaw tutaj swoje nowe współrzędne X i Z
+    // Wait for the viewport to be ready, then center on 0,0 with offset
+    setTimeout(() => {
+        centerMapAt(0, 0); // Teraz będzie dokładnie na środku z 50px offsetem w górę
     }, 100);
     
     // Check user permissions
@@ -952,10 +957,3 @@ function init() {
     // Initialize the application
     init();
 });
-
-
-
-
-
-
-
