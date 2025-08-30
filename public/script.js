@@ -706,7 +706,7 @@ function init() {
     
     // Wait for the viewport to be ready, then reset the map view
  setTimeout(() => {
-        centerMapAt(-1500, -500); // Wstaw tutaj swoje nowe współrzędne X i Z
+        centerMapAt(0, 0); // Wstaw tutaj swoje nowe współrzędne X i Z
     }, 100);
     
     // Check user permissions
@@ -952,6 +952,7 @@ function init() {
     // Initialize the application
     init();
 });
+
 
 
 
