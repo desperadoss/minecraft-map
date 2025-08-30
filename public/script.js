@@ -1,10 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     // === Configuration ===
 const MAP_CONFIG = {
-    width: 10000,
-    height: 6000,
-    minX: -4000,
-    maxX: 4000,
+    width: 8004,
+    height: 4500,
+    minX: -4002,
+    maxX: 4002,
     minZ: -2250,
     maxZ: 2250,
     gridSize: 50,
@@ -189,13 +189,9 @@ function updateMapTransform() {
         const mouseX = event.clientX - rect.left;
         const mouseY = event.clientY - rect.top;
         
-        // Calculate mouse position relative to map center
-        const mapCenterX = rect.width / 2;
-        const mapCenterY = rect.height / 2;
-        
-        // Convert to map pixel coordinates
-        const mapPixelX = (mouseX - mapCenterX - currentPanX) / currentZoom + MAP_CONFIG.width / 2;
-        const mapPixelZ = (mouseY - mapCenterY - currentPanY) / currentZoom + MAP_CONFIG.height / 2;
+        // Convert mouse position to map pixel coordinates accounting for pan and zoom
+        const mapPixelX = (mouseX - currentPanX) / currentZoom;
+        const mapPixelZ = (mouseY - currentPanY) / currentZoom;
         
         // Convert to Minecraft coordinates
         const mcCoords = pixelToMc(mapPixelX, mapPixelZ);
@@ -957,5 +953,3 @@ function init() {
     // Initialize the application
     init();
 });
-
-
