@@ -703,9 +703,9 @@ function init() {
     // Create grid
     createGrid();
     
-    // Wait for the viewport to be ready, then center the map
+    // Wait for the viewport to be ready, then reset the map view
     setTimeout(() => {
-        centerMapOnViewport();
+        resetView(); // Zastępuje centerMapOnViewport()
     }, 100);
     
     // Check user permissions
@@ -951,4 +951,5 @@ function init() {
     // Initialize the application
     init();
 });
+
 
