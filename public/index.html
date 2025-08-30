@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interaktywna Mapa Minecraft</title>
+    <title>Interactive Minecraft Map</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,19 +25,19 @@
                 </div>
                 <div class="nav-item" data-view="points">
                     <div class="nav-icon">📍</div>
-                    <span>Twoje punkty</span>
+                    <span>Your Points</span>
                 </div>
                 <div class="nav-item" data-view="shared">
-                    <div class="nav-icon">🌐</div>
-                    <span>Udostępnione</span>
+                    <div class="nav-icon">🌍</div>
+                    <span>Shared Points</span>
                 </div>
                 <div class="nav-item" data-view="admin" id="admin-nav" style="display: none;">
                     <div class="nav-icon">⚙️</div>
-                    <span>Panel Admina</span>
+                    <span>Admin Panel</span>
                 </div>
                 <div class="nav-item" data-view="owner" id="owner-nav" style="display: none;">
                     <div class="nav-icon">👑</div>
-                    <span>Panel Właściciela</span>
+                    <span>Owner Panel</span>
                 </div>
             </nav>
 
@@ -60,12 +60,12 @@
                 </div>
                 <div class="header-actions">
                     <button class="btn btn-secondary" id="login-btn">
-                        <span>🔐</span>
+                        <span>🔑</span>
                         Login
                     </button>
                     <button class="btn btn-primary" id="add-point-btn">
                         <span>+</span>
-                        Dodaj punkt
+                        Add Point
                     </button>
                 </div>
             </header>
@@ -84,10 +84,10 @@
                 <div class="bottom-controls">
                     <div class="control-group">
                         <div class="control-panel">
-                            <div class="control-title">Filtry</div>
+                            <div class="control-title">Filters</div>
                             <div class="filter-buttons">
-                                <button class="filter-btn active" id="filter-private">Twoje punkty</button>
-                                <button class="filter-btn active" id="filter-public">Udostępnione</button>
+                                <button class="filter-btn active" id="filter-private">Your Points</button>
+                                <button class="filter-btn active" id="filter-public">Shared Points</button>
                             </div>
                         </div>
                     </div>
@@ -119,70 +119,70 @@
     <div class="modal" id="add-point-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">Dodaj nowy punkt</h2>
+                <h2 class="modal-title">Add New Point</h2>
                 <button class="modal-close" id="modal-close-add">&times;</button>
             </div>
             
             <form id="add-point-form">
                 <div class="form-group">
-                    <label class="form-label" for="resource-select">Typ punktu</label>
+                    <label class="form-label" for="resource-select">Point Type</label>
                     <select class="form-select" id="resource-select">
-                        <option value="diamond_ore">Ruda Diamentu</option>
-                        <option value="iron_ore">Ruda Żelaza</option>
-                        <option value="gold_ore">Ruda Złota</option>
-                        <option value="coal_ore">Ruda Węgla</option>
-                        <option value="copper_ore">Ruda Miedzi</option>
-                        <option value="redstone_ore">Ruda Redstone</option>
-                        <option value="lapis_ore">Ruda Lapis Lazuli</option>
-                        <option value="emerald_ore">Ruda Szmaragdu</option>
-                        <option value="netherite">Starożytny Gruz</option>
-                        <option value="village">Wioska</option>
-                        <option value="stronghold">Twierdza</option>
-                        <option value="nether_fortress">Twierdza Netheru</option>
-                        <option value="end_city">Miasto Kresu</option>
-                        <option value="ocean_monument">Monument Oceaniczny</option>
-                        <option value="woodland_mansion">Leśna Rezydencja</option>
-                        <option value="desert_temple">Pustynna Świątynia</option>
-                        <option value="jungle_temple">Dżunglowa Świątynia</option>
+                        <option value="diamond_ore">Diamond Ore</option>
+                        <option value="iron_ore">Iron Ore</option>
+                        <option value="gold_ore">Gold Ore</option>
+                        <option value="coal_ore">Coal Ore</option>
+                        <option value="copper_ore">Copper Ore</option>
+                        <option value="redstone_ore">Redstone Ore</option>
+                        <option value="lapis_ore">Lapis Lazuli Ore</option>
+                        <option value="emerald_ore">Emerald Ore</option>
+                        <option value="netherite">Ancient Debris</option>
+                        <option value="village">Village</option>
+                        <option value="stronghold">Stronghold</option>
+                        <option value="nether_fortress">Nether Fortress</option>
+                        <option value="end_city">End City</option>
+                        <option value="ocean_monument">Ocean Monument</option>
+                        <option value="woodland_mansion">Woodland Mansion</option>
+                        <option value="desert_temple">Desert Temple</option>
+                        <option value="jungle_temple">Jungle Temple</option>
                         <option value="igloo">Igloo</option>
-                        <option value="shipwreck">Wrak Statku</option>
-                        <option value="mushroom_biome">Grzybowa Wyspa</option>
-                        <option value="mesa">Góry Skalne (Badlands)</option>
-                        <option value="ice_spikes">Lodowe Kolce</option>
-                        <option value="flower_forest">Kwiatowy Las</option>
-                        <option value="spawn">Punkt Spawnu</option>
-                        <option value="base">Baza</option>
-                        <option value="farm">Farma</option>
-                        <option value="portal">Portal Netheru</option>
-                        <option value="treasure">Skarb</option>
-                        <option value="custom">Własne...</option>
+                        <option value="shipwreck">Shipwreck</option>
+                        <option value="mushroom_biome">Mushroom Island</option>
+                        <option value="mesa">Badlands</option>
+                        <option value="ice_spikes">Ice Spikes</option>
+                        <option value="flower_forest">Flower Forest</option>
+                        <option value="spawn">Spawn Point</option>
+                        <option value="base">Base</option>
+                        <option value="farm">Farm</option>
+                        <option value="portal">Nether Portal</option>
+                        <option value="treasure">Treasure</option>
+                        <option value="custom">Custom...</option>
                     </select>
                 </div>
 
                 <div class="form-group" id="custom-name-group" style="display: none;">
-                    <label class="form-label" for="name-input">Nazwa punktu</label>
-                    <input type="text" class="form-input" id="name-input" placeholder="Wpisz nazwę punktu...">
+                    <label class="form-label" for="name-input">Point Name</label>
+                    <input type="text" class="form-input" id="name-input" placeholder="Enter point name...">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="description-input">Opis (opcjonalnie)</label>
-                    <textarea class="form-textarea" id="description-input" placeholder="Dodatkowy opis punktu..." rows="3"></textarea>
+                    <label class="form-label" for="description-input">Description (optional)</label>
+                    <textarea class="form-textarea" id="description-input" placeholder="Additional point description..." rows="3"></textarea>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="x-input">Współrzędna X</label>
+                        <label class="form-label" for="x-input">X Coordinate</label>
                         <input type="number" class="form-input" id="x-input" placeholder="0" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="z-input">Współrzędna Z</label>
+                        <label class="form-label" for="z-input">Z Coordinate</label>
                         <input type="number" class="form-input" id="z-input" placeholder="0" required>
                     </div>
                 </div>
 
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" id="cancel-add">Anuluj</button>
-                    <button type="submit" class="btn btn-primary">Dodaj punkt</button>
+                    <button type="button" class="btn btn-secondary" id="cancel-add">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Point</button>
                 </div>
             </form>
         </div>
@@ -192,31 +192,31 @@
     <div class="modal" id="point-details-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" id="point-details-title">Szczegóły punktu</h2>
+                <h2 class="modal-title" id="point-details-title">Point Details</h2>
                 <button class="modal-close" id="modal-close-details">&times;</button>
             </div>
             
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">Koordinaty</label>
+                    <label class="form-label">Coordinates</label>
                     <div class="coordinates-value" id="point-coords-display">X: 0, Z: 0</div>
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">Typ</label>
+                    <label class="form-label">Type</label>
                     <div id="point-type-display">-</div>
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">Opis</label>
-                    <div id="point-description-display">Brak opisu</div>
+                    <label class="form-label">Description</label>
+                    <div id="point-description-display">No description</div>
                 </div>
             </div>
 
             <div class="form-actions">
-                <button class="btn btn-secondary" id="share-point" style="display: none;">Udostępnij</button>
-                <button class="btn btn-secondary" id="edit-point" style="display: none;">Edytuj</button>
-                <button class="btn btn-primary" id="delete-point" style="display: none;">Usuń</button>
+                <button class="btn btn-secondary" id="share-point" style="display: none;">Share</button>
+                <button class="btn btn-secondary" id="edit-point" style="display: none;">Edit</button>
+                <button class="btn btn-primary" id="delete-point" style="display: none;">Delete</button>
             </div>
         </div>
     </div>
@@ -225,18 +225,18 @@
     <div class="modal" id="login-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">Logowanie do panelu</h2>
+                <h2 class="modal-title">Login to Panel</h2>
                 <button class="modal-close" id="modal-close-login">&times;</button>
             </div>
             
             <div class="form-group">
-                <label class="form-label" for="login-code">Kod dostępu</label>
-                <input type="text" class="form-input" id="login-code" placeholder="Wprowadź kod sesji...">
+                <label class="form-label" for="login-code">Access Code</label>
+                <input type="text" class="form-input" id="login-code" placeholder="Enter session code...">
             </div>
 
             <div class="form-actions">
-                <button class="btn btn-secondary" id="cancel-login">Anuluj</button>
-                <button class="btn btn-primary" id="submit-login">Zaloguj się</button>
+                <button class="btn btn-secondary" id="cancel-login">Cancel</button>
+                <button class="btn btn-primary" id="submit-login">Login</button>
             </div>
         </div>
     </div>
@@ -245,7 +245,7 @@
     <div class="modal" id="points-list-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" id="points-list-title">Lista punktów</h2>
+                <h2 class="modal-title" id="points-list-title">Points List</h2>
                 <button class="modal-close" id="modal-close-points">&times;</button>
             </div>
             
@@ -259,17 +259,17 @@
     <div class="modal" id="admin-panel-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">Panel Admina</h2>
+                <h2 class="modal-title">Admin Panel</h2>
                 <button class="modal-close" id="modal-close-admin">&times;</button>
             </div>
             <div class="modal-section">
-                <h3>Oczekujące punkty</h3>
+                <h3>Pending Points</h3>
                 <div class="point-list" id="pending-points-list">
                     <!-- Pending points will be populated here -->
                 </div>
             </div>
             <div class="form-actions">
-                <button class="btn btn-secondary" id="refresh-pending">Odśwież listę</button>
+                <button class="btn btn-secondary" id="refresh-pending">Refresh List</button>
             </div>
         </div>
     </div>
@@ -278,24 +278,24 @@
     <div class="modal" id="owner-panel-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">Panel Właściciela</h2>
+                <h2 class="modal-title">Owner Panel</h2>
                 <button class="modal-close" id="modal-close-owner">&times;</button>
             </div>
             <div class="modal-section">
-                <h3>Zarządzanie sesjami</h3>
+                <h3>Session Management</h3>
                 <div class="form-group">
-                    <input type="text" class="form-input" id="new-session-code" placeholder="Wprowadź kod sesji do dodania">
-                    <button class="btn btn-primary" id="add-session-btn" style="margin-top: 8px;">Dodaj sesję</button>
+                    <input type="text" class="form-input" id="new-session-code" placeholder="Enter session code to add">
+                    <button class="btn btn-primary" id="add-session-btn" style="margin-top: 8px;">Add Session</button>
                 </div>
                 <div class="point-list" id="allowed-sessions-list">
                     <!-- Sessions will be populated here -->
                 </div>
             </div>
             <div class="modal-section">
-                <h3>Nadaj uprawnienia admina</h3>
+                <h3>Grant Admin Rights</h3>
                 <div class="form-group">
-                    <input type="text" class="form-input" id="promote-session-code" placeholder="Wprowadź kod sesji do awansowania">
-                    <button class="btn btn-primary" id="promote-user" style="margin-top: 8px;">Nadaj uprawnienia</button>
+                    <input type="text" class="form-input" id="promote-session-code" placeholder="Enter session code to promote">
+                    <button class="btn btn-primary" id="promote-user" style="margin-top: 8px;">Grant Rights</button>
                 </div>
             </div>
         </div>
