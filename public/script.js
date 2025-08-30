@@ -1,17 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
     // === Configuration ===
-    const MAP_CONFIG = {
-        width: 8004,
-        height: 4500,
-        minX: -4002,
-        maxX: 4002,
-        minZ: -2250,
-        maxZ: 2250,
-        gridSize: 50,
-        minZoom: 0.1,
-        maxZoom: 3.0,
-        zoomStep: 0.1
-    };
+const MAP_CONFIG = {
+    width: 8004,
+    height: 4500,
+    minX: -9843, // Ustawiamy na ujemną wartość X ze zrzutu ekranu
+    maxX: 4002, // Pozostałe wartości można na razie zostawić
+    minZ: -5337, // Ustawiamy na ujemną wartość Z ze zrzutu ekranu
+    maxZ: 2250,
+    gridSize: 50,
+    minZoom: 0.1,
+    maxZoom: 3.0,
+    zoomStep: 0.1
+};
 
     // Resource types with colors
 const RESOURCE_TYPES = {
@@ -952,6 +952,7 @@ function init() {
     // Initialize the application
     init();
 });
+
 
 
 
