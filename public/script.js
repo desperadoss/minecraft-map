@@ -150,12 +150,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function mcToPixel(x, z) {
-        // Convert Minecraft coordinates to pixel coordinates
-        const pixelX = x - MAP_CONFIG.minX;
-        const pixelZ = z - MAP_CONFIG.minZ;
-        return { x: pixelX, z: pixelZ };
-    }
+function mcToPixel(x, z) {
+    // Convert Minecraft coordinates to pixel coordinates
+    const pixelX = x - MAP_CONFIG.minX;
+    const pixelZ = z - MAP_CONFIG.minZ;
+    return { x: pixelX, z: pixelZ };
+}
 
     function pixelToMc(pixelX, pixelZ) {
         // Convert pixel coordinates to Minecraft coordinates
@@ -702,10 +702,11 @@ function init() {
     
     // Create grid
     createGrid();
+
     
     // Wait for the viewport to be ready, then reset the map view
-    setTimeout(() => {
-        resetView(); // Zastępuje centerMapOnViewport()
+ setTimeout(() => {
+        centerMapAt(-1500, -500); // Wstaw tutaj swoje nowe współrzędne X i Z
     }, 100);
     
     // Check user permissions
@@ -951,5 +952,6 @@ function init() {
     // Initialize the application
     init();
 });
+
 
 
