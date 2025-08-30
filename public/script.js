@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     // === Configuration ===
 const MAP_CONFIG = {
-    width: 8000,
-    height: 4500,
+    width: 10000,
+    height: 6000,
     minX: -4000,
     maxX: 4000,
     minZ: -2250,
@@ -957,4 +957,5 @@ function init() {
     // Initialize the application
     init();
 });
+
 
