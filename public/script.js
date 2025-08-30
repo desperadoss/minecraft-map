@@ -14,37 +14,37 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Resource types with colors
-    const RESOURCE_TYPES = {
-        diamond_ore: { name: 'Ruda Diamentu', color: '#00FFFF' },
-        iron_ore: { name: 'Ruda Żelaza', color: '#C0C0C0' },
-        gold_ore: { name: 'Ruda Złota', color: '#FFD700' },
-        coal_ore: { name: 'Ruda Węgla', color: '#2C2C2C' },
-        copper_ore: { name: 'Ruda Miedzi', color: '#B87333' },
-        redstone_ore: { name: 'Ruda Redstone', color: '#FF0000' },
-        lapis_ore: { name: 'Ruda Lapis Lazuli', color: '#007FFF' },
-        emerald_ore: { name: 'Ruda Szmaragdu', color: '#00C957' },
-        netherite: { name: 'Starożytny Gruz', color: '#554441' },
-        village: { name: 'Wioska', color: '#FFDAB9' },
-        stronghold: { name: 'Twierdza', color: '#8A2BE2' },
-        nether_fortress: { name: 'Twierdza Netheru', color: '#8B0000' },
-        end_city: { name: 'Miasto Kresu', color: '#9932CC' },
-        ocean_monument: { name: 'Monument Oceaniczny', color: '#4169E1' },
-        woodland_mansion: { name: 'Leśna Rezydencja', color: '#556B2F' },
-        desert_temple: { name: 'Pustynna Świątynia', color: '#F0E68C' },
-        jungle_temple: { name: 'Dżunglowa Świątynia', color: '#228B22' },
-        igloo: { name: 'Igloo', color: '#FFFFFF' },
-        shipwreck: { name: 'Wrak Statku', color: '#CD853F' },
-        mushroom_biome: { name: 'Grzybowa Wyspa', color: '#9400D3' },
-        mesa: { name: 'Góry Skalne (Badlands)', color: '#CD5C5C' },
-        ice_spikes: { name: 'Lodowe Kolce', color: '#ADD8E6' },
-        flower_forest: { name: 'Kwiatowy Las', color: '#FFB6C1' },
-        spawn: { name: 'Punkt Spawnu', color: '#FFA500' },
-        base: { name: 'Baza', color: '#008080' },
-        farm: { name: 'Farma', color: '#7FFF00' },
-        portal: { name: 'Portal Netheru', color: '#9370DB' },
-        treasure: { name: 'Skarb', color: '#FFD700' },
-        custom: { name: 'Własne', color: '#888888' }
-    };
+const RESOURCE_TYPES = {
+    diamond_ore: { name: 'Diamond Ore', color: '#00FFFF' },
+    iron_ore: { name: 'Iron Ore', color: '#C0C0C0' },
+    gold_ore: { name: 'Gold Ore', color: '#FFD700' },
+    coal_ore: { name: 'Coal Ore', color: '#2C2C2C' },
+    copper_ore: { name: 'Copper Ore', color: '#B87333' },
+    redstone_ore: { name: 'Redstone Ore', color: '#FF0000' },
+    lapis_ore: { name: 'Lapis Lazuli Ore', color: '#007FFF' },
+    emerald_ore: { name: 'Emerald Ore', color: '#00C957' },
+    netherite: { name: 'Ancient Debris', color: '#554441' },
+    village: { name: 'Village', color: '#FFDAB9' },
+    stronghold: { name: 'Stronghold', color: '#8A2BE2' },
+    nether_fortress: { name: 'Nether Fortress', color: '#8B0000' },
+    end_city: { name: 'End City', color: '#9932CC' },
+    ocean_monument: { name: 'Ocean Monument', color: '#4169E1' },
+    woodland_mansion: { name: 'Woodland Mansion', color: '#556B2F' },
+    desert_temple: { name: 'Desert Temple', color: '#F0E68C' },
+    jungle_temple: { name: 'Jungle Temple', color: '#228B22' },
+    igloo: { name: 'Igloo', color: '#FFFFFF' },
+    shipwreck: { name: 'Shipwreck', color: '#CD853F' },
+    mushroom_biome: { name: 'Mushroom Island', color: '#9400D3' },
+    mesa: { name: 'Badlands', color: '#CD5C5C' },
+    ice_spikes: { name: 'Ice Spikes', color: '#ADD8E6' },
+    flower_forest: { name: 'Flower Forest', color: '#FFB6C1' },
+    spawn: { name: 'Spawn Point', color: '#FFA500' },
+    base: { name: 'Base', color: '#008080' },
+    farm: { name: 'Farm', color: '#7FFF00' },
+    portal: { name: 'Nether Portal', color: '#9370DB' },
+    treasure: { name: 'Treasure', color: '#FFD700' },
+    custom: { name: 'Custom', color: '#888888' }
+};
 
     // Owner session codes
     const OWNER_SESSION_CODES = [
@@ -952,6 +952,7 @@ function init() {
     // Initialize the application
     init();
 });
+
 
 
 
