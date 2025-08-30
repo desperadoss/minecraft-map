@@ -189,12 +189,14 @@ function updateMapTransform() {
         const mouseX = event.clientX - rect.left;
         const mouseY = event.clientY - rect.top;
         
-        // Convert mouse position to map pixel coordinates accounting for pan and zoom
-        const mapPixelX = (mouseX - currentPanX) / currentZoom;
-        const mapPixelZ = (mouseY - currentPanY) / currentZoom;
+        // Znajdź pozycję myszy względem oryginalnej mapy (bez zoom i pan)
+        // Najpierw odejmij pan, potem podziel przez zoom żeby uzyskać rzeczywistą pozycję na mapie
+        const realMapX = (mouseX - currentPanX) / currentZoom;
+        const realMapY = (mouseY - currentPanY) / currentZoom;
         
-        // Convert to Minecraft coordinates
-        const mcCoords = pixelToMc(mapPixelX, mapPixelZ);
+        // Konwertuj piksele mapy na współrzędne Minecraft
+        const mcCoords = pixelToMc(realMapX, realMapY);
+        
         coordinatesDisplay.textContent = `X: ${Math.round(mcCoords.x)}, Z: ${Math.round(mcCoords.z)}`;
     }
 
@@ -953,4 +955,3 @@ function init() {
     // Initialize the application
     init();
 });
-
