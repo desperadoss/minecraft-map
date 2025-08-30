@@ -164,17 +164,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return { x, z };
     }
 
-    function updateMapTransform() {
-        const maxPanX = (MAP_CONFIG.width * currentZoom - mapViewport.clientWidth) / 2;
-        const maxPanY = (MAP_CONFIG.height * currentZoom - mapViewport.clientHeight) / 2;
-        
-        currentPanX = Math.max(-maxPanX, Math.min(maxPanX, currentPanX));
-        currentPanY = Math.max(-maxPanY, Math.min(maxPanY, currentPanY));
-        
-        mapCanvas.style.transform = `translate(${currentPanX}px, ${currentPanY}px) scale(${currentZoom})`;
-        updateZoomDisplay();
-        updatePointSizes();
-    }
+function updateMapTransform() {
+    mapCanvas.style.transform = `translate(${currentPanX}px, ${currentPanY}px) scale(${currentZoom})`;
+    updateZoomDisplay();
+    updatePointSizes();
+}
 
     function updateZoomDisplay() {
         zoomDisplay.textContent = `${Math.round(currentZoom * 100)}%`;
@@ -244,6 +238,20 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPanY = 0;
         updateMapTransform();
     }
+
+function centerMapOnViewport() {
+    // Calculate the offset needed to center the map in the viewport
+    const viewportWidth = mapViewport.clientWidth;
+    const viewportHeight = mapViewport.clientHeight;
+    const mapWidth = MAP_CONFIG.width * currentZoom;
+    const mapHeight = MAP_CONFIG.height * currentZoom;
+    
+    // Center the map by calculating the offset from viewport center to map center
+    currentPanX = (viewportWidth - mapWidth) / 2;
+    currentPanY = (viewportHeight - mapHeight) / 2;
+    
+    updateMapTransform();
+}
 
     function zoom(direction) {
         const newZoom = currentZoom + direction * MAP_CONFIG.zoomStep;
@@ -687,23 +695,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // (Similar to your original implementation but adapted to new UI)
 
     // === Initialization ===
-    function init() {
-        // Set session code
-        localStorage.setItem('sessionCode', sessionCode);
-        sessionDisplay.textContent = sessionCode;
-        
-        // Create grid
-        createGrid();
-        
-        // Center map at spawn (0,0)
-        centerMapAt(0, 0);
-        
-        // Check user permissions
-        checkUserPermissions();
-        
-        // Fetch initial points
-        fetchPoints();
-    }
+function init() {
+    // Set session code
+    localStorage.setItem('sessionCode', sessionCode);
+    sessionDisplay.textContent = sessionCode;
+    
+    // Create grid
+    createGrid();
+    
+    // Wait for the viewport to be ready, then center the map
+    setTimeout(() => {
+        centerMapOnViewport();
+    }, 100);
+    
+    // Check user permissions
+    checkUserPermissions();
+    
+    // Fetch initial points
+    fetchPoints();
+}
 
     async function showAdminPanel() {
         try {
@@ -941,3 +951,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize the application
     init();
 });
+
