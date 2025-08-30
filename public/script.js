@@ -229,7 +229,7 @@ function updateMapTransform() {
         const viewportCenterY = mapViewport.clientHeight / 2;
         
         currentPanX = viewportCenterX - pixelCoords.x * currentZoom;
-        currentPanY = viewportCenterY - pixelCoords.z * currentZoom - 50; // 50px offset w górę
+        currentPanY = viewportCenterY - pixelCoords.z * currentZoom + 50; // 50px offset w górę
         
         updateMapTransform();
     }
@@ -955,3 +955,4 @@ function init() {
     // Initialize the application
     init();
 });
+
