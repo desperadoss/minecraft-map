@@ -3,9 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
 const MAP_CONFIG = {
     width: 8004,
     height: 4500,
-    minX: -9843, // Ustawiamy na ujemną wartość X ze zrzutu ekranu
+    minX: -4002, // Ustawiamy na ujemną wartość X ze zrzutu ekranu
     maxX: 4002, // Pozostałe wartości można na razie zostawić
-    minZ: -5337, // Ustawiamy na ujemną wartość Z ze zrzutu ekranu
+    minZ: -2250, // Ustawiamy na ujemną wartość Z ze zrzutu ekranu
     maxZ: 2250,
     gridSize: 50,
     minZoom: 0.1,
@@ -952,6 +952,7 @@ function init() {
     // Initialize the application
     init();
 });
+
 
 
 
